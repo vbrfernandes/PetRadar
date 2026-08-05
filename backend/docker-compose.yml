@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: petradar_db
+    restart: always
+    environment:
+      POSTGRES_DB: petradar_db
+      POSTGRES_USER: petradar_admin
+      POSTGRES_PASSWORD: petradar_pass_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petradar_admin -d petradar_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+# docker compose up -d
+# comando para iniciar
+# docker compose down
+# comando para parar
+
+# docker exec -it petradar_db psql -U petradar_admin -d petradar_db -c "SELECT PostGIS_Full_Version();"
+# para garantir que esta ativo

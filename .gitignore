@@ -1,0 +1,36 @@
+# --- Backend (Python / FastAPI) ---
+.env
+inicializações.txt
+codigo_projeto_completo*.txt
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# --- Mobile (React Native / Expo / Node) ---
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+*.pem
+.env*.local
+*.tsbuildinfo
+mobile/ios/
+mobile/android/
+
+# --- Arquivos temporários e relatórios ---
+caminhos_pastas.py
+lista_de_pastas.txt
