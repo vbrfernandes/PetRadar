@@ -1,0 +1,1294 @@
+================================================================================
+ARQUITETURA DO PROJETO (MAPA DE DIRETÓRIOS)
+================================================================================
+
+mobile/
+├── src
+│   ├── components
+│   │   └── AnimatedCTA.tsx
+│   ├── contexts
+│   │   └── AuthContext.tsx
+│   ├── navigation
+│   │   ├── AppTabNavigator.tsx
+│   │   ├── AuthNavigator.tsx
+│   │   └── RootNavigator.tsx
+│   ├── screens
+│   │   ├── CadastroUserScreen.tsx
+│   │   ├── LoginScreen.tsx
+│   │   └── TipoCadastroScreen.tsx
+│   ├── services
+│   │   └── api.ts
+│   ├── store
+│   │   └── useAuthStore.ts
+│   ├── theme
+│   │   └── colors.ts
+│   └── types
+
+├── AGENTS.md
+├── app.json
+├── App.tsx
+├── CLAUDE.md
+├── codigo_frontend_completo.txt
+├── exportar_frontend.py
+├── index.ts
+├── LICENSE
+├── package-lock.json
+├── package.json
+└── tsconfig.json
+
+================================================================================
+CÓDIGO FONTE E CONFIGURAÇÕES DE MANUTENÇÃO
+================================================================================
+
+
+================================================================================
+CAMINHO: AGENTS.md
+================================================================================
+
+# Expo HAS CHANGED
+
+Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
+
+
+================================================================================
+CAMINHO: app.json
+================================================================================
+
+{
+  "expo": {
+    "name": "mobile",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
+
+
+================================================================================
+CAMINHO: App.tsx
+================================================================================
+
+// D:\Pesquisa Pucminas\Pesquisa de animais errantes\PetRadar\...\src\mobile\App.tsx
+
+import React, { useContext } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+
+// Contextos
+import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
+
+// Telas (Importações Reais)
+import LoginScreen from './src/screens/LoginScreen';
+import CadastroUserScreen from './src/screens/CadastroUserScreen';
+import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
+
+// ==========================================
+// 1. TELAS TEMPORÁRIAS (Placeholders)
+// ==========================================
+const CadastroONGScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Cadastro ONG</Text></View>;
+const FeedScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Feed de Animais (PostGIS)</Text></View>;
+const SOSScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Alerta SOS</Text></View>;
+const ProfileScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Meu Perfil</Text></View>;
+
+// ==========================================
+// 2. CONFIGURAÇÃO DOS NAVEGADORES
+// ==========================================
+const AuthStack = createNativeStackNavigator();
+const AppTabs = createBottomTabNavigator();
+
+// Fluxo Público (Usuário Deslogado)
+function AuthNavigator() {
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="TipoCadastro" component={TipoCadastroScreen} />
+      <AuthStack.Screen name="CadastroUser" component={CadastroUserScreen} />
+      <AuthStack.Screen name="CadastroONG" component={CadastroONGScreen} />
+    </AuthStack.Navigator>
+  );
+}
+
+// Fluxo Privado (Usuário Logado)
+function AppNavigator() {
+  return (
+    <AppTabs.Navigator screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}>
+      <AppTabs.Screen name="Feed" component={FeedScreen} />
+      <AppTabs.Screen name="SOS" component={SOSScreen} />
+      <AppTabs.Screen name="Perfil" component={ProfileScreen} />
+    </AppTabs.Navigator>
+  );
+}
+
+// ==========================================
+// 3. COMPONENTE DE ROTAS (Ponte)
+// ==========================================
+function Routes() {
+  const { signed, loading } = useContext(AuthContext);
+
+  // Loading state com UX agradável
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F6FA' }}>
+        <ActivityIndicator size="large" color="#0052CC" />
+      </View>
+    );
+  }
+
+  return signed ? <AppNavigator /> : <AuthNavigator />;
+}
+
+// ==========================================
+// 4. COMPONENTE PRINCIPAL (Root)
+// ==========================================
+export default function App() {
+  return (
+    <NavigationContainer>
+      <StatusBar style="auto" />
+      <AuthProvider>
+        <Routes />
+      </AuthProvider>
+    </NavigationContainer>
+  );
+}
+
+================================================================================
+CAMINHO: CLAUDE.md
+================================================================================
+
+@AGENTS.md
+
+
+================================================================================
+CAMINHO: index.ts
+================================================================================
+
+import { registerRootComponent } from 'expo';
+
+import App from './App';
+
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+registerRootComponent(App);
+
+
+================================================================================
+CAMINHO: package.json
+================================================================================
+
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^7.18.14",
+    "@react-navigation/native": "^7.3.14",
+    "@react-navigation/native-stack": "^7.18.6",
+    "axios": "^1.19.0",
+    "expo": "~54.0.0",
+    "expo-blur": "~15.0.8",
+    "expo-haptics": "~15.0.8",
+    "expo-image-picker": "~17.0.11",
+    "expo-location": "~19.0.8",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-paper": "^5.15.3",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
+}
+
+
+================================================================================
+CAMINHO: tsconfig.json
+================================================================================
+
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true
+  }
+}
+
+
+================================================================================
+CAMINHO: .claude\settings.json
+================================================================================
+
+{
+  "enabledPlugins": {
+    "expo@claude-plugins-official": true
+  }
+}
+
+
+================================================================================
+CAMINHO: src\components\AnimatedCTA.tsx
+================================================================================
+
+import React, { useRef } from 'react';
+import { Animated, TouchableWithoutFeedback, Text, StyleSheet } from 'react-native';
+import { theme } from '../theme/colors';
+
+
+interface Props {
+  title: string;
+  onPress: () => void;
+  style?: object;
+}
+
+export default function AnimatedCTA({ title, onPress, style }: Props) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      speed: 20,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      bounciness: 10,
+    }).start();
+  };
+
+  return (
+    <TouchableWithoutFeedback
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={onPress}
+    >
+      <Animated.View style={[styles.button, style, { transform: [{ scale: scaleAnim }] }]}>
+        <Text style={styles.text}>{title}</Text>
+      </Animated.View>
+    </TouchableWithoutFeedback>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: theme.colors.action,
+    borderRadius: theme.radius.button,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.shadows.buttonGlow,
+  },
+  text: {
+    color: theme.colors.surface,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
+================================================================================
+CAMINHO: src\contexts\AuthContext.tsx
+================================================================================
+
+import React, { createContext, useState, useEffect, useCallback, useMemo, ReactNode, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../services/api';
+
+const STORAGE_USER_KEY = '@PetRadar:user';
+const STORAGE_TOKEN_KEY = '@PetRadar:token';
+
+export interface User {
+  id: string;
+  email: string;
+  nome: string;
+}
+
+interface AuthContextData {
+  signed: boolean;
+  user: User | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Inicializa o estado lendo o storage e injetando o Bearer Token no Axios
+  useEffect(() => {
+    async function loadStorageData() {
+      try {
+        const [[, storageUser], [, storageToken]] = await AsyncStorage.multiGet([
+          STORAGE_USER_KEY,
+          STORAGE_TOKEN_KEY,
+        ]);
+
+        if (storageUser && storageToken) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${storageToken}`;
+          setUser(JSON.parse(storageUser));
+        }
+      } catch (error) {
+        console.error('Falha ao carregar credenciais locais:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadStorageData();
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    // Alinhado com o LoginSchema no FastAPI (espera o campo "senha")
+    const response = await api.post('/auth/login', {
+      email,
+      senha: password,
+    });
+
+    const { access_token } = response.data;
+
+    // Configura o token imediatamente para as chamadas subsequentes
+    api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
+    const minimalUser: User = {
+      id: '',
+      email,
+      nome: '',
+    };
+
+    setUser(minimalUser);
+
+    await AsyncStorage.multiSet([
+      [STORAGE_USER_KEY, JSON.stringify(minimalUser)],
+      [STORAGE_TOKEN_KEY, access_token],
+    ]);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    // Apaga apenas os dados de autenticação mantendo outras preferências salvas
+    delete api.defaults.headers.common['Authorization'];
+    await AsyncStorage.multiRemove([STORAGE_USER_KEY, STORAGE_TOKEN_KEY]);
+    setUser(null);
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      signed: !!user,
+      user,
+      loading,
+      signIn,
+      signOut,
+    }),
+    [user, loading, signIn, signOut]
+  );
+
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+};
+
+// Hook customizado para facilitar a utilização e garantir o Provider
+export function useAuth(): AuthContextData {
+  const context = useContext(AuthContext);
+
+  if (!context || Object.keys(context).length === 0) {
+    throw new Error('useAuth deve ser utilizado dentro de um AuthProvider');
+  }
+
+  return context;
+}
+
+================================================================================
+CAMINHO: src\navigation\AppTabNavigator.tsx
+================================================================================
+
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text, View, Button } from 'react-native';
+import { useAuthStore } from '../store/useAuthStore';
+
+const Tab = createBottomTabNavigator();
+
+function FeedScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Feed / Mapa de Pets</Text>
+    </View>
+  );
+}
+
+function SOSScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Reportar Pet Perdido / Encontrado</Text>
+    </View>
+  );
+}
+
+function ProfileScreen() {
+  const { user, logout } = useAuthStore();
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Perfil de {user?.name}</Text>
+      <Button title="Sair" onPress={logout} />
+    </View>
+  );
+}
+
+export function AppTabNavigator() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Feed" component={FeedScreen} />
+      <Tab.Screen name="SOS" component={SOSScreen} />
+      <Tab.Screen name="Perfil" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+================================================================================
+CAMINHO: src\navigation\AuthNavigator.tsx
+================================================================================
+
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text, View, Button } from 'react-native';
+import { useAuthStore } from '../store/useAuthStore';
+
+const Stack = createNativeStackNavigator();
+
+// Telas temporárias para validação
+function LoginScreen() {
+  const setAuth = useAuthStore((state) => state.setAuth);
+
+  const handleFakeLogin = () => {
+    setAuth('fake-jwt-token-123', {
+      id: '1',
+      name: 'Usuário Teste',
+      email: 'teste@petradar.com',
+      isOng: false,
+    });
+  };
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Tela de Login</Text>
+      <Button title="Entrar (Simular Auth)" onPress={handleFakeLogin} />
+    </View>
+  );
+}
+
+export function AuthNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+    </Stack.Navigator>
+  );
+}
+
+================================================================================
+CAMINHO: src\navigation\RootNavigator.tsx
+================================================================================
+
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { useAuthStore } from '../store/useAuthStore';
+import { AuthNavigator } from './AuthNavigator';
+import { AppTabNavigator } from './AppTabNavigator';
+
+export function RootNavigator() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <AppTabNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
+  );
+}
+
+================================================================================
+CAMINHO: src\screens\CadastroUserScreen.tsx
+================================================================================
+
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { TextInput, Button, Text, ActivityIndicator, useTheme } from 'react-native-paper';
+import * as Location from 'expo-location'; //[cite: 2]
+import axios from 'axios'; //[cite: 2]
+import { useNavigation } from '@react-navigation/native';
+
+export default function CadastroUserScreen() {
+  const theme = useTheme();
+  const navigation = useNavigation();
+
+  // Gerenciamento de Estado
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Função para capturar localização e enviar ao backend
+  const handleCadastro = async () => {
+    // Edge Case: Validação básica para evitar chamadas desnecessárias à API
+    if (!nome || !email || !senha) {
+      Alert.alert('Erro', 'Por favor, preencha os campos obrigatórios (Nome, E-mail e Senha).');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Captura de Localização (UX/Backend Requirement)
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      let lat = null;
+      let lng = null;
+
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        lat = location.coords.latitude;
+        lng = location.coords.longitude;
+      } else {
+        // Fallback: Avisamos o usuário, mas não bloqueamos o cadastro caso ele recuse o GPS
+        Alert.alert('Aviso', 'Permissão de localização negada. O feed por raio de distância pode não funcionar corretamente.');
+      }
+
+      // 2. Payload alinhado com o Backend (Conta + UsuarioFisico)
+      const payload = {
+        tipo_conta: 'PESSOA_FISICA', // Mapeado do seu model backend
+        email: email.trim().toLowerCase(),
+        senha: senha,
+        telefone: telefone,
+        localizacao_lat: lat, //[cite: 1]
+        localizacao_lng: lng, //[cite: 1]
+        usuario_fisico: {
+          nome_completo: nome, //[cite: 1]
+          tem_pet: false, // Default[cite: 1]
+          raio_pesquisa_km: 10, // Default[cite: 1]
+        }
+      };
+
+      // 3. Integração com FastAPI
+      // Substitua a URL pela variável de ambiente correta (ex: process.env.EXPO_PUBLIC_API_URL)
+      const response = await axios.post('https://sua-api.com/auth/cadastro', payload);
+
+      Alert.alert('Sucesso', 'Conta criada com sucesso!');
+      navigation.navigate('Login' as never);
+
+    } catch (error: any) {
+      // Tratamento de erro resiliente
+      const errorMessage = error.response?.data?.detail || 'Não foi possível realizar o cadastro. Tente novamente mais tarde.';
+      Alert.alert('Erro no Cadastro', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <Text variant="headlineMedium" style={styles.title}>Crie sua Conta</Text>
+      <Text variant="bodyMedium" style={styles.subtitle}>Encontre e ajude pets na sua região.</Text>
+
+      <TextInput
+        label="Nome Completo *"
+        mode="outlined"
+        value={nome}
+        onChangeText={setNome}
+        style={styles.input}
+        autoCapitalize="words"
+        autoCorrect={false}
+      />
+
+      <TextInput
+        label="E-mail *"
+        mode="outlined"
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+
+      <TextInput
+        label="Telefone"
+        mode="outlined"
+        value={telefone}
+        onChangeText={setTelefone}
+        style={styles.input}
+        keyboardType="phone-pad"
+      />
+
+      <TextInput
+        label="Senha *"
+        mode="outlined"
+        value={senha}
+        onChangeText={setSenha}
+        secureTextEntry
+        style={styles.input}
+      />
+
+      <Button 
+        mode="contained" 
+        onPress={handleCadastro} 
+        disabled={loading}
+        style={styles.button}
+      >
+        {loading ? <ActivityIndicator color="#9e1b1b" /> : 'Cadastrar'}
+      </Button>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    padding: 24,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    textAlign: 'center',
+    marginBottom: 24,
+    color: '#9c0808',
+  },
+  input: {
+    marginBottom: 16,
+  },
+  button: {
+    marginTop: 8,
+    paddingVertical: 6,
+  },
+});
+
+================================================================================
+CAMINHO: src\screens\LoginScreen.tsx
+================================================================================
+
+import React, { useState, useContext, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard
+} from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { theme } from '../theme/colors';
+import { AuthContext } from '../contexts/AuthContext'; 
+
+type AuthStackParamList = {
+  Login: undefined;
+  CadastroUser: undefined;
+  CadastroONG: undefined;
+};
+
+type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
+
+export default function LoginScreen({ navigation }: Props) {
+  const { signIn } = useContext(AuthContext); 
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Ref para alternar o foco do teclado para a senha automaticamente
+  const passwordInputRef = useRef<TextInput>(null);
+
+  const validateEmail = (targetEmail: string) => {
+    return /\S+@\S+\.\S+/.test(targetEmail);
+  };
+
+  const handleLogin = async () => {
+    Keyboard.dismiss();
+
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      setErrorMsg('Por favor, preencha e-mail e senha.');
+      return;
+    }
+
+    if (!validateEmail(cleanEmail)) {
+      setErrorMsg('Por favor, insira um e-mail com formato válido.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg('');
+
+    try {
+      await signIn(cleanEmail, cleanPassword); 
+    } catch (error) {
+      setErrorMsg('Credenciais inválidas ou erro de rede. Tente novamente.');
+      Alert.alert('Erro no Login', 'Não foi possível autenticar.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
+            {/* Header / Brand */}
+            <View style={styles.header}>
+              <Text style={styles.title}>PetRadar</Text>
+              <Text style={styles.subtitle}>Bem-vindo de volta! Faça login para continuar.</Text>
+            </View>
+
+            {/* Formulário */}
+            <View style={styles.form}>
+              {errorMsg ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                </View>
+              ) : null}
+
+              <TextInput
+                style={styles.input}
+                placeholder="E-mail"
+                placeholderTextColor={theme?.colors?.textBody ?? '#888888'}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                blurOnSubmit={false}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                accessibilityLabel="Campo de e-mail"
+                editable={!isLoading}
+              />
+
+              <TextInput
+                ref={passwordInputRef}
+                style={styles.input}
+                placeholder="Senha"
+                placeholderTextColor={theme?.colors?.textBody ?? '#888888'}
+                secureTextEntry
+                autoCapitalize="none"
+                autoComplete="password"
+                textContentType="password"
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                accessibilityLabel="Campo de senha"
+                editable={!isLoading}
+              />
+
+              <TouchableOpacity 
+                style={styles.forgotPassword}
+                disabled={isLoading}
+              >
+                <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+              </TouchableOpacity>
+
+              {/* Botão de Ação Primária */}
+              <TouchableOpacity 
+                style={[
+                  styles.button, 
+                  theme?.shadows?.buttonGlow,
+                  isLoading && styles.buttonDisabled
+                ]} 
+                onPress={handleLogin}
+                disabled={isLoading}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isLoading }}
+                activeOpacity={0.8}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color={theme?.colors?.surface ?? '#FFFFFF'} />
+                ) : (
+                  <Text style={styles.buttonText}>Entrar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Rodapé - Navegação para Cadastro */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Ainda não tem uma conta? </Text>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('CadastroUser')}
+                disabled={isLoading}
+              >
+                <Text style={styles.linkText}>Cadastre-se</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme?.colors?.background ?? '#FFFFFF',
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    padding: (theme?.spacing?.padding ?? 16) * 1.5,
+    justifyContent: 'center',
+  },
+  header: {
+    marginBottom: (theme?.spacing?.globalMargin ?? 16) * 2,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: theme?.colors?.brand ?? '#007AFF',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: theme?.colors?.textBody ?? '#666666',
+    textAlign: 'center',
+  },
+  form: {
+    width: '100%',
+  },
+  input: {
+    backgroundColor: theme?.colors?.inputBg ?? '#F2F2F2',
+    borderRadius: theme?.radius?.card ?? 8,
+    padding: theme?.spacing?.padding ?? 16,
+    marginBottom: theme?.spacing?.globalMargin ?? 16,
+    fontSize: 16,
+    color: theme?.colors?.textTitle ?? '#000000',
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: (theme?.spacing?.globalMargin ?? 16) * 1.5,
+  },
+  forgotPasswordText: {
+    color: theme?.colors?.brand ?? '#007AFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  button: {
+    backgroundColor: theme?.colors?.brand ?? '#007AFF',
+    borderRadius: theme?.radius?.button ?? 8,
+    paddingVertical: theme?.spacing?.padding ?? 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: theme?.colors?.surface ?? '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  errorContainer: {
+    backgroundColor: theme?.colors?.semantic?.danger?.bg ?? '#FFEEEE',
+    padding: theme?.spacing?.padding ?? 16,
+    borderRadius: theme?.radius?.card ?? 8,
+    marginBottom: theme?.spacing?.globalMargin ?? 16,
+  },
+  errorText: {
+    color: theme?.colors?.semantic?.danger?.text ?? '#CC0000',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: (theme?.spacing?.globalMargin ?? 16) * 2,
+  },
+  footerText: {
+    color: theme?.colors?.textBody ?? '#666666',
+    fontSize: 15,
+  },
+  linkText: {
+    color: theme?.colors?.action ?? '#007AFF',
+    fontSize: 15,
+    fontWeight: 'bold',
+  }
+});
+
+================================================================================
+CAMINHO: src\screens\TipoCadastroScreen.tsx
+================================================================================
+
+// src/screens/TipoCadastroScreen.tsx
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Haptics from 'expo-haptics';
+
+// Tipagem do fluxo de navegação pública
+export type AuthStackParamList = {
+  Login: undefined;
+  TipoCadastro: undefined;
+  CadastroUser: undefined;
+  CadastroONG: undefined;
+};
+
+type TipoCadastroNavProp = NativeStackNavigationProp<AuthStackParamList, 'TipoCadastro'>;
+
+export default function TipoCadastroScreen() {
+  const navigation = useNavigation<TipoCadastroNavProp>();
+  const insets = useSafeAreaInsets();
+
+  const handleSelectOption = (screenName: keyof AuthStackParamList) => {
+    // Feedback tátil instantâneo ao clicar (melhora a percepção de resposta da UI)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate(screenName as any);
+  };
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View style={styles.content}>
+        
+        {/* Cabeçalho informativo */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Como você deseja participar?</Text>
+          <Text style={styles.subtitle}>
+            Escolha o perfil que melhor descreve você para personalizarmos sua experiência no PetRadar.
+          </Text>
+        </View>
+
+        {/* Seleção de Perfis */}
+        <View style={styles.cardsContainer}>
+          <TouchableOpacity 
+            style={[styles.card, styles.cardUser]}
+            onPress={() => handleSelectOption('CadastroUser')}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Cadastrar como Usuário ou Tutor"
+            accessibilityHint="Redireciona para a criação de conta simples para tutores"
+          >
+            <Text style={styles.cardTitle}>Usuário / Tutor</Text>
+            <Text style={styles.cardDescription}>
+              Quero relatar avistamentos, buscar pets perdidos ou adotar um animal.
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.card, styles.cardONG]}
+            onPress={() => handleSelectOption('CadastroONG')}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Cadastrar como Organização Não Governamental"
+            accessibilityHint="Redireciona para o formulário institucional com validação de CNPJ"
+          >
+            <Text style={styles.cardTitle}>Sou uma ONG / Instituição</Text>
+            <Text style={styles.cardDescription}>
+              Represento um abrigo ou ONG e quero gerenciar resgates e feiras de adoção.
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Ação secundária / Retorno */}
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => {
+            Haptics.selectionAsync();
+            navigation.goBack();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar para a tela de Login"
+        >
+          <Text style={styles.backButtonText}>Já tem uma conta? Voltar ao Login</Text>
+        </TouchableOpacity>
+
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { 
+    flex: 1, 
+    backgroundColor: '#F7F9FC' 
+  },
+  content: { 
+    flex: 1, 
+    paddingHorizontal: 24, 
+    justifyContent: 'center' 
+  },
+  header: { 
+    marginBottom: 32 
+  },
+  title: { 
+    fontSize: 26, 
+    fontWeight: '700', 
+    color: '#1A202C', 
+    marginBottom: 8,
+    letterSpacing: -0.5
+  },
+  subtitle: { 
+    fontSize: 15, 
+    color: '#4A5568', 
+    lineHeight: 22 
+  },
+  cardsContainer: { 
+    gap: 16, 
+    marginBottom: 32 
+  },
+  card: {
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
+    shadowColor: '#1A202C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+  },
+  cardUser: { 
+    borderLeftWidth: 6, 
+    borderLeftColor: '#3182CE' 
+  },
+  cardONG: { 
+    borderLeftWidth: 6, 
+    borderLeftColor: '#38A169' 
+  },
+  cardTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#2D3748', 
+    marginBottom: 6 
+  },
+  cardDescription: { 
+    fontSize: 14, 
+    color: '#718096', 
+    lineHeight: 20 
+  },
+  backButton: { 
+    alignItems: 'center', 
+    paddingVertical: 14 
+  },
+  backButtonText: { 
+    color: '#3182CE', 
+    fontSize: 15, 
+    fontWeight: '600' 
+  }
+});
+
+================================================================================
+CAMINHO: src\services\api.ts
+================================================================================
+
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Lê variável do ambiente Expo (SDK 49+) evitando hardcode no repositório
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:8000/api/v1';
+
+const api = axios.create({
+  baseURL: API_URL,
+  timeout: 10000, // Previne requisições infinitas em redes instáveis
+});
+
+api.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem('@PetRadar:token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Trata expiração do token JWT centralizadamente
+    if (error.response?.status === 401) {
+      await AsyncStorage.multiRemove(['@PetRadar:token', '@PetRadar:user']);
+      // A mudança no AsyncStorage ou um evento no AuthContext deve forçar a desautenticação
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+
+================================================================================
+CAMINHO: src\store\useAuthStore.ts
+================================================================================
+
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  isOng: boolean;
+}
+
+interface AuthState {
+  token: string | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  setAuth: (token: string, user: User) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
+      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+    }),
+    {
+      name: '@petradar:auth',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
+
+================================================================================
+CAMINHO: src\theme\colors.ts
+================================================================================
+
+export const theme = {
+  colors: {
+    // Brand e Fundos
+    brand: '#1F5C4D',      // Verde Floresta Profundo
+    action: '#28A745',     // Verde Esmeralda Vivo
+    background: '#F5F6F8', // Cinza Off-white Quente
+    surface: '#FFFFFF',    // Branco Puro
+    
+    // Tipografia
+    textTitle: '#1A1A1A',  // Quase Preto (Títulos e Contadores)
+    textBody: '#666666',   // Cinza Médio (Textos longos)
+    
+    // UI Elements
+    inputBg: '#F0F0F0',    // Fundo de input translúcido
+    
+    // Cores Semânticas (Glassmorphism & Tags)
+    // O fundo já utiliza rgba com 15% de opacidade direto no token para evitar 
+    // o uso de `opacity` na View, o que deixaria o texto transparente também.
+    semantic: {
+      danger: {
+        bg: 'rgba(235, 87, 87, 0.15)',
+        text: '#EB5757', // SOS / Perdido
+      },
+      warning: {
+        bg: 'rgba(242, 201, 76, 0.15)',
+        text: '#B8860B', // Aviso / Avistado
+      },
+      success: {
+        bg: 'rgba(39, 174, 96, 0.15)',
+        text: '#27AE60', // Sucesso / Achado
+      }
+    }
+  },
+  
+  shadows: {
+    // Tactile Design: React Native não aceita múltiplas sombras nativamente em uma única View.
+    // Esta configuração cria uma sombra de profundidade otimizada para iOS e a elevação correspondente no Android.
+    elevation1: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.06,
+      shadowRadius: 16,
+      elevation: 4, // Android shadow
+    },
+    // Sombras coloridas funcionam perfeitamente no iOS. 
+    // No Android (antes da API 28), sombras coloridas ignoram a cor e ficam pretas. 
+    // Para manter a consistência, garantimos a cor no iOS e uma elevação limpa no Android.
+    buttonGlow: {
+      shadowColor: '#1F5C4D',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.35,
+      shadowRadius: 20,
+      elevation: 8, 
+    }
+  },
+  
+  spacing: {
+    globalMargin: 20,
+    cardGap: 24,
+    padding: 16,
+  },
+  
+  radius: {
+    card: 16,
+    image: 20, // Nova regra do V2 para imagens em destaque
+    button: 100, // Pill shape
+  }
+} as const;
+
+// Opcional, mas recomendado: Exportar os tipos para uso com TypeScript e Styled-Components/Emotion
+export type Theme = typeof theme;
