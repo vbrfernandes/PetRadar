@@ -1,13 +1,38 @@
-# --- Backend (Python / FastAPI) ---
+# ==========================================
+# 1. VARIÁVEIS DE AMBIENTE E SEGREDOS
+# ==========================================
 .env
-inicializações.txt
-codigo_projeto_completo*.txt
-__pycache__/
-*.pyc
-venv/
-.venv/
+.env.*
+!.env.example
+*.pem
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.keystore
 
-# --- Mobile (React Native / Expo / Node) ---
+# ==========================================
+# 2. BACKEND (PYTHON / FASTAPI / ALEMBIC)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.sqlite3
+*.db
+
+# ==========================================
+# 3. MOBILE (REACT NATIVE / EXPO SDK 57 / NODE)
+# ==========================================
 node_modules/
 .expo/
 dist/
@@ -15,22 +40,47 @@ web-build/
 expo-env.d.ts
 .kotlin/
 *.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
 .metro-health-check*
 npm-debug.*
 yarn-debug.*
 yarn-error.*
-.DS_Store
-*.pem
-.env*.local
+lerna-debug.*
+.pnpm-debug.log*
 *.tsbuildinfo
+
+# Artefatos nativos gerados dinamicamente via prebuild/EAS
 mobile/ios/
 mobile/android/
+ios/
+android/
 
-# --- Arquivos temporários e relatórios ---
+# ==========================================
+# 4. SCRIPTS DE EXTRAÇÃO E DUMPS LOCAIS
+# ==========================================
+codigo_projeto_completo*.txt
+codigo_frontend_completo*.txt
 caminhos_pastas.py
 lista_de_pastas.txt
+inicializações.txt
+
+# ==========================================
+# 5. IDE, EDITORES E SISTEMA OPERACIONAL
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
