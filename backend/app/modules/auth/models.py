@@ -37,7 +37,7 @@ class UsuarioFisico(Base):
     id_usuario: Mapped[int] = mapped_column(primary_key=True, index=True)
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), unique=True, nullable=False)
     nome_completo: Mapped[str] = mapped_column(String(255), nullable=False)
-    tem_pet: Mapped[bool] = mapped_column(Boolean, default=False)
+    tem_pet: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     social_login_id: Mapped[str | None] = mapped_column(String(255))
     raio_pesquisa_km: Mapped[int] = mapped_column(default=10)
     pets: Mapped[list["Pet"]] = relationship("Pet", back_populates="usuario", cascade="all, delete-orphan")

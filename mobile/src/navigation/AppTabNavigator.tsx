@@ -33,9 +33,14 @@ function ProfileScreen() {
 
 export function AppTabNavigator() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      tabBar={() => null}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >     
       <Tab.Screen name="Feed" component={FeedScreen} />
-      <Tab.Screen name="SOS" component={SOSScreen} />
+      <Tab.Screen name="SO0S" component={SOSScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
   );

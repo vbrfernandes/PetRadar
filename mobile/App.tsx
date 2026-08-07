@@ -7,12 +7,15 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
 import EsqueceuSenhaScreen from './src/screens/EsqueceuSenhaScreen';
+import ProfileDetailScreen from './src/screens/ProfileDetailScreen';
+
 
 // Store do Zustand (Caminho corrigido para 'store' no singular)
 import { useAuthStore } from './src/store/useAuthStore'; 
 
 // Telas Reais
 import LoginScreen from './src/screens/LoginScreen';
+import MapScreen from './src/screens/MapScreen';
 import CadastroUserScreen from './src/screens/CadastroUserScreen';
 import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
 import CadastroONGScreen from './src/screens/CadastroONGScreen';
@@ -29,19 +32,15 @@ export type AuthStackParamList = {
 
 // Tipagem das Rotas da Aplicação Principal
 export type AppTabParamList = {
-  Feed: undefined;
+  Mapa: undefined;
   SOS: undefined;
   Perfil: undefined;
 };
 
 
 // Telas Temporárias
-const FeedScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>Feed de Animais (PostGIS)</Text>
-  </View>
-);
 
+const AppStack = createNativeStackNavigator();
 const SOSScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
     <Text>Alerta SOS</Text>
@@ -71,8 +70,14 @@ function AuthNavigator() {
 
 function AppNavigator() {
   return (
-    <AppTabs.Navigator screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}>
-      <AppTabs.Screen name="Feed" component={FeedScreen} />
+    <AppTabs.Navigator 
+      tabBar={() => null} 
+      screenOptions={{ 
+        headerShown: false, 
+        tabBarHideOnKeyboard: true 
+      }}
+    >
+      <AppTabs.Screen name="Mapa" component={MapScreen} />
       <AppTabs.Screen name="SOS" component={SOSScreen} />
       <AppTabs.Screen name="Perfil" component={ProfileScreen} />
     </AppTabs.Navigator>

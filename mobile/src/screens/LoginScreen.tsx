@@ -38,7 +38,7 @@ export default function LoginScreen({ navigation }: any) {
 
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleLogin = async () => {
+const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Atenção", "Preencha seu e-mail e senha para continuar.");
       return;
@@ -51,13 +51,15 @@ export default function LoginScreen({ navigation }: any) {
         senha: password,
       });
 
-      const { access_token } = response.data;
+      // Recebe o token e o objeto user retornado pela API
+      const { access_token, user } = response.data;
 
+      // Grava na store com o nome e tipo de conta corretos
       setAuth(access_token, {
-        id: "1",
-        name: email,
-        email: email,
-        isOng: false,
+        id: String(user.id_conta),
+        name: user.name,
+        email: user.email,
+        isOng: user.tipo_conta === "ONG",
       });
     } catch (error: any) {
       Alert.alert(

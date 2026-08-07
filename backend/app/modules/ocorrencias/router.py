@@ -81,3 +81,12 @@ async def listar_ocorrencias_proximas(
 
     resultado = await db.execute(query)
     return resultado.scalars().all()
+
+@router.get("/minhas", response_model=list[OcorrenciaResposta])
+async def listar_minhas_ocorrencias(
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(Ocorrencia).where(Ocorrencia.id_conta == conta_atual.id_conta).order_by(Ocorrencia.data_ocorrencia.desc())
+    resultado = await db.execute(query)
+    return resultado.scalars().all()

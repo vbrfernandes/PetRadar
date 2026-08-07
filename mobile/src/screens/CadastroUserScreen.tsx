@@ -9,7 +9,8 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  ScrollView
+  ScrollView,
+  Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +38,7 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
   const [nome, setNome] = useState('');
   const [cpf, setCpf] = useState('');
   const [telefone, setTelefone] = useState('');
+  const [temPet, setTemPet] = useState(false);
 
   // Etapa 2: Acesso
   const [email, setEmail] = useState('');
@@ -80,6 +82,7 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
         nome_completo: nome.trim(),
         cpf: cpf.trim(),
         telefone: telefone.trim(),
+        tem_pet: temPet,
         email: email.trim().toLowerCase(),
         senha: senha.trim(),
         localizacao_lat: lat,
@@ -136,11 +139,24 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
                 </View>
 
                 <View style={styles.inputWrapper}>
-                  <Text style={styles.label}>Telefone / WhatsApp *</Text>
+                  <Text style={styles.label}>Telefone *</Text>
                   <View style={styles.inputContainer}>
                     <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
                     <TextInput style={styles.input} placeholder="(00) 00000-0000" placeholderTextColor={COLORS.placeholder} keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
                   </View>
+                </View>
+
+                {/* SWITCH: POSSUI PET / CACHORRO */}
+                <View style={styles.switchRow}>
+                  <View style={{ flex: 1, paddingRight: 10 }}>
+                    <Text style={styles.switchLabel}>Possui cachorro / pet?</Text>
+                    <Text style={styles.switchSublabel}>Ajuda a personalizar os alertas de resgate e animais perdidos.</Text>
+                  </View>
+                  <Switch
+                    value={temPet}
+                    onValueChange={setTemPet}
+                    trackColor={{ false: '#CBD5E1', true: COLORS.accent }}
+                  />
                 </View>
 
                 <TouchableOpacity style={styles.submitButton} onPress={avançarEtapa1}>
@@ -216,6 +232,9 @@ const styles = StyleSheet.create({
   inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 14, paddingHorizontal: 16, height: 52, borderWidth: 1, borderColor: COLORS.border },
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 15, color: COLORS.textTitle, fontWeight: '500' },
+  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border, marginBottom: 14 },
+  switchLabel: { fontSize: 14, fontWeight: '600', color: COLORS.textTitle },
+  switchSublabel: { fontSize: 11, color: COLORS.textBody, marginTop: 2 },
   submitButton: { backgroundColor: COLORS.primary, borderRadius: 16, height: 54, justifyContent: 'center', alignItems: 'center', marginTop: 12 },
   buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },

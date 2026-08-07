@@ -71,7 +71,7 @@ async def criar_ong(db: AsyncSession, dados: ONGCriar) -> Conta:
     await db.commit()
     return nova_conta
 
-async def autenticar_usuario(db: AsyncSession, dados_login: LoginSchema) -> str:
+async def autenticar_usuario(db: AsyncSession, dados_login: LoginSchema) -> dict:
     query = select(Conta).where(Conta.email == dados_login.email)
     resultado = await db.execute(query)
     conta = resultado.scalar_one_or_none()
@@ -79,8 +79,33 @@ async def autenticar_usuario(db: AsyncSession, dados_login: LoginSchema) -> str:
     if not conta or not verificar_senha(dados_login.senha, conta.senha):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas.")
 
-    return criar_token_acesso(subjetivo=conta.id_conta)
+    token = criar_token_acesso(subjetivo=conta.id_conta)
 
+    # Busca o nome real de acordo com o tipo de conta
+    nome_exibicao = "Usuário"
+    if conta.tipo_conta == "PESSOA_FISICA":
+        query_usr = select(UsuarioFisico).where(UsuarioFisico.id_conta == conta.id_conta)
+        res_usr = await db.execute(query_usr)
+        usr = res_usr.scalar_one_or_none()
+        if usr and usr.nome_completo:
+            nome_exibicao = usr.nome_completo
+    elif conta.tipo_conta == "ONG":
+        query_ong = select(ONG).where(ONG.id_conta == conta.id_conta)
+        res_ong = await db.execute(query_ong)
+        ong = res_ong.scalar_one_or_none()
+        if ong and ong.nome_fantasia:
+            nome_exibicao = ong.nome_fantasia
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id_conta": conta.id_conta,
+            "email": conta.email,
+            "name": nome_exibicao,
+            "tipo_conta": conta.tipo_conta
+        }
+    }
 
 async def solicitar_codigo_recuperacao(db: AsyncSession, email: str):
     query = select(Conta).where(Conta.email == email)
@@ -115,3 +140,68 @@ async def redefinir_senha_com_codigo(db: AsyncSession, dados: RedefinirSenha):
     conta.codigo_recuperacao = None
     conta.codigo_recuperacao_expira = None
     await db.commit()
+
+async def obter_perfil_completo(db: AsyncSession, conta: Conta) -> dict:
+    dados = {
+        "id_conta": conta.id_conta,
+        "email": conta.email,
+        "tipo_conta": conta.tipo_conta,
+        "telefone": conta.telefone,
+        "foto_perfil": conta.foto_perfil,
+        "data_cadastro": conta.data_cadastro,
+    }
+    if conta.tipo_conta == "PESSOA_FISICA":
+        query = select(UsuarioFisico).where(UsuarioFisico.id_conta == conta.id_conta)
+        res = await db.execute(query)
+        usr = res.scalar_one_or_none()
+        if usr:
+            dados.update({
+                "nome_completo": usr.nome_completo,
+                "tem_pet": usr.tem_pet,
+                "raio_pesquisa_km": usr.raio_pesquisa_km
+            })
+    elif conta.tipo_conta == "ONG":
+        query = select(ONG).where(ONG.id_conta == conta.id_conta)
+        res = await db.execute(query)
+        ong = res.scalar_one_or_none()
+        if ong:
+            dados.update({
+                "cnpj": ong.cnpj,
+                "razao_social": ong.razao_social,
+                "nome_fantasia": ong.nome_fantasia,
+                "endereco_completo": ong.endereco_completo,
+                "nome_gestor": ong.nome_gestor,
+                "cpf_gestor": ong.cpf_gestor,
+            })
+    return dados
+
+async def atualizar_perfil(db: AsyncSession, conta: Conta, dados: PerfilAtualizacao) -> dict:
+
+    
+    if dados.telefone is not None:
+        conta.telefone = dados.telefone
+
+    if conta.tipo_conta == "PESSOA_FISICA":
+        query = select(UsuarioFisico).where(UsuarioFisico.id_conta == conta.id_conta)
+        res = await db.execute(query)
+        usr = res.scalar_one_or_none()
+        if usr:
+            if dados.nome is not None:
+                usr.nome_completo = dados.nome
+            if dados.raio_pesquisa_km is not None:
+                usr.raio_pesquisa_km = dados.raio_pesquisa_km
+            if dados.tem_pet is not None:
+                usr.tem_pet = dados.tem_pet
+    elif conta.tipo_conta == "ONG":
+        query = select(ONG).where(ONG.id_conta == conta.id_conta)
+        res = await db.execute(query)
+        ong = res.scalar_one_or_none()
+        if ong:
+            if dados.nome is not None:
+                ong.nome_fantasia = dados.nome
+            if dados.endereco_completo is not None:
+                ong.endereco_completo = dados.endereco_completo
+
+    await db.commit()
+    await db.refresh(conta)
+    return await obter_perfil_completo(db, conta)
