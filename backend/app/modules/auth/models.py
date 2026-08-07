@@ -1,3 +1,4 @@
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from sqlalchemy import String, DateTime, Numeric, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -21,6 +22,11 @@ class Conta(Base):
     )
     foto_perfil: Mapped[str | None] = mapped_column(String(500))
     data_cadastro: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    email_confirmado: Mapped[bool] = mapped_column(Boolean, default=False)
+    codigo_confirmacao: Mapped[str | None] = mapped_column(String(6))
+    codigo_recuperacao: Mapped[str | None] = mapped_column(String(6))
+    codigo_recuperacao_expira: Mapped[datetime | None] = mapped_column(DateTime)
 
     usuario_fisico: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="conta", uselist=False)
     ong: Mapped["ONG"] = relationship("ONG", back_populates="conta", uselist=False)

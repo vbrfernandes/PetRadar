@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,274 +7,291 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Alert,
+  ActivityIndicator,
   ScrollView,
-  TouchableWithoutFeedback,
-  Keyboard,
-} from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from '../theme/colors';
-import { useAuth } from '../contexts/AuthContext';
+import api from "../services/api";
+import { useAuthStore } from "../store/useAuthStore";
 
-type AuthStackParamList = {
-  Login: undefined;
-  CadastroUser: undefined;
-  CadastroONG: undefined;
-  TipoCadastro: undefined;
+const COLORS = {
+  primary: "#1F5C4D",
+  primaryLight: "#E8F5E9",
+  accent: "#10B981",
+  background: "#F4F7F6",
+  surface: "#FFFFFF",
+  textTitle: "#1A1A1A",
+  textBody: "#666666",
+  border: "#E2E8F0",
+  placeholder: "#A0AEC0",
 };
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
-
-export default function LoginScreen({ navigation }: Props) {
-  const { signIn } = useAuth();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginScreen({ navigation }: any) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
 
-  const passwordInputRef = useRef<TextInput>(null);
-
-  const validateEmail = (targetEmail: string) => /\S+@\S+\.\S+/.test(targetEmail);
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleLogin = async () => {
-    Keyboard.dismiss();
-
-    const cleanEmail = email.trim();
-    const cleanPassword = password.trim();
-
-    if (!cleanEmail || !cleanPassword) {
-      setErrorMsg('Por favor, preencha e-mail e senha.');
-      return;
-    }
-
-    if (!validateEmail(cleanEmail)) {
-      setErrorMsg('Por favor, insira um e-mail válido.');
+    if (!email || !password) {
+      Alert.alert("Atenção", "Preencha seu e-mail e senha para continuar.");
       return;
     }
 
     setIsLoading(true);
-    setErrorMsg('');
-
     try {
-      await signIn(cleanEmail, cleanPassword);
+      const response = await api.post("/auth/login", {
+        email: email.trim().toLowerCase(),
+        senha: password,
+      });
+
+      const { access_token } = response.data;
+
+      setAuth(access_token, {
+        id: "1",
+        name: email,
+        email: email,
+        isOng: false,
+      });
     } catch (error: any) {
-      const msg = error.response?.data?.detail || 'Credenciais inválidas ou erro de rede.';
-      setErrorMsg(msg);
-      Alert.alert('Falha na Autenticação', msg);
+      Alert.alert(
+        "Falha no Acesso",
+        error.response?.data?.detail ||
+          "Verifique suas credenciais e tente novamente.",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <Text style={styles.title}>PetRadar</Text>
-              <Text style={styles.subtitle}>Bem-vindo de volta! Faça login para continuar.</Text>
+          {/* Header com a Logo da aplicação */}
+          <View style={styles.header}>
+            <Image
+              source={require("../../assets/logo/logo.png")}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Form Card Premium */}
+          <View style={styles.card}>
+            {/* Input E-mail */}
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>E-mail</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color={COLORS.primary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="seuemail@exemplo.com"
+                  placeholderTextColor={COLORS.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
             </View>
 
-            <View style={styles.form}>
-              {errorMsg ? (
-                <View style={styles.errorContainer}>
-                  <Text style={styles.errorText}>{errorMsg}</Text>
-                </View>
-              ) : null}
-
-              <TextInput
-                style={styles.input}
-                placeholder="E-mail"
-                placeholderTextColor={theme.colors.textBody}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordInputRef.current?.focus()}
-                blurOnSubmit={false}
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (errorMsg) setErrorMsg('');
-                }}
-                editable={!isLoading}
-              />
-
-              <View style={styles.passwordWrapper}>
+            {/* Input Senha */}
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>Senha</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={COLORS.primary}
+                  style={styles.inputIcon}
+                />
                 <TextInput
-                  ref={passwordInputRef}
-                  style={[styles.input, styles.passwordInput]}
-                  placeholder="Senha"
-                  placeholderTextColor={theme.colors.textBody}
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor={COLORS.placeholder}
                   secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  returnKeyType="done"
-                  onSubmitEditing={handleLogin}
                   value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (errorMsg) setErrorMsg('');
-                  }}
-                  editable={!isLoading}
+                  onChangeText={setPassword}
                 />
                 <TouchableOpacity
-                  style={styles.toggleShow}
                   onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
                 >
-                  <Text style={styles.toggleShowText}>{showPassword ? 'Ocultar' : 'Exibir'}</Text>
+                  <Ionicons
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={20}
+                    color={COLORS.textBody}
+                  />
                 </TouchableOpacity>
               </View>
-
-              <TouchableOpacity style={styles.forgotPassword} disabled={isLoading}>
-                <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.button, theme.shadows.buttonGlow, isLoading && styles.buttonDisabled]}
-                onPress={handleLogin}
-                disabled={isLoading}
-                activeOpacity={0.8}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color={theme.colors.surface} />
-                ) : (
-                  <Text style={styles.buttonText}>Entrar</Text>
-                )}
-              </TouchableOpacity>
             </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Ainda não tem uma conta? </Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('TipoCadastro')}
-                disabled={isLoading}
-              >
-                <Text style={styles.linkText}>Cadastre-se</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Esqueceu a Senha */}
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => navigation.navigate("EsqueceuSenha")}
+            >
+              <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+            </TouchableOpacity>
+
+            {/* Botão Entrar */}
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              activeOpacity={0.8}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <View style={styles.buttonContent}>
+                  <Text style={styles.loginButtonText}>Entrar na Conta</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Ainda não possui uma conta? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("TipoCadastro")}
+            >
+              <Text style={styles.registerText}>Cadastre-se</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    padding: theme.spacing.globalMargin * 1.2,
-    justifyContent: 'center',
+    // justify: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 20,
   },
   header: {
-    marginBottom: theme.spacing.globalMargin * 2,
-    alignItems: 'center',
+    alignItems: "center",
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: theme.colors.brand,
+  logoImage: {
+    width: 220,
+    height: 180,
+  },
+  card: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.03)",
+  },
+  inputWrapper: {
+    marginBottom: 18,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.textTitle,
     marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  subtitle: {
-    fontSize: 15,
-    color: theme.colors.textBody,
-    textAlign: 'center',
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  form: {
-    width: '100%',
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.card,
-    padding: theme.spacing.padding,
-    marginBottom: theme.spacing.globalMargin,
+    flex: 1,
     fontSize: 16,
-    color: theme.colors.textTitle,
-    borderWidth: 1,
-    borderColor: theme.colors.inputBg,
+    color: COLORS.textTitle,
+    fontWeight: "500",
   },
-  passwordWrapper: {
-    position: 'relative',
-  },
-  passwordInput: {
-    paddingRight: 75,
-  },
-  toggleShow: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-  },
-  toggleShowText: {
-    color: theme.colors.brand,
-    fontSize: 13,
-    fontWeight: '600',
+  eyeIcon: {
+    padding: 6,
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: theme.spacing.globalMargin * 1.2,
+    alignSelf: "flex-end",
+    marginBottom: 24,
   },
   forgotPasswordText: {
-    color: theme.colors.brand,
+    color: COLORS.primary,
+    fontWeight: "600",
     fontSize: 14,
-    fontWeight: '600',
   },
-  button: {
-    backgroundColor: theme.colors.brand,
-    borderRadius: theme.radius.button,
-    paddingVertical: theme.spacing.padding,
-    alignItems: 'center',
-    justifyContent: 'center',
+  loginButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  buttonDisabled: {
-    opacity: 0.6,
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  buttonText: {
-    color: theme.colors.surface,
+  loginButtonText: {
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  errorContainer: {
-    backgroundColor: theme.colors.semantic.danger.bg,
-    padding: theme.spacing.padding,
-    borderRadius: theme.radius.card,
-    marginBottom: theme.spacing.globalMargin,
-  },
-  errorText: {
-    color: theme.colors.semantic.danger.text,
-    fontSize: 14,
-    textAlign: 'center',
+    fontWeight: "700",
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: theme.spacing.globalMargin * 2,
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 24,
   },
   footerText: {
-    color: theme.colors.textBody,
+    color: COLORS.textBody,
     fontSize: 15,
   },
-  linkText: {
-    color: theme.colors.action,
+  registerText: {
+    color: COLORS.primary,
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "700",
   },
 });

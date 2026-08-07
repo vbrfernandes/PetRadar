@@ -1,0 +1,3556 @@
+================================================================================
+ARQUITETURA DO PROJETO (ESTRUTURA DE DIRETÓRIOS E ARQUIVOS)
+================================================================================
+
+📁 src\backend\app
+├── core
+│   ├── cloudinary.py
+│   ├── config.py
+│   ├── database.py
+│   ├── deps.py
+│   └── security.py
+├── modules
+│   ├── auth
+│   │   ├── models.py
+│   │   ├── router.py
+│   │   ├── schemas.py
+│   │   └── service.py
+│   ├── chat
+│   │   └── models.py
+│   ├── engajamento
+│   │   └── models.py
+│   ├── ocorrencias
+│   │   ├── avistamento_router.py
+│   │   ├── models.py
+│   │   ├── router.py
+│   │   └── schemas.py
+│   ├── ong
+│   │   └── models.py
+│   └── pets
+│       ├── models.py
+│       ├── router.py
+│       └── schemas.py
+└── main.py
+
+📁 src\backend\alembic
+├── versions
+│   ├── 6ec9a90cf3ac_completar_modelos_der.py
+│   └── be3d516310b6_add_auth_verification_fields.py
+├── env.py
+└── script.py.mako
+
+📁 src\mobile
+├── .claude
+│   └── settings.json
+├── src
+│   ├── components
+│   │   └── AnimatedCTA.tsx
+│   ├── navigation
+│   │   ├── AppTabNavigator.tsx
+│   │   ├── AuthNavigator.tsx
+│   │   └── RootNavigator.tsx
+│   ├── screens
+│   │   ├── CadastroONGScreen.tsx
+│   │   ├── CadastroUserScreen.tsx
+│   │   ├── EsqueceuSenhaScreen.tsx
+│   │   ├── LoginScreen.tsx
+│   │   └── TipoCadastroScreen.tsx
+│   ├── services
+│   │   └── api.ts
+│   ├── store
+│   │   └── useAuthStore.ts
+│   ├── theme
+│   │   └── colors.ts
+│   └── types
+
+├── .env
+├── AGENTS.md
+├── app.json
+├── App.tsx
+├── CLAUDE.md
+├── exportar_frontend.py
+├── index.ts
+├── package.json
+└── tsconfig.json
+
+📄 ARQUIVOS DE CONFIGURAÇÃO DE RAIZ ADICIONADOS:
+  └── src\backend\docker-compose.yml
+  └── src\backend\alembic.ini
+  └── src\backend\.env
+  └── src\backend\alembic\env.py
+  └── src\mobile\package.json
+
+================================================================================
+CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
+================================================================================
+
+
+================================================================================
+CAMINHO: src\backend\app\main.py
+================================================================================
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
+from app.modules.auth.router import router as auth_router
+from app.modules.ocorrencias.router import router as ocorrencias_router
+from app.modules.ocorrencias.avistamento_router import router as avistamento_router
+from app.modules.pets.router import router as pets_router
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health", tags=["Healthcheck"])
+async def health_check():
+    return {"status": "ok", "app": settings.PROJECT_NAME}
+
+app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Autenticação"])
+app.include_router(ocorrencias_router, prefix=f"{settings.API_V1_STR}/ocorrencias", tags=["Ocorrências"])
+app.include_router(avistamento_router, prefix=f"{settings.API_V1_STR}/avistamentos", tags=["Avistamentos"])
+app.include_router(pets_router, prefix=f"{settings.API_V1_STR}/pets", tags=["Pets"])
+
+================================================================================
+CAMINHO: src\backend\app\core\cloudinary.py
+================================================================================
+
+import cloudinary
+import cloudinary.uploader
+from fastapi import UploadFile, HTTPException, status
+from app.core.config import settings
+
+cloudinary.config(
+    cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+    api_key=settings.CLOUDINARY_API_KEY,
+    api_secret=settings.CLOUDINARY_API_SECRET,
+    secure=True
+)
+
+async def upload_foto_pet(arquivo: UploadFile, pasta: str = "ocorrencias") -> str:
+    try:
+        conteudo = await arquivo.read()
+        resultado = cloudinary.uploader.upload(
+            conteudo,
+            folder=f"petradar/{pasta}",
+            transformation=[
+                {"width": 1080, "height": 1080, "crop": "limit"},
+                {"quality": "auto", "fetch_format": "auto"}
+            ]
+        )
+        return resultado.get("secure_url")
+    except Exception as erro:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao realizar upload da imagem: {str(erro)}"
+        )
+
+================================================================================
+CAMINHO: src\backend\app\core\config.py
+================================================================================
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "petRadar API"
+    API_V1_STR: str = "/api/v1"
+    
+    # Banco de Dados
+    POSTGRES_USER: str = "petradar_admin"
+    POSTGRES_PASSWORD: str = "petradar_pass_dev"
+    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_PORT: str = "5432"
+    POSTGRES_DB: str = "petradar_db"
+
+    # Segurança JWT
+    SECRET_KEY: str = "petradar_chave_secreta_super_segura_desenvolvimento_2026"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
+
+    # Cloudinary
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+
+    @property
+    def ASYNC_DATABASE_URL(self) -> str:
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+
+settings = Settings()
+
+================================================================================
+CAMINHO: src\backend\app\core\database.py
+================================================================================
+
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from app.core.config import settings
+
+engine = create_async_engine(settings.ASYNC_DATABASE_URL, echo=True, future=True)
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
+)
+
+class Base(DeclarativeBase):
+    pass
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+
+================================================================================
+CAMINHO: src\backend\app\core\deps.py
+================================================================================
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from app.core.config import settings
+from app.core.database import get_db
+from app.modules.auth.models import Conta
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+
+async def obter_conta_atual(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db)
+) -> Conta:
+    excecao_credenciais = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Não foi possível validar as credenciais.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        id_conta: str = payload.get("sub")
+        if id_conta is None:
+            raise excecao_credenciais
+    except JWTError:
+        raise excecao_credenciais
+
+    query = select(Conta).where(Conta.id_conta == int(id_conta))
+    resultado = await db.execute(query)
+    conta = resultado.scalar_one_or_none()
+
+    if conta is None:
+        raise excecao_credenciais
+    return conta
+
+================================================================================
+CAMINHO: src\backend\app\core\security.py
+================================================================================
+
+from datetime import datetime, timedelta, timezone
+from typing import Any
+from jose import jwt
+from passlib.context import CryptContext
+from app.core.config import settings
+
+contexto_senha = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verificar_senha(senha_plana: str, senha_hashed: str) -> bool:
+    return contexto_senha.verify(senha_plana, senha_hashed)
+
+def gerar_hash_senha(senha_plana: str) -> str:
+    return contexto_senha.hash(senha_plana)
+
+def criar_token_acesso(subjetivo: str | Any, tempo_expiracao: timedelta | None = None) -> str:
+    if tempo_expiracao:
+        expiracao = datetime.now(timezone.utc) + tempo_expiracao
+    else:
+        expiracao = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    dados_token = {"exp": expiracao, "sub": str(subjetivo)}
+    return jwt.encode(dados_token, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+================================================================================
+CAMINHO: src\backend\app\modules\auth\models.py
+================================================================================
+
+from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
+from sqlalchemy import String, DateTime, Numeric, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.core.database import Base
+from app.modules.pets.models import Pet
+from geoalchemy2 import Geometry
+
+class Conta(Base):
+    __tablename__ = "contas"
+
+    id_conta: Mapped[int] = mapped_column(primary_key=True, index=True)
+    tipo_conta: Mapped[str] = mapped_column(String(20), nullable=False) # PESSOA_FISICA | ONG
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    senha: Mapped[str] = mapped_column(String(255), nullable=False)
+    telefone: Mapped[str | None] = mapped_column(String(20))
+    localizacao_lat: Mapped[float | None] = mapped_column(Numeric(10, 8))
+    localizacao_lng: Mapped[float | None] = mapped_column(Numeric(11, 8))
+    localizacao: Mapped[bytes | None] = mapped_column(
+        Geometry("POINT", srid=4326, spatial_index=False), 
+        nullable=True
+    )
+    foto_perfil: Mapped[str | None] = mapped_column(String(500))
+    data_cadastro: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    email_confirmado: Mapped[bool] = mapped_column(Boolean, default=False)
+    codigo_confirmacao: Mapped[str | None] = mapped_column(String(6))
+    codigo_recuperacao: Mapped[str | None] = mapped_column(String(6))
+    codigo_recuperacao_expira: Mapped[datetime | None] = mapped_column(DateTime)
+
+    usuario_fisico: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="conta", uselist=False)
+    ong: Mapped["ONG"] = relationship("ONG", back_populates="conta", uselist=False)
+
+class UsuarioFisico(Base):
+    __tablename__ = "usuarios_fisicos"
+
+    id_usuario: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), unique=True, nullable=False)
+    nome_completo: Mapped[str] = mapped_column(String(255), nullable=False)
+    tem_pet: Mapped[bool] = mapped_column(Boolean, default=False)
+    social_login_id: Mapped[str | None] = mapped_column(String(255))
+    raio_pesquisa_km: Mapped[int] = mapped_column(default=10)
+    pets: Mapped[list["Pet"]] = relationship("Pet", back_populates="usuario", cascade="all, delete-orphan")
+
+    conta: Mapped["Conta"] = relationship("Conta", back_populates="usuario_fisico")
+
+class ONG(Base):
+    __tablename__ = "ongs"
+
+    id_ong: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), unique=True, nullable=False)
+    cnpj: Mapped[str] = mapped_column(String(18), unique=True, nullable=False)
+    razao_social: Mapped[str] = mapped_column(String(255), nullable=False)
+    nome_fantasia: Mapped[str] = mapped_column(String(255), nullable=False)
+    endereco_completo: Mapped[str] = mapped_column(String(500), nullable=False)
+    nome_gestor: Mapped[str] = mapped_column(String(255), nullable=False)
+    cpf_gestor: Mapped[str] = mapped_column(String(14), nullable=False)
+    comprovante_url: Mapped[str | None] = mapped_column(String(500))
+    selo_verificado: Mapped[bool] = mapped_column(Boolean, default=False)
+    oferece_lar_temporario: Mapped[bool] = mapped_column(Boolean, default=False)
+    vagas_emergenciais: Mapped[bool] = mapped_column(Boolean, default=False)
+    capacidade_total: Mapped[int | None] = mapped_column()
+    lotacao_atual: Mapped[int | None] = mapped_column()
+    link_prestacao_contas: Mapped[str | None] = mapped_column(String(500))
+
+    conta: Mapped["Conta"] = relationship("Conta", back_populates="ong")
+
+
+
+class EsqueceuSenhaSolicitacao(BaseModel):
+    email: EmailStr
+
+class RedefinirSenha(BaseModel):
+    email: EmailStr
+    codigo_verificacao: str = Field(min_length=6, max_length=6)
+    nova_senha: str = Field(min_length=6)
+
+
+
+================================================================================
+CAMINHO: src\backend\app\modules\auth\router.py
+================================================================================
+
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import get_db
+from app.modules.auth.schemas import UsuarioFisicoCriar, ONGCriar, LoginSchema, TokenSchema, ContaResposta
+from app.modules.auth import service
+
+router = APIRouter()
+
+@router.post("/registro/usuario", response_model=ContaResposta, status_code=status.HTTP_201_CREATED)
+async def registrar_usuario(dados: UsuarioFisicoCriar, db: AsyncSession = Depends(get_db)):
+    return await service.criar_usuario_fisico(db, dados)
+
+@router.post("/registro/ong", response_model=ContaResposta, status_code=status.HTTP_201_CREATED)
+async def registrar_ong(dados: ONGCriar, db: AsyncSession = Depends(get_db)):
+    return await service.criar_ong(db, dados)
+
+@router.post("/login", response_model=TokenSchema)
+async def login(dados: LoginSchema, db: AsyncSession = Depends(get_db)):
+    token = await service.autenticar_usuario(db, dados)
+    return {"access_token": token, "token_type": "bearer"}
+
+@router.post("/esqueceu-senha")
+async def solicitar_codigo(dados: EsqueceuSenhaSolicitacao, db: AsyncSession = Depends(get_db)):
+    await service.solicitar_codigo_recuperacao(db, dados.email)
+    return {"message": "Se o e-mail estiver cadastrado, o código foi enviado."}
+
+@router.post("/redefinir-senha")
+async def redefinir_senha(dados: RedefinirSenha, db: AsyncSession = Depends(get_db)):
+    await service.redefinir_senha_com_codigo(db, dados)
+    return {"message": "Senha alterada com sucesso!"}
+
+================================================================================
+CAMINHO: src\backend\app\modules\auth\schemas.py
+================================================================================
+
+from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime
+
+class UsuarioFisicoCriar(BaseModel):
+    email: EmailStr
+    senha: str = Field(min_length=6)
+    telefone: str | None = None
+    nome_completo: str
+    tem_pet: bool = False
+    raio_pesquisa_km: int = 10
+    localizacao_lat: float | None = None
+    localizacao_lng: float | None = None
+
+class ONGCriar(BaseModel):
+    email: EmailStr
+    senha: str = Field(min_length=6)
+    telefone: str
+    cnpj: str
+    razao_social: str
+    nome_fantasia: str
+    endereco_completo: str
+    nome_gestor: str
+    cpf_gestor: str
+    oferece_lar_temporario: bool = False
+    vagas_emergenciais: bool = False
+    capacidade_total: int | None = None
+    lotacao_atual: int | None = None
+    link_prestacao_contas: str | None = None
+    localizacao_lat: float | None = None
+    localizacao_lng: float | None = None
+
+class LoginSchema(BaseModel):
+    email: EmailStr
+    senha: str
+
+class TokenSchema(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class ContaResposta(BaseModel):
+    id_conta: int
+    email: EmailStr
+    tipo_conta: str
+    data_cadastro: datetime
+
+    class Config:
+        from_attributes = True
+
+================================================================================
+CAMINHO: src\backend\app\modules\auth\service.py
+================================================================================
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from fastapi import HTTPException, status
+from app.modules.auth.models import Conta, UsuarioFisico, ONG
+from app.modules.auth.schemas import UsuarioFisicoCriar, ONGCriar, LoginSchema
+from app.core.security import gerar_hash_senha, verificar_senha, criar_token_acesso
+import random
+from datetime import datetime, timedelta, timezone
+
+async def criar_usuario_fisico(db: AsyncSession, dados: UsuarioFisicoCriar) -> Conta:
+    query = select(Conta).where(Conta.email == dados.email)
+    resultado = await db.execute(query)
+    if resultado.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail já cadastrado.")
+
+    nova_conta = Conta(
+        tipo_conta="PESSOA_FISICA",
+        email=dados.email,
+        senha=gerar_hash_senha(dados.senha),
+        telefone=dados.telefone,
+        localizacao_lat=dados.localizacao_lat,
+        localizacao_lng=dados.localizacao_lng
+    )
+    db.add(nova_conta)
+    await db.commit()
+    await db.refresh(nova_conta)
+
+    novo_usuario = UsuarioFisico(
+        id_conta=nova_conta.id_conta,
+        nome_completo=dados.nome_completo,
+        tem_pet=dados.tem_pet,
+        raio_pesquisa_km=dados.raio_pesquisa_km
+    )
+    db.add(novo_usuario)
+    await db.commit()
+    return nova_conta
+
+async def criar_ong(db: AsyncSession, dados: ONGCriar) -> Conta:
+    query = select(Conta).where(Conta.email == dados.email)
+    resultado = await db.execute(query)
+    if resultado.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail já cadastrado.")
+
+    nova_conta = Conta(
+        tipo_conta="ONG",
+        email=dados.email,
+        senha=gerar_hash_senha(dados.senha),
+        telefone=dados.telefone,
+        localizacao_lat=dados.localizacao_lat,
+        localizacao_lng=dados.localizacao_lng
+    )
+    db.add(nova_conta)
+    await db.commit()
+    await db.refresh(nova_conta)
+
+    nova_ong = ONG(
+        id_conta=nova_conta.id_conta,
+        cnpj=dados.cnpj,
+        razao_social=dados.razao_social,
+        nome_fantasia=dados.nome_fantasia,
+        endereco_completo=dados.endereco_completo,
+        nome_gestor=dados.nome_gestor,
+        cpf_gestor=dados.cpf_gestor,
+        oferece_lar_temporario=dados.oferece_lar_temporario,
+        vagas_emergenciais=dados.vagas_emergenciais,
+        capacidade_total=dados.capacidade_total,
+        lotacao_atual=dados.lotacao_atual,
+        link_prestacao_contas=dados.link_prestacao_contas
+    )
+    db.add(nova_ong)
+    await db.commit()
+    return nova_conta
+
+async def autenticar_usuario(db: AsyncSession, dados_login: LoginSchema) -> str:
+    query = select(Conta).where(Conta.email == dados_login.email)
+    resultado = await db.execute(query)
+    conta = resultado.scalar_one_or_none()
+
+    if not conta or not verificar_senha(dados_login.senha, conta.senha):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas.")
+
+    return criar_token_acesso(subjetivo=conta.id_conta)
+
+
+async def solicitar_codigo_recuperacao(db: AsyncSession, email: str):
+    query = select(Conta).where(Conta.email == email)
+    resultado = await db.execute(query)
+    conta = resultado.scalar_one_or_none()
+    
+    if conta:
+        codigo = f"{random.randint(100000, 999999)}"
+        conta.codigo_recuperacao = codigo
+        conta.codigo_recuperacao_expira = datetime.now(timezone.utc) + timedelta(minutes=15)
+        await db.commit()
+        # TODO: Chavear a função de envio SMTP aqui
+        print(f"[SMTP MOCK] Código para {email}: {codigo}")
+
+async def redefinir_senha_com_codigo(db: AsyncSession, dados: RedefinirSenha):
+    query = select(Conta).where(Conta.email == dados.email)
+    resultado = await db.execute(query)
+    conta = resultado.scalar_one_or_none()
+
+    if not conta or conta.codigo_recuperacao != dados.codigo_verificacao:
+        raise HTTPException(status_code=400, detail="Código inválido ou expirado.")
+
+    if conta.codigo_recuperacao_expira and conta.codigo_recuperacao_expira.tzinfo is None:
+        expira = conta.codigo_recuperacao_expira.replace(tzinfo=timezone.utc)
+    else:
+        expira = conta.codigo_recuperacao_expira
+
+    if datetime.now(timezone.utc) > expira:
+        raise HTTPException(status_code=400, detail="Código expirado.")
+
+    conta.senha = gerar_hash_senha(dados.nova_senha)
+    conta.codigo_recuperacao = None
+    conta.codigo_recuperacao_expira = None
+    await db.commit()
+
+================================================================================
+CAMINHO: src\backend\app\modules\chat\models.py
+================================================================================
+
+# app/modules/chat/models.py
+from datetime import datetime
+from sqlalchemy import Text, DateTime, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
+from app.core.database import Base
+
+class MensagemChat(Base):
+    __tablename__ = "mensagens_chat"
+
+    id_mensagem: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_remetente_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
+    id_destinatario_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
+    conteudo: Mapped[str] = mapped_column(Text, nullable=False)
+    data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    lida: Mapped[bool] = mapped_column(Boolean, default=False)
+
+================================================================================
+CAMINHO: src\backend\app\modules\engajamento\models.py
+================================================================================
+
+from datetime import datetime
+from sqlalchemy import String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.core.database import Base
+
+class Interacao(Base):
+    __tablename__ = "interacoes"
+
+    id_interacao: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
+    id_ocorrencia: Mapped[int] = mapped_column(ForeignKey("ocorrencias.id_ocorrencia"), nullable=False)
+    
+    tipo_interacao: Mapped[str] = mapped_column(String(20), nullable=False) # FORCA | FAVORITO
+    data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class Comentario(Base):
+    __tablename__ = "comentarios"
+
+    id_comentario: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
+    id_ocorrencia: Mapped[int] = mapped_column(ForeignKey("ocorrencias.id_ocorrencia"), nullable=False)
+    
+    texto: Mapped[str] = mapped_column(Text, nullable=False)
+    data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class Denuncia(Base):
+    __tablename__ = "denuncias"
+
+    id_denuncia: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
+    id_ocorrencia: Mapped[int] = mapped_column(ForeignKey("ocorrencias.id_ocorrencia"), nullable=False)
+    
+    motivo: Mapped[str] = mapped_column(Text, nullable=False)
+    data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+================================================================================
+CAMINHO: src\backend\app\modules\ocorrencias\avistamento_router.py
+================================================================================
+
+from fastapi import APIRouter, Depends, UploadFile, File, Form, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from geoalchemy2.functions import ST_GeomFromText
+from app.core.database import get_db
+from app.core.deps import obter_conta_atual
+from app.core.cloudinary import upload_foto_pet
+from app.modules.auth.models import Conta
+from app.modules.ocorrencias.models import Avistamento
+
+router = APIRouter()
+
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def registrar_avistamento(
+    id_ocorrencia: int = Form(...),
+    latitude: float = Form(...),
+    longitude: float = Form(...),
+    eh_de_raca: bool = Form(False),
+    raca: str | None = Form(None),
+    observacao: str | None = Form(None),
+    foto: UploadFile | None = File(None),
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db)
+):
+    url_foto = None
+    if foto:
+        url_foto = await upload_foto_pet(foto, pasta="avistamentos")
+
+    ponto_wkt = f"POINT({longitude} {latitude})"
+
+    novo_avistamento = Avistamento(
+        id_ocorrencia=id_ocorrencia,
+        id_conta=conta_atual.id_conta,
+        eh_de_raca=eh_de_raca,
+        raca=raca,
+        localizacao=ST_GeomFromText(ponto_wkt, 4326),
+        foto=url_foto,
+        observacao=observacao
+    )
+
+    db.add(novo_avistamento)
+    await db.commit()
+    await db.refresh(novo_avistamento)
+
+    return {"status": "sucesso", "id_avistamento": novo_avistamento.id_avistamento}
+
+================================================================================
+CAMINHO: src\backend\app\modules\ocorrencias\models.py
+================================================================================
+
+from datetime import datetime
+from sqlalchemy import String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from geoalchemy2 import Geometry
+from app.core.database import Base
+
+class Ocorrencia(Base):
+    __tablename__ = "ocorrencias"
+
+    id_ocorrencia: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
+    
+    tipo_ocorrencia: Mapped[str] = mapped_column(String(50), nullable=False)
+    status_badge: Mapped[str] = mapped_column(String(20), nullable=False) # PERDIDO | AVISTADO
+    tipo_animal: Mapped[str] = mapped_column(String(50), nullable=False)
+    raca: Mapped[str | None] = mapped_column(String(100))
+    sexo: Mapped[str | None] = mapped_column(String(20))
+    cor: Mapped[str | None] = mapped_column(String(50))
+    porte: Mapped[str | None] = mapped_column(String(20))
+    idade: Mapped[str | None] = mapped_column(String(20))
+    saude_critica: Mapped[bool] = mapped_column(Boolean, default=False)
+    saude_detalhes: Mapped[str | None] = mapped_column(Text)
+    cuidados_iniciais: Mapped[str | None] = mapped_column(Text)
+    deficiencia: Mapped[bool] = mapped_column(Boolean, default=False)
+    deficiencia_detalhes: Mapped[str | None] = mapped_column(Text)
+    nivel_urgencia: Mapped[str] = mapped_column(String(20), default="Moderado")
+    data_ocorrencia: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    endereco_localizacao: Mapped[str | None] = mapped_column(String(500))
+    
+    localizacao: Mapped[bytes] = mapped_column(
+        Geometry(geometry_type="POINT", srid=4326, spatial_index=False), 
+        nullable=False
+    )
+    foto: Mapped[str] = mapped_column(String(500), nullable=False)
+    observacao: Mapped[str | None] = mapped_column(Text)
+
+    avistamentos: Mapped[list["Avistamento"]] = relationship("Avistamento", back_populates="ocorrencia")
+
+class Avistamento(Base):
+    __tablename__ = "avistamentos"
+
+    id_avistamento: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_ocorrencia: Mapped[int] = mapped_column(ForeignKey("ocorrencias.id_ocorrencia"), nullable=False)
+    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
+    
+    eh_de_raca: Mapped[bool] = mapped_column(Boolean, default=False)
+    raca: Mapped[str | None] = mapped_column(String(100))
+    data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    localizacao: Mapped[bytes] = mapped_column(
+        Geometry(geometry_type="POINT", srid=4326, spatial_index=False), 
+        nullable=False
+    )
+    foto: Mapped[str | None] = mapped_column(String(500))
+    observacao: Mapped[str | None] = mapped_column(Text)
+
+    ocorrencia: Mapped["Ocorrencia"] = relationship("Ocorrencia", back_populates="avistamentos")
+
+================================================================================
+CAMINHO: src\backend\app\modules\ocorrencias\router.py
+================================================================================
+
+from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from geoalchemy2.functions import ST_GeomFromText, ST_DWithin
+from app.core.database import get_db
+from app.core.deps import obter_conta_atual
+from app.core.cloudinary import upload_foto_pet
+from app.modules.auth.models import Conta
+from app.modules.ocorrencias.models import Ocorrencia
+from app.modules.ocorrencias.schemas import OcorrenciaResposta
+
+router = APIRouter()
+
+@router.post("/", response_model=OcorrenciaResposta, status_code=status.HTTP_201_CREATED)
+async def criar_ocorrencia(
+    tipo_ocorrencia: str = Form(...),
+    status_badge: str = Form(...),
+    tipo_animal: str = Form(...),
+    latitude: float = Form(...),
+    longitude: float = Form(...),
+    foto: UploadFile = File(...),
+    raca: str | None = Form(None),
+    sexo: str | None = Form(None),
+    cor: str | None = Form(None),
+    porte: str | None = Form(None),
+    idade: str | None = Form(None),
+    saude_critica: bool = Form(False),
+    saude_detalhes: str | None = Form(None),
+    cuidados_iniciais: str | None = Form(None),
+    deficiencia: bool = Form(False),
+    deficiencia_detalhes: str | None = Form(None),
+    nivel_urgencia: str = Form("Moderado"),
+    endereco_localizacao: str | None = Form(None),
+    observacao: str | None = Form(None),
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db)
+):
+    url_foto = await upload_foto_pet(foto, pasta="ocorrencias")
+    ponto_wkt = f"POINT({longitude} {latitude})"
+
+    nova_ocorrencia = Ocorrencia(
+        id_conta=conta_atual.id_conta,
+        tipo_ocorrencia=tipo_ocorrencia,
+        status_badge=status_badge,
+        tipo_animal=tipo_animal,
+        raca=raca,
+        sexo=sexo,
+        cor=cor,
+        porte=porte,
+        idade=idade,
+        saude_critica=saude_critica,
+        saude_detalhes=saude_detalhes,
+        cuidados_iniciais=cuidados_iniciais,
+        deficiencia=deficiencia,
+        deficiencia_detalhes=deficiencia_detalhes,
+        nivel_urgencia=nivel_urgencia,
+        endereco_localizacao=endereco_localizacao,
+        localizacao=ST_GeomFromText(ponto_wkt, 4326),
+        foto=url_foto,
+        observacao=observacao
+    )
+
+    db.add(nova_ocorrencia)
+    await db.commit()
+    await db.refresh(nova_ocorrencia)
+    return nova_ocorrencia
+
+@router.get("/proximas", response_model=list[OcorrenciaResposta])
+async def listar_ocorrencias_proximas(
+    lat: float = Query(...),
+    lng: float = Query(...),
+    raio_km: float = Query(10.0),
+    db: AsyncSession = Depends(get_db)
+):
+    ponto_usuario = ST_GeomFromText(f"POINT({lng} {lat})", 4326)
+    raio_metros = raio_km * 1000
+
+    query = select(Ocorrencia).where(
+        ST_DWithin(Ocorrencia.localizacao, ponto_usuario, raio_metros, use_spheroid=True)
+    )
+
+    resultado = await db.execute(query)
+    return resultado.scalars().all()
+
+================================================================================
+CAMINHO: src\backend\app\modules\ocorrencias\schemas.py
+================================================================================
+
+from pydantic import BaseModel
+from datetime import datetime
+
+class OcorrenciaCriar(BaseModel):
+    id_conta: int
+    tipo_ocorrencia: str
+    status_badge: str
+    tipo_animal: str
+    raca: str | None = None
+    sexo: str | None = None
+    cor: str | None = None
+    porte: str | None = None
+    idade: str | None = None
+    saude_critica: bool = False
+    saude_detalhes: str | None = None
+    cuidados_iniciais: str | None = None
+    deficiencia: bool = False
+    deficiencia_detalhes: str | None = None
+    nivel_urgencia: str = "Moderado"
+    endereco_localizacao: str | None = None
+    latitude: float
+    longitude: float
+    foto: str
+    observacao: str | None = None
+
+class OcorrenciaResposta(BaseModel):
+    id_ocorrencia: int
+    id_conta: int
+    tipo_ocorrencia: str
+    status_badge: str
+    tipo_animal: str
+    foto: str
+    nivel_urgencia: str
+    data_ocorrencia: datetime
+    endereco_localizacao: str | None = None
+
+    class Config:
+        from_attributes = True
+
+================================================================================
+CAMINHO: src\backend\app\modules\ong\models.py
+================================================================================
+
+# app/modules/ong/models.py
+from datetime import datetime
+from sqlalchemy import String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.core.database import Base
+
+class ProjetoAdocao(Base):
+    __tablename__ = "projetos_adocao"
+
+    id_projeto: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_ong: Mapped[int] = mapped_column(ForeignKey("ongs.id_ong"), nullable=False)
+    tipo_conteudo: Mapped[str] = mapped_column(String(20), nullable=False) # PROJETO | ADOCAO | INST
+    titulo: Mapped[str] = mapped_column(String(255), nullable=False)
+    descricao: Mapped[str] = mapped_column(Text, nullable=False)
+    foto: Mapped[str | None] = mapped_column(String(500))
+    data_publicacao: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class VoluntariadoSeguidor(Base):
+    __tablename__ = "voluntariados_seguidores"
+
+    id_relacao: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_usuario: Mapped[int] = mapped_column(ForeignKey("usuarios_fisicos.id_usuario"), nullable=False)
+    id_ong: Mapped[int] = mapped_column(ForeignKey("ongs.id_ong"), nullable=False)
+    tipo_relacao: Mapped[str] = mapped_column(String(20), nullable=False) # VOLUNTARIO | SEGUIDOR
+    data_inicio: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    status_aprovacao: Mapped[str] = mapped_column(String(20), default="PENDENTE")
+
+================================================================================
+CAMINHO: src\backend\app\modules\pets\models.py
+================================================================================
+
+from sqlalchemy import String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.core.database import Base
+
+class Pet(Base):
+    __tablename__ = "pets"
+
+    id_pet: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id_usuario: Mapped[int] = mapped_column(ForeignKey("usuarios_fisicos.id_usuario"), nullable=False)
+    
+    nome: Mapped[str] = mapped_column(String(100), nullable=False)
+    especie: Mapped[str] = mapped_column(String(50), nullable=False)
+    raca: Mapped[str | None] = mapped_column(String(100))
+    porte: Mapped[str | None] = mapped_column(String(20))
+    foto: Mapped[str | None] = mapped_column(String(500))
+
+    usuario: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="pets")
+
+================================================================================
+CAMINHO: src\backend\app\modules\pets\router.py
+================================================================================
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from app.core.database import get_db
+from app.core.deps import obter_conta_atual
+from app.core.cloudinary import upload_foto_pet
+from app.modules.auth.models import Conta, UsuarioFisico
+from app.modules.pets.models import Pet
+from app.modules.pets.schemas import PetResposta
+
+router = APIRouter()
+
+@router.post("/", response_model=PetResposta, status_code=status.HTTP_201_CREATED)
+async def cadastrar_pet(
+    nome: str = Form(...),
+    especie: str = Form(...),
+    raca: str | None = Form(None),
+    porte: str | None = Form(None),
+    foto: UploadFile | None = File(None),
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db)
+):
+    if conta_atual.tipo_conta != "PESSOA_FISICA":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Apenas contas de Pessoa Física podem cadastrar pets de tutor."
+        )
+
+    # Busca o perfil de usuario_fisico vinculado à conta
+    query_user = select(UsuarioFisico).where(UsuarioFisico.id_conta == conta_atual.id_conta)
+    user_res = await db.execute(query_user)
+    usuario = user_res.scalar_one_or_none()
+
+    url_foto = None
+    if foto:
+        url_foto = await upload_foto_pet(foto, pasta="pets")
+
+    novo_pet = Pet(
+        id_usuario=usuario.id_usuario,
+        nome=nome,
+        especie=especie,
+        raca=raca,
+        porte=porte,
+        foto=url_foto
+    )
+    
+    db.add(novo_pet)
+    await db.commit()
+    await db.refresh(novo_pet)
+    
+    return novo_pet
+
+@router.get("/meus", response_model=list[PetResposta])
+async def listar_meus_pets(
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db)
+):
+    query_user = select(UsuarioFisico).where(UsuarioFisico.id_conta == conta_atual.id_conta)
+    user_res = await db.execute(query_user)
+    usuario = user_res.scalar_one_or_none()
+
+    query_pets = select(Pet).where(Pet.id_usuario == usuario.id_usuario)
+    resultado = await db.execute(query_pets)
+    return resultado.scalars().all()
+
+================================================================================
+CAMINHO: src\backend\app\modules\pets\schemas.py
+================================================================================
+
+from pydantic import BaseModel
+
+class PetBase(BaseModel):
+    nome: str
+    especie: str
+    raca: str | None = None
+    porte: str | None = None
+
+class PetCriar(PetBase):
+    pass
+
+class PetResposta(PetBase):
+    id_pet: int
+    id_usuario: int
+    foto: str | None = None
+
+    class Config:
+        from_attributes = True
+
+================================================================================
+CAMINHO: src\backend\alembic\env.py
+================================================================================
+
+import asyncio
+from logging.config import fileConfig
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import async_engine_from_config
+from alembic import context
+
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath("."))
+
+import geoalchemy2  # noqa: F401
+from app.core.config import settings
+from app.core.database import Base
+# Importar os modelos para que o Alembic reconheça as tabelas nas migrações
+import app.modules.auth.models  # noqa: F401
+import app.modules.engajamento.models  # noqa: F401
+import app.modules.ocorrencias.models  # noqa: F401
+import app.modules.pets.models  # noqa: F401
+import app.modules.ong.models  # noqa: F401
+import app.modules.chat.models  # noqa: F401
+
+config = context.config
+config.set_main_option("sqlalchemy.url", settings.ASYNC_DATABASE_URL)
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+target_metadata = Base.metadata
+
+# Lista de tabelas nativas do PostGIS/TIGER a serem ignoradas pelo Alembic
+IGNORED_TABLES = {
+    'spatial_ref_sys', 'topology', 'layer', 'geom_cols',
+    'addr', 'addrfeat', 'bg', 'county', 'county_lookup',
+    'countysub_lookup', 'cousub', 'direction_lookup', 'edges',
+    'faces', 'featnames', 'geocode_settings', 'geocode_settings_default',
+    'loader_lookuptables', 'loader_platform', 'loader_variables',
+    'pagc_gaz', 'pagc_lex', 'pagc_rules', 'place', 'place_lookup',
+    'secondary_unit_lookup', 'state', 'state_lookup', 'street_type_lookup',
+    'tabblock', 'tabblock20', 'tract', 'zcta5', 'zip_lookup',
+    'zip_lookup_all', 'zip_lookup_base', 'zip_state', 'zip_state_loc'
+}
+
+def include_object(object, name, type_, reflected, compare_to):
+    """Filtra objetos do banco para não tentar excluir tabelas do PostGIS."""
+    if type_ == "table" and name in IGNORED_TABLES:
+        return False
+    return True
+
+def run_migrations_offline() -> None:
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+def do_run_migrations(connection):
+    context.configure(
+        connection=connection, 
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+async def run_async_migrations():
+    connectable = async_engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+    await connectable.dispose()
+
+def run_migrations_online() -> None:
+    asyncio.run(run_async_migrations())
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+
+================================================================================
+CAMINHO: src\backend\alembic\script.py.mako
+================================================================================
+
+"""${message}
+
+Revision ID: ${up_revision}
+Revises: ${down_revision | repr, n}
+Create Date: ${create_date}
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import geoalchemy2
+${imports if imports else ""}
+
+# revision identifiers, used by Alembic.
+revision: str = ${repr(up_revision)}
+down_revision: Union[str, None] = ${repr(down_revision)}
+branch_labels: Union[str, Sequence[str], None] = ${repr(branch_labels)}
+depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
+
+
+def upgrade() -> None:
+    ${upgrades if upgrades else "pass"}
+
+
+def downgrade() -> None:
+    ${downgrades if downgrades else "pass"}
+
+================================================================================
+CAMINHO: src\backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
+================================================================================
+
+"""completar_modelos_der
+
+Revision ID: 6ec9a90cf3ac
+Revises: None
+Create Date: 2026-08-04 19:53:45.818662
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import geoalchemy2
+
+
+# revision identifiers, used by Alembic.
+revision: str = '6ec9a90cf3ac'
+down_revision: Union[str, None] = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.create_table('contas',
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('tipo_conta', sa.String(length=20), nullable=False),
+    sa.Column('email', sa.String(length=255), nullable=False),
+    sa.Column('senha', sa.String(length=255), nullable=False),
+    sa.Column('telefone', sa.String(length=20), nullable=True),
+    sa.Column('localizacao_lat', sa.Numeric(precision=10, scale=8), nullable=True),
+    sa.Column('localizacao_lng', sa.Numeric(precision=11, scale=8), nullable=True),
+    sa.Column('localizacao', geoalchemy2.types.Geometry(geometry_type='POINT', srid=4326, dimension=2, spatial_index=False, from_text='ST_GeomFromEWKT', name='geometry'), nullable=True),
+    sa.Column('foto_perfil', sa.String(length=500), nullable=True),
+    sa.Column('data_cadastro', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id_conta')
+    )
+    op.create_index(op.f('ix_contas_email'), 'contas', ['email'], unique=True)
+    op.create_index(op.f('ix_contas_id_conta'), 'contas', ['id_conta'], unique=False)
+    op.create_table('mensagens_chat',
+    sa.Column('id_mensagem', sa.Integer(), nullable=False),
+    sa.Column('id_remetente_conta', sa.Integer(), nullable=False),
+    sa.Column('id_destinatario_conta', sa.Integer(), nullable=False),
+    sa.Column('conteudo', sa.Text(), nullable=False),
+    sa.Column('data_hora', sa.DateTime(), nullable=False),
+    sa.Column('lida', sa.Boolean(), nullable=False),
+    sa.ForeignKeyConstraint(['id_destinatario_conta'], ['contas.id_conta'], ),
+    sa.ForeignKeyConstraint(['id_remetente_conta'], ['contas.id_conta'], ),
+    sa.PrimaryKeyConstraint('id_mensagem')
+    )
+    op.create_index(op.f('ix_mensagens_chat_id_mensagem'), 'mensagens_chat', ['id_mensagem'], unique=False)
+    op.create_table('ocorrencias',
+    sa.Column('id_ocorrencia', sa.Integer(), nullable=False),
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('tipo_ocorrencia', sa.String(length=50), nullable=False),
+    sa.Column('status_badge', sa.String(length=20), nullable=False),
+    sa.Column('tipo_animal', sa.String(length=50), nullable=False),
+    sa.Column('raca', sa.String(length=100), nullable=True),
+    sa.Column('sexo', sa.String(length=20), nullable=True),
+    sa.Column('cor', sa.String(length=50), nullable=True),
+    sa.Column('porte', sa.String(length=20), nullable=True),
+    sa.Column('idade', sa.String(length=20), nullable=True),
+    sa.Column('saude_critica', sa.Boolean(), nullable=False),
+    sa.Column('saude_detalhes', sa.Text(), nullable=True),
+    sa.Column('cuidados_iniciais', sa.Text(), nullable=True),
+    sa.Column('deficiencia', sa.Boolean(), nullable=False),
+    sa.Column('deficiencia_detalhes', sa.Text(), nullable=True),
+    sa.Column('nivel_urgencia', sa.String(length=20), nullable=False),
+    sa.Column('data_ocorrencia', sa.DateTime(), nullable=False),
+    sa.Column('endereco_localizacao', sa.String(length=500), nullable=True),
+    sa.Column('localizacao', geoalchemy2.types.Geometry(geometry_type='POINT', srid=4326, dimension=2, spatial_index=False, from_text='ST_GeomFromEWKT', name='geometry', nullable=False), nullable=False),
+    sa.Column('foto', sa.String(length=500), nullable=False),
+    sa.Column('observacao', sa.Text(), nullable=True),
+    sa.ForeignKeyConstraint(['id_conta'], ['contas.id_conta'], ),
+    sa.PrimaryKeyConstraint('id_ocorrencia')
+    )
+    op.create_index(op.f('ix_ocorrencias_id_ocorrencia'), 'ocorrencias', ['id_ocorrencia'], unique=False)
+    op.create_table('ongs',
+    sa.Column('id_ong', sa.Integer(), nullable=False),
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('cnpj', sa.String(length=18), nullable=False),
+    sa.Column('razao_social', sa.String(length=255), nullable=False),
+    sa.Column('nome_fantasia', sa.String(length=255), nullable=False),
+    sa.Column('endereco_completo', sa.String(length=500), nullable=False),
+    sa.Column('nome_gestor', sa.String(length=255), nullable=False),
+    sa.Column('cpf_gestor', sa.String(length=14), nullable=False),
+    sa.Column('comprovante_url', sa.String(length=500), nullable=True),
+    sa.Column('selo_verificado', sa.Boolean(), nullable=False),
+    sa.Column('oferece_lar_temporario', sa.Boolean(), nullable=False),
+    sa.Column('vagas_emergenciais', sa.Boolean(), nullable=False),
+    sa.Column('capacidade_total', sa.Integer(), nullable=True),
+    sa.Column('lotacao_atual', sa.Integer(), nullable=True),
+    sa.Column('link_prestacao_contas', sa.String(length=500), nullable=True),
+    sa.ForeignKeyConstraint(['id_conta'], ['contas.id_conta'], ),
+    sa.PrimaryKeyConstraint('id_ong'),
+    sa.UniqueConstraint('cnpj'),
+    sa.UniqueConstraint('id_conta')
+    )
+    op.create_index(op.f('ix_ongs_id_ong'), 'ongs', ['id_ong'], unique=False)
+    op.create_table('usuarios_fisicos',
+    sa.Column('id_usuario', sa.Integer(), nullable=False),
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('nome_completo', sa.String(length=255), nullable=False),
+    sa.Column('tem_pet', sa.Boolean(), nullable=False),
+    sa.Column('social_login_id', sa.String(length=255), nullable=True),
+    sa.Column('raio_pesquisa_km', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['id_conta'], ['contas.id_conta'], ),
+    sa.PrimaryKeyConstraint('id_usuario'),
+    sa.UniqueConstraint('id_conta')
+    )
+    op.create_index(op.f('ix_usuarios_fisicos_id_usuario'), 'usuarios_fisicos', ['id_usuario'], unique=False)
+    op.create_table('avistamentos',
+    sa.Column('id_avistamento', sa.Integer(), nullable=False),
+    sa.Column('id_ocorrencia', sa.Integer(), nullable=False),
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('eh_de_raca', sa.Boolean(), nullable=False),
+    sa.Column('raca', sa.String(length=100), nullable=True),
+    sa.Column('data_hora', sa.DateTime(), nullable=False),
+    sa.Column('localizacao', geoalchemy2.types.Geometry(geometry_type='POINT', srid=4326, dimension=2, spatial_index=False, from_text='ST_GeomFromEWKT', name='geometry', nullable=False), nullable=False),
+    sa.Column('foto', sa.String(length=500), nullable=True),
+    sa.Column('observacao', sa.Text(), nullable=True),
+    sa.ForeignKeyConstraint(['id_conta'], ['contas.id_conta'], ),
+    sa.ForeignKeyConstraint(['id_ocorrencia'], ['ocorrencias.id_ocorrencia'], ),
+    sa.PrimaryKeyConstraint('id_avistamento')
+    )
+    op.create_index(op.f('ix_avistamentos_id_avistamento'), 'avistamentos', ['id_avistamento'], unique=False)
+    op.create_table('comentarios',
+    sa.Column('id_comentario', sa.Integer(), nullable=False),
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('id_ocorrencia', sa.Integer(), nullable=False),
+    sa.Column('texto', sa.Text(), nullable=False),
+    sa.Column('data_hora', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['id_conta'], ['contas.id_conta'], ),
+    sa.ForeignKeyConstraint(['id_ocorrencia'], ['ocorrencias.id_ocorrencia'], ),
+    sa.PrimaryKeyConstraint('id_comentario')
+    )
+    op.create_index(op.f('ix_comentarios_id_comentario'), 'comentarios', ['id_comentario'], unique=False)
+    op.create_table('denuncias',
+    sa.Column('id_denuncia', sa.Integer(), nullable=False),
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('id_ocorrencia', sa.Integer(), nullable=False),
+    sa.Column('motivo', sa.Text(), nullable=False),
+    sa.Column('data_hora', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['id_conta'], ['contas.id_conta'], ),
+    sa.ForeignKeyConstraint(['id_ocorrencia'], ['ocorrencias.id_ocorrencia'], ),
+    sa.PrimaryKeyConstraint('id_denuncia')
+    )
+    op.create_index(op.f('ix_denuncias_id_denuncia'), 'denuncias', ['id_denuncia'], unique=False)
+    op.create_table('interacoes',
+    sa.Column('id_interacao', sa.Integer(), nullable=False),
+    sa.Column('id_conta', sa.Integer(), nullable=False),
+    sa.Column('id_ocorrencia', sa.Integer(), nullable=False),
+    sa.Column('tipo_interacao', sa.String(length=20), nullable=False),
+    sa.Column('data_hora', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['id_conta'], ['contas.id_conta'], ),
+    sa.ForeignKeyConstraint(['id_ocorrencia'], ['ocorrencias.id_ocorrencia'], ),
+    sa.PrimaryKeyConstraint('id_interacao')
+    )
+    op.create_index(op.f('ix_interacoes_id_interacao'), 'interacoes', ['id_interacao'], unique=False)
+    op.create_table('pets',
+    sa.Column('id_pet', sa.Integer(), nullable=False),
+    sa.Column('id_usuario', sa.Integer(), nullable=False),
+    sa.Column('nome', sa.String(length=100), nullable=False),
+    sa.Column('especie', sa.String(length=50), nullable=False),
+    sa.Column('raca', sa.String(length=100), nullable=True),
+    sa.Column('porte', sa.String(length=20), nullable=True),
+    sa.Column('foto', sa.String(length=500), nullable=True),
+    sa.ForeignKeyConstraint(['id_usuario'], ['usuarios_fisicos.id_usuario'], ),
+    sa.PrimaryKeyConstraint('id_pet')
+    )
+    op.create_index(op.f('ix_pets_id_pet'), 'pets', ['id_pet'], unique=False)
+    op.create_table('projetos_adocao',
+    sa.Column('id_projeto', sa.Integer(), nullable=False),
+    sa.Column('id_ong', sa.Integer(), nullable=False),
+    sa.Column('tipo_conteudo', sa.String(length=20), nullable=False),
+    sa.Column('titulo', sa.String(length=255), nullable=False),
+    sa.Column('descricao', sa.Text(), nullable=False),
+    sa.Column('foto', sa.String(length=500), nullable=True),
+    sa.Column('data_publicacao', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['id_ong'], ['ongs.id_ong'], ),
+    sa.PrimaryKeyConstraint('id_projeto')
+    )
+    op.create_index(op.f('ix_projetos_adocao_id_projeto'), 'projetos_adocao', ['id_projeto'], unique=False)
+    op.create_table('voluntariados_seguidores',
+    sa.Column('id_relacao', sa.Integer(), nullable=False),
+    sa.Column('id_usuario', sa.Integer(), nullable=False),
+    sa.Column('id_ong', sa.Integer(), nullable=False),
+    sa.Column('tipo_relacao', sa.String(length=20), nullable=False),
+    sa.Column('data_inicio', sa.DateTime(), nullable=False),
+    sa.Column('status_aprovacao', sa.String(length=20), nullable=False),
+    sa.ForeignKeyConstraint(['id_ong'], ['ongs.id_ong'], ),
+    sa.ForeignKeyConstraint(['id_usuario'], ['usuarios_fisicos.id_usuario'], ),
+    sa.PrimaryKeyConstraint('id_relacao')
+    )
+    op.create_index(op.f('ix_voluntariados_seguidores_id_relacao'), 'voluntariados_seguidores', ['id_relacao'], unique=False)
+    # ### end Alembic commands ###
+
+
+def downgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f('ix_voluntariados_seguidores_id_relacao'), table_name='voluntariados_seguidores')
+    op.drop_table('voluntariados_seguidores')
+    op.drop_index(op.f('ix_projetos_adocao_id_projeto'), table_name='projetos_adocao')
+    op.drop_table('projetos_adocao')
+    op.drop_index(op.f('ix_pets_id_pet'), table_name='pets')
+    op.drop_table('pets')
+    op.drop_index(op.f('ix_interacoes_id_interacao'), table_name='interacoes')
+    op.drop_table('interacoes')
+    op.drop_index(op.f('ix_denuncias_id_denuncia'), table_name='denuncias')
+    op.drop_table('denuncias')
+    op.drop_index(op.f('ix_comentarios_id_comentario'), table_name='comentarios')
+    op.drop_table('comentarios')
+    op.drop_index(op.f('ix_avistamentos_id_avistamento'), table_name='avistamentos')
+    op.drop_table('avistamentos')
+    op.drop_index(op.f('ix_usuarios_fisicos_id_usuario'), table_name='usuarios_fisicos')
+    op.drop_table('usuarios_fisicos')
+    op.drop_index(op.f('ix_ongs_id_ong'), table_name='ongs')
+    op.drop_table('ongs')
+    op.drop_index(op.f('ix_ocorrencias_id_ocorrencia'), table_name='ocorrencias')
+    op.drop_table('ocorrencias')
+    op.drop_index(op.f('ix_mensagens_chat_id_mensagem'), table_name='mensagens_chat')
+    op.drop_table('mensagens_chat')
+    op.drop_index(op.f('ix_contas_id_conta'), table_name='contas')
+    op.drop_index(op.f('ix_contas_email'), table_name='contas')
+    op.drop_table('contas')
+    # ### end Alembic commands ###
+
+================================================================================
+CAMINHO: src\backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
+================================================================================
+
+"""add_auth_verification_fields
+
+Revision ID: be3d516310b6
+Revises: '6ec9a90cf3ac'
+Create Date: 2026-08-06 19:14:07.663789
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import geoalchemy2
+
+
+# revision identifiers, used by Alembic.
+revision: str = 'be3d516310b6'
+down_revision: Union[str, None] = '6ec9a90cf3ac'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.add_column('contas', sa.Column('email_confirmado', sa.Boolean(), nullable=False))
+    op.add_column('contas', sa.Column('codigo_confirmacao', sa.String(length=6), nullable=True))
+    op.add_column('contas', sa.Column('codigo_recuperacao', sa.String(length=6), nullable=True))
+    op.add_column('contas', sa.Column('codigo_recuperacao_expira', sa.DateTime(), nullable=True))
+    # ### end Alembic commands ###
+
+
+def downgrade() -> None:
+    # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_column('contas', 'codigo_recuperacao_expira')
+    op.drop_column('contas', 'codigo_recuperacao')
+    op.drop_column('contas', 'codigo_confirmacao')
+    op.drop_column('contas', 'email_confirmado')
+    # ### end Alembic commands ###
+
+================================================================================
+CAMINHO: src\mobile\.env
+================================================================================
+
+EXPO_PUBLIC_API_URL=http://192.168.0.5:8000/api/v1
+
+================================================================================
+CAMINHO: src\mobile\AGENTS.md
+================================================================================
+
+# Expo HAS CHANGED
+
+Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
+
+
+================================================================================
+CAMINHO: src\mobile\app.json
+================================================================================
+
+{
+  "expo": {
+    "name": "mobile",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
+
+
+================================================================================
+CAMINHO: src\mobile\App.tsx
+================================================================================
+
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider as PaperProvider } from 'react-native-paper';
+import EsqueceuSenhaScreen from './src/screens/EsqueceuSenhaScreen';
+
+// Store do Zustand (Caminho corrigido para 'store' no singular)
+import { useAuthStore } from './src/store/useAuthStore'; 
+
+// Telas Reais
+import LoginScreen from './src/screens/LoginScreen';
+import CadastroUserScreen from './src/screens/CadastroUserScreen';
+import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
+import CadastroONGScreen from './src/screens/CadastroONGScreen';
+
+// Tipagem das Rotas do Autenticação
+export type AuthStackParamList = {
+  Login: undefined;
+  TipoCadastro: undefined;
+  CadastroUser: undefined;
+  CadastroONG: undefined;
+  EsqueceuSenha: undefined;
+};
+
+
+// Tipagem das Rotas da Aplicação Principal
+export type AppTabParamList = {
+  Feed: undefined;
+  SOS: undefined;
+  Perfil: undefined;
+};
+
+
+// Telas Temporárias
+const FeedScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>Feed de Animais (PostGIS)</Text>
+  </View>
+);
+
+const SOSScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>Alerta SOS</Text>
+  </View>
+);
+
+const ProfileScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>Meu Perfil</Text>
+  </View>
+);
+
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const AppTabs = createBottomTabNavigator<AppTabParamList>();
+
+function AuthNavigator() {
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="TipoCadastro" component={TipoCadastroScreen} />
+      <AuthStack.Screen name="CadastroUser" component={CadastroUserScreen} />
+      <AuthStack.Screen name="CadastroONG" component={CadastroONGScreen} />
+      <AuthStack.Screen name="EsqueceuSenha" component={EsqueceuSenhaScreen} />
+    </AuthStack.Navigator>
+  );
+}
+
+function AppNavigator() {
+  return (
+    <AppTabs.Navigator screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}>
+      <AppTabs.Screen name="Feed" component={FeedScreen} />
+      <AppTabs.Screen name="SOS" component={SOSScreen} />
+      <AppTabs.Screen name="Perfil" component={ProfileScreen} />
+    </AppTabs.Navigator>
+  );
+}
+
+function Routes() {
+  const { isAuthenticated } = useAuthStore();
+
+  return isAuthenticated ? <AppNavigator /> : <AuthNavigator />;
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <PaperProvider>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <Routes />
+        </NavigationContainer>
+      </PaperProvider>
+    </SafeAreaProvider>
+  );
+}
+
+================================================================================
+CAMINHO: src\mobile\CLAUDE.md
+================================================================================
+
+@AGENTS.md
+
+
+================================================================================
+CAMINHO: src\mobile\exportar_frontend.py
+================================================================================
+
+import os
+from pathlib import Path
+from typing import Set
+
+# Caminho do projeto React Native / Expo
+DIRETORIO_ALVO = Path(
+    r"D:\Pesquisa Pucminas\Pesquisa de animais errantes\PetRadar\pmv-ads-2026-1-e2-proj-int-t6-pmv-ads-2026-1-e2-proj-int-t6-IntApplicationProject-Template-8827313f65d1bdbbcd7921e29482da59512116ae\src\mobile"
+)
+
+ARQUIVO_SAIDA = "codigo_frontend_completo.txt"
+
+# 1. Ignorar pastas de build, dependências e artefatos
+PASTAS_IGNORADAS: Set[str] = {
+    "node_modules", ".expo", "android", "ios", "assets",
+    ".git", ".vscode", ".idea", "build", "dist", ".bundle"
+}
+
+# 2. Ignorar trava de dependências e binários pesados (Poluição Visual/Contexto)
+ARQUIVOS_IGNORADOS: Set[str] = {
+    "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb",
+    ARQUIVO_SAIDA, "exportar_frontend.py"
+}
+
+# 3. Whitelist: Apenas extensões cruciais para arquitetura e manutenção
+EXTENSOES_RELEVANTES: Set[str] = {
+    ".ts", ".tsx", ".js", ".jsx", ".json", ".env.example", ".md"
+}
+
+TAMANHO_MAXIMO_KB = 500  # Evita estourar memória lendo arquivos gigantes acidentais
+
+
+def gerar_arvore_diretorios(diretorio: Path, prefixo: str = "") -> str:
+    """Gera visualização hierárquica do projeto para mapeamento rápido de arquitetura."""
+    linhas = []
+    itens = sorted(
+        [
+            item for item in diretorio.iterdir()
+            if item.name not in PASTAS_IGNORADAS and not item.name.startswith(".")
+        ],
+        key=lambda x: (not x.is_dir(), x.name.lower())
+    )
+
+    for index, item in enumerate(itens):
+        e_ultimo = (index == len(itens) - 1)
+        conector = "└── " if e_ultimo else "├── "
+        linhas.append(f"{prefixo}{conector}{item.name}")
+
+        if item.is_dir():
+            extensao_prefixo = "    " if e_ultimo else "│   "
+            linhas.append(gerar_arvore_diretorios(item, prefixo + extensao_prefixo))
+
+    return "\n".join(linhas)
+
+
+def exportar_codigo(diretorio_raiz: Path) -> None:
+    caminho_saida = Path(__file__).parent / ARQUIVO_SAIDA
+
+    if not diretorio_raiz.exists():
+        print(f"[Erro] Diretório não encontrado: {diretorio_raiz}")
+        return
+
+    with open(caminho_saida, "w", encoding="utf-8") as saida:
+        # Cabeçalho 1: Árvore do Projeto (Essencial para IA/Code Review entender a estrutura)
+        saida.write("=" * 80 + "\n")
+        saida.write("ARQUITETURA DO PROJETO (MAPA DE DIRETÓRIOS)\n")
+        saida.write("=" * 80 + "\n\n")
+        saida.write(f"{diretorio_raiz.name}/\n")
+        saida.write(gerar_arvore_diretorios(diretorio_raiz) + "\n\n")
+
+        # Cabeçalho 2: Conteúdo dos Arquivos de Código
+        saida.write("=" * 80 + "\n")
+        saida.write("CÓDIGO FONTE E CONFIGURAÇÕES DE MANUTENÇÃO\n")
+        saida.write("=" * 80 + "\n\n")
+
+        for caminho in diretorio_raiz.rglob("*"):
+            # Validações de exclusão
+            if caminho.is_dir():
+                continue
+            if any(part in PASTAS_IGNORADAS for part in caminho.parts):
+                continue
+            if caminho.name in ARQUIVOS_IGNORADOS:
+                continue
+            if caminho.suffix.lower() not in EXTENSOES_RELEVANTES:
+                continue
+            if caminho.stat().st_size > (TAMANHO_MAXIMO_KB * 1024):
+                continue
+
+            caminho_relativo = caminho.relative_to(diretorio_raiz)
+
+            saida.write(f"\n{'=' * 80}\n")
+            saida.write(f"CAMINHO: {caminho_relativo}\n")
+            saida.write(f"{'=' * 80}\n\n")
+
+            try:
+                conteudo = caminho.read_text(encoding="utf-8", errors="ignore")
+                saida.write(conteudo + "\n")
+            except Exception as erro:
+                saida.write(f"[Erro ao ler o arquivo: {erro}]\n")
+
+    print(f"Exportação concluída! Arquivo consolidado salvo em: {caminho_saida}")
+
+
+if __name__ == "__main__":
+    exportar_codigo(DIRETORIO_ALVO)
+
+================================================================================
+CAMINHO: src\mobile\index.ts
+================================================================================
+
+import { registerRootComponent } from 'expo';
+
+import App from './App';
+
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+registerRootComponent(App);
+
+
+================================================================================
+CAMINHO: src\mobile\package.json
+================================================================================
+
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^7.18.14",
+    "@react-navigation/native": "^7.3.14",
+    "@react-navigation/native-stack": "^7.18.6",
+    "axios": "^1.19.0",
+    "expo": "~54.0.0",
+    "expo-blur": "~15.0.8",
+    "expo-haptics": "~15.0.8",
+    "expo-image-picker": "~17.0.11",
+    "expo-location": "~19.0.8",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-paper": "^5.15.3",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
+}
+
+
+================================================================================
+CAMINHO: src\mobile\tsconfig.json
+================================================================================
+
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true
+  }
+}
+
+
+================================================================================
+CAMINHO: src\mobile\.claude\settings.json
+================================================================================
+
+{
+  "enabledPlugins": {
+    "expo@claude-plugins-official": true
+  }
+}
+
+
+================================================================================
+CAMINHO: src\mobile\src\components\AnimatedCTA.tsx
+================================================================================
+
+import React, { useRef } from 'react';
+import { Animated, TouchableWithoutFeedback, Text, StyleSheet } from 'react-native';
+import { theme } from '../theme/colors';
+
+
+interface Props {
+  title: string;
+  onPress: () => void;
+  style?: object;
+}
+
+export default function AnimatedCTA({ title, onPress, style }: Props) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      speed: 20,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      bounciness: 10,
+    }).start();
+  };
+
+  return (
+    <TouchableWithoutFeedback
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={onPress}
+    >
+      <Animated.View style={[styles.button, style, { transform: [{ scale: scaleAnim }] }]}>
+        <Text style={styles.text}>{title}</Text>
+      </Animated.View>
+    </TouchableWithoutFeedback>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: theme.colors.action,
+    borderRadius: theme.radius.button,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.shadows.buttonGlow,
+  },
+  text: {
+    color: theme.colors.surface,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
+================================================================================
+CAMINHO: src\mobile\src\navigation\AppTabNavigator.tsx
+================================================================================
+
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Text, View, Button } from 'react-native';
+import { useAuthStore } from '../store/useAuthStore';
+
+const Tab = createBottomTabNavigator();
+
+function FeedScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Feed / Mapa de Pets</Text>
+    </View>
+  );
+}
+
+function SOSScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Reportar Pet Perdido / Encontrado</Text>
+    </View>
+  );
+}
+
+function ProfileScreen() {
+  const { user, logout } = useAuthStore();
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Perfil de {user?.name}</Text>
+      <Button title="Sair" onPress={logout} />
+    </View>
+  );
+}
+
+export function AppTabNavigator() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Feed" component={FeedScreen} />
+      <Tab.Screen name="SOS" component={SOSScreen} />
+      <Tab.Screen name="Perfil" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+================================================================================
+CAMINHO: src\mobile\src\navigation\AuthNavigator.tsx
+================================================================================
+
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text, View, Button } from 'react-native';
+import { useAuthStore } from '../store/useAuthStore';
+
+const Stack = createNativeStackNavigator();
+
+// Telas temporárias para validação
+function LoginScreen() {
+  const setAuth = useAuthStore((state) => state.setAuth);
+
+  const handleFakeLogin = () => {
+    setAuth('fake-jwt-token-123', {
+      id: '1',
+      name: 'Usuário Teste',
+      email: 'teste@petradar.com',
+      isOng: false,
+    });
+  };
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Tela de Login</Text>
+      <Button title="Entrar (Simular Auth)" onPress={handleFakeLogin} />
+    </View>
+  );
+}
+
+export function AuthNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+    </Stack.Navigator>
+  );
+}
+
+================================================================================
+CAMINHO: src\mobile\src\navigation\RootNavigator.tsx
+================================================================================
+
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { useAuthStore } from '../store/useAuthStore';
+import { AuthNavigator } from './AuthNavigator';
+import { AppTabNavigator } from './AppTabNavigator';
+
+export function RootNavigator() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <AppTabNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
+  );
+}
+
+================================================================================
+CAMINHO: src\mobile\src\screens\CadastroONGScreen.tsx
+================================================================================
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  Switch,
+  Image
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
+
+import api from '../services/api';
+
+const COLORS = {
+  primary: '#1F5C4D',
+  primaryLight: '#E8F5E9',
+  accent: '#10B981',
+  background: '#F4F7F6',
+  surface: '#FFFFFF',
+  textTitle: '#1A1A1A',
+  textBody: '#666666',
+  border: '#E2E8F0',
+  placeholder: '#A0AEC0',
+};
+
+export default function CadastroONGScreen({ navigation }: any) {
+  const [etapa, setEtapa] = useState<1 | 2 | 3>(1);
+  const [loading, setLoading] = useState(false);
+
+  // Etapa 1: Dados Institucionais
+  const [cnpj, setCnpj] = useState('');
+  const [razaoSocial, setRazaoSocial] = useState('');
+  const [nomeFantasia, setNomeFantasia] = useState('');
+  const [endereco, setEndereco] = useState('');
+
+  // Etapa 2: Capacidade e Estrutura
+  const [ofereceLarTemporario, setOfereceLarTemporario] = useState(false);
+  const [vagasEmergenciais, setVagasEmergenciais] = useState(false);
+  const [capacidadeTotal, setCapacidadeTotal] = useState('');
+  const [lotacaoAtual, setLotacaoAtual] = useState('');
+  const [linkPrestacao, setLinkPrestacao] = useState('');
+
+  // Etapa 3: Gestor e Acesso
+  const [nomeGestor, setNomeGestor] = useState('');
+  const [cpfGestor, setCpfGestor] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [confirmaSenha, setConfirmaSenha] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [comprovanteUri, setComprovanteUri] = useState<string | null>(null);
+
+  const selecionarComprovante = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setComprovanteUri(result.assets[0].uri);
+    }
+  };
+
+  const avançarEtapa1 = () => {
+    if (!cnpj.trim() || !razaoSocial.trim() || !nomeFantasia.trim() || !endereco.trim()) {
+      Alert.alert('Campos Obrigatórios', 'Preencha todos os campos da Etapa 1.');
+      return;
+    }
+    setEtapa(2);
+  };
+
+  const avançarEtapa2 = () => {
+    setEtapa(3);
+  };
+
+  const handleCadastroFinal = async () => {
+    if (!nomeGestor.trim() || !cpfGestor.trim() || !email.trim() || !senha || !telefone.trim()) {
+      Alert.alert('Campos Obrigatórios', 'Preencha todos os campos obrigatórios do gestor e conta.');
+      return;
+    }
+
+    if (senha !== confirmaSenha) {
+      Alert.alert('Erro de Senha', 'As senhas informadas não coincidem.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let lat: number | null = null;
+      let lng: number | null = null;
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        lat = location.coords.latitude;
+        lng = location.coords.longitude;
+      }
+
+      const payload = {
+        email: email.trim().toLowerCase(),
+        senha: senha.trim(),
+        telefone: telefone.trim(),
+        cnpj: cnpj.trim(),
+        razao_social: razaoSocial.trim(),
+        nome_fantasia: nomeFantasia.trim(),
+        endereco_completo: endereco.trim(),
+        nome_gestor: nomeGestor.trim(),
+        cpf_gestor: cpfGestor.trim(),
+        oferece_lar_temporario: ofereceLarTemporario,
+        vagas_emergenciais: vagasEmergenciais,
+        capacidade_total: capacidadeTotal ? parseInt(capacidadeTotal, 10) : null,
+        lotacao_atual: lotacaoAtual ? parseInt(lotacaoAtual, 10) : null,
+        link_prestacao_contas: linkPrestacao.trim() || null,
+        localizacao_lat: lat,
+        localizacao_lng: lng,
+      };
+
+      await api.post('/auth/registro/ong', payload);
+
+      Alert.alert('Sucesso', 'Instituição cadastrada com sucesso!', [
+        { text: 'Ir para Login', onPress: () => navigation.navigate('Login') },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Erro no Cadastro', error.response?.data?.detail || 'Ocorreu um erro ao cadastrar a ONG.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          
+          {/* Header */}
+          <View style={styles.topRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => etapa > 1 ? setEtapa((etapa - 1) as any) : navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+            <Text style={styles.stepIndicator}>Etapa {etapa} de 3</Text>
+          </View>
+
+          <View style={styles.header}>
+            <View style={styles.logoBadge}>
+              <MaterialCommunityIcons name="domain" size={40} color={COLORS.primary} />
+            </View>
+            <Text style={styles.brandTitle}>Cadastro de ONG</Text>
+            <Text style={styles.brandTagline}>Gerencie resgates e prestação de contas no PetRadar.</Text>
+          </View>
+
+          {/* Form Card */}
+          <View style={styles.card}>
+            {/* ETAPA 1 */}
+            {etapa === 1 && (
+              <>
+                <Text style={styles.sectionTitle}>1. Dados Institucionais</Text>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>CNPJ *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="business-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="00.000.000/0001-00" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={cnpj} onChangeText={setCnpj} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Razão Social *</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} placeholder="Nome Jurídico Completo" placeholderTextColor={COLORS.placeholder} value={razaoSocial} onChangeText={setRazaoSocial} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Nome Fantasia *</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} placeholder="Nome de divulgação da ONG" placeholderTextColor={COLORS.placeholder} value={nomeFantasia} onChangeText={setNomeFantasia} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Endereço Completo *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="location-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Rua, Número, Bairro, Cidade - UF" placeholderTextColor={COLORS.placeholder} value={endereco} onChangeText={setEndereco} />
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.submitButton} onPress={avançarEtapa1}>
+                  <View style={styles.buttonContent}>
+                    <Text style={styles.submitButtonText}>Próximo: Estrutura</Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* ETAPA 2 */}
+            {etapa === 2 && (
+              <>
+                <Text style={styles.sectionTitle}>2. Capacidade e Operação</Text>
+
+                <View style={styles.switchRow}>
+                  <Text style={styles.switchLabel}>Oferece Lar Temporário?</Text>
+                  <Switch value={ofereceLarTemporario} onValueChange={setOfereceLarTemporario} trackColor={{ false: '#CBD5E1', true: COLORS.accent }} />
+                </View>
+
+                <View style={styles.switchRow}>
+                  <Text style={styles.switchLabel}>Possui vagas para lar emergencial?</Text>
+                  <Switch value={vagasEmergenciais} onValueChange={setVagasEmergenciais} trackColor={{ false: '#CBD5E1', true: COLORS.accent }} />
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Capacidade Total de Animais</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} placeholder="Ex: 50" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={capacidadeTotal} onChangeText={setCapacidadeTotal} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Lotação Atual</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} placeholder="Ex: 35" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={lotacaoAtual} onChangeText={setLotacaoAtual} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Link de Prestação de Contas (Opcional)</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="link-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="https://..." placeholderTextColor={COLORS.placeholder} autoCapitalize="none" value={linkPrestacao} onChangeText={setLinkPrestacao} />
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.submitButton} onPress={avançarEtapa2}>
+                  <View style={styles.buttonContent}>
+                    <Text style={styles.submitButtonText}>Próximo: Gestor e Acesso</Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* ETAPA 3 */}
+            {etapa === 3 && (
+              <>
+                <Text style={styles.sectionTitle}>3. Responsável e Acesso</Text>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Nome do Gestor *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Nome completo do responsável" placeholderTextColor={COLORS.placeholder} value={nomeGestor} onChangeText={setNomeGestor} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>CPF do Gestor *</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} placeholder="000.000.000-00" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={cpfGestor} onChangeText={setCpfGestor} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Telefone / WhatsApp *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="(00) 00000-0000" placeholderTextColor={COLORS.placeholder} keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>E-mail de Acesso *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="ong@exemplo.com" placeholderTextColor={COLORS.placeholder} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Senha *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={senha} onChangeText={setSenha} />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textBody} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Confirma Senha *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={confirmaSenha} onChangeText={setConfirmaSenha} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Comprovante de Vínculo (Opcional)</Text>
+                  <TouchableOpacity style={styles.uploadButton} onPress={selecionarComprovante}>
+                    <Ionicons name="document-attach-outline" size={20} color={COLORS.primary} />
+                    <Text style={styles.uploadText}>{comprovanteUri ? 'Comprovante Anexado ✓' : 'Anexar documento'}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity style={styles.submitButton} onPress={handleCadastroFinal} disabled={loading}>
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.submitButtonText}>Finalizar Cadastro</Text>
+                      <Ionicons name="checkmark-circle-outline" size={22} color="#FFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  stepIndicator: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  header: { alignItems: 'center', marginBottom: 20 },
+  logoBadge: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.primaryLight, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  brandTitle: { fontSize: 26, fontWeight: '800', color: COLORS.primary },
+  brandTagline: { fontSize: 13, color: COLORS.textBody, marginTop: 4, textAlign: 'center' },
+  card: { backgroundColor: COLORS.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.primary, marginBottom: 16 },
+  inputWrapper: { marginBottom: 14 },
+  label: { fontSize: 12, fontWeight: '600', color: COLORS.textTitle, marginBottom: 6, textTransform: 'uppercase' },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 14, paddingHorizontal: 16, height: 52, borderWidth: 1, borderColor: COLORS.border },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 15, color: COLORS.textTitle, fontWeight: '500' },
+  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border, marginBottom: 14 },
+  switchLabel: { fontSize: 14, fontWeight: '600', color: COLORS.textTitle, flex: 1 },
+  uploadButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.primaryLight, padding: 14, borderRadius: 14, gap: 10 },
+  uploadText: { color: COLORS.primary, fontWeight: '600', fontSize: 14 },
+  submitButton: { backgroundColor: COLORS.primary, borderRadius: 16, height: 54, justifyContent: 'center', alignItems: 'center', marginTop: 12 },
+  buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+});
+
+================================================================================
+CAMINHO: src\mobile\src\screens\CadastroUserScreen.tsx
+================================================================================
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+  ScrollView
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+
+import api from '../services/api';
+
+const COLORS = {
+  primary: '#1F5C4D',
+  primaryLight: '#E8F5E9',
+  accent: '#10B981',
+  background: '#F4F7F6',
+  surface: '#FFFFFF',
+  textTitle: '#1A1A1A',
+  textBody: '#666666',
+  border: '#E2E8F0',
+  placeholder: '#A0AEC0',
+};
+
+export default function CadastroUsuarioScreen({ navigation }: any) {
+  const [etapa, setEtapa] = useState<1 | 2>(1);
+  const [loading, setLoading] = useState(false);
+
+  // Etapa 1: Dados Pessoais
+  const [nome, setNome] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [telefone, setTelefone] = useState('');
+
+  // Etapa 2: Acesso
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [confirmaSenha, setConfirmaSenha] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const avançarEtapa1 = () => {
+    if (!nome.trim() || !cpf.trim() || !telefone.trim()) {
+      Alert.alert('Campos Obrigatórios', 'Preencha todos os dados pessoais.');
+      return;
+    }
+    setEtapa(2);
+  };
+
+  const handleCadastro = async () => {
+    if (!email.trim() || !senha) {
+      Alert.alert('Campos Obrigatórios', 'Preencha e-mail e senha.');
+      return;
+    }
+
+    if (senha !== confirmaSenha) {
+      Alert.alert('Erro de Senha', 'As senhas não coincidem.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let lat: number | null = null;
+      let lng: number | null = null;
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        lat = location.coords.latitude;
+        lng = location.coords.longitude;
+      }
+
+      const payload = {
+        nome_completo: nome.trim(),
+        cpf: cpf.trim(),
+        telefone: telefone.trim(),
+        email: email.trim().toLowerCase(),
+        senha: senha.trim(),
+        localizacao_lat: lat,
+        localizacao_lng: lng,
+      };
+
+      await api.post('/auth/registro/usuario', payload);
+
+      Alert.alert('Sucesso', 'Conta criada com sucesso!', [
+        { text: 'Ir para Login', onPress: () => navigation.navigate('Login') },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Erro no Cadastro', error.response?.data?.detail || 'Ocorreu um erro ao cadastrar.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          
+          <View style={styles.topRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => etapa > 1 ? setEtapa(1) : navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+            <Text style={styles.stepIndicator}>Etapa {etapa} de 2</Text>
+          </View>
+
+          <View style={styles.header}>
+            <Text style={styles.brandTitle}>Criar Conta</Text>
+            <Text style={styles.brandTagline}>Cadastre-se para adotar ou reportar resgates.</Text>
+          </View>
+
+          <View style={styles.card}>
+            {etapa === 1 ? (
+              <>
+                <Text style={styles.sectionTitle}>1. Dados Pessoais</Text>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Nome Completo *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Seu nome" placeholderTextColor={COLORS.placeholder} value={nome} onChangeText={setNome} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>CPF *</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} placeholder="000.000.000-00" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={cpf} onChangeText={setCpf} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Telefone / WhatsApp *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="(00) 00000-0000" placeholderTextColor={COLORS.placeholder} keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.submitButton} onPress={avançarEtapa1}>
+                  <View style={styles.buttonContent}>
+                    <Text style={styles.submitButtonText}>Próximo: Dados de Acesso</Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                  </View>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.sectionTitle}>2. Dados de Acesso</Text>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>E-mail *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="seu@email.com" placeholderTextColor={COLORS.placeholder} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Senha *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={senha} onChangeText={setSenha} />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textBody} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Confirma Senha *</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={confirmaSenha} onChangeText={setConfirmaSenha} />
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.submitButton} onPress={handleCadastro} disabled={loading}>
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.submitButtonText}>Criar Conta</Text>
+                      <Ionicons name="checkmark-circle-outline" size={22} color="#FFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  stepIndicator: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  header: { alignItems: 'center', marginBottom: 20 },
+  brandTitle: { fontSize: 26, fontWeight: '800', color: COLORS.primary },
+  brandTagline: { fontSize: 13, color: COLORS.textBody, marginTop: 4, textAlign: 'center' },
+  card: { backgroundColor: COLORS.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.primary, marginBottom: 16 },
+  inputWrapper: { marginBottom: 14 },
+  label: { fontSize: 12, fontWeight: '600', color: COLORS.textTitle, marginBottom: 6, textTransform: 'uppercase' },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 14, paddingHorizontal: 16, height: 52, borderWidth: 1, borderColor: COLORS.border },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 15, color: COLORS.textTitle, fontWeight: '500' },
+  submitButton: { backgroundColor: COLORS.primary, borderRadius: 16, height: 54, justifyContent: 'center', alignItems: 'center', marginTop: 12 },
+  buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+});
+
+================================================================================
+CAMINHO: src\mobile\src\screens\EsqueceuSenhaScreen.tsx
+================================================================================
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  Image
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+
+import api from '../services/api';
+
+const COLORS = {
+  primary: '#1F5C4D',
+  primaryLight: '#E8F5E9',
+  accent: '#10B981',
+  background: '#F4F7F6',
+  surface: '#FFFFFF',
+  textTitle: '#1A1A1A',
+  textBody: '#666666',
+  border: '#E2E8F0',
+  placeholder: '#A0AEC0',
+};
+
+export default function EsqueceuSenhaScreen({ navigation }: any) {
+  const [etapa, setEtapa] = useState<1 | 2>(1);
+  const [loading, setLoading] = useState(false);
+
+  // Campos
+  const [email, setEmail] = useState('');
+  const [codigo, setCodigo] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmaSenha, setConfirmaSenha] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Etapa 1: Enviar E-mail
+  const handleSolicitarCodigo = async () => {
+    if (!email.trim()) {
+      Alert.alert('Atenção', 'Informe o seu e-mail cadastrado.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.post('/auth/esqueceu-senha', { email: email.trim().toLowerCase() });
+      Alert.alert('Código Enviado', 'Verifique sua caixa de entrada para obter o código de verificação.');
+      setEtapa(2);
+    } catch (error: any) {
+      Alert.alert('Erro', error.response?.data?.detail || 'Não foi possível solicitar o código.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Etapa 2: Validar Código e Nova Senha
+  const handleRedefinirSenha = async () => {
+    if (!codigo.trim() || !novaSenha || !confirmaSenha) {
+      Alert.alert('Atenção', 'Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (novaSenha !== confirmaSenha) {
+      Alert.alert('Erro', 'As senhas informadas não coincidem.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.post('/auth/redefinir-senha', {
+        email: email.trim().toLowerCase(),
+        codigo_verificacao: codigo.trim(),
+        nova_senha: novaSenha.trim(),
+      });
+
+      Alert.alert('Sucesso', 'Sua senha foi redefinida com sucesso!', [
+        { text: 'Ir para Login', onPress: () => navigation.navigate('Login') },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Erro na Redefinição', error.response?.data?.detail || 'Código inválido ou expirado.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          
+          {/* Header Superior */}
+          <View style={styles.topRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => etapa === 2 ? setEtapa(1) : navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+            <Text style={styles.stepIndicator}>Passo {etapa} de 2</Text>
+          </View>
+
+          {/* Logo Brand */}
+          <View style={styles.header}>
+            <Image 
+              source={require('../../assets/logo/logo.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Form Card */}
+          <View style={styles.card}>
+            {etapa === 1 ? (
+              <>
+                <Text style={styles.cardTitle}>Recuperar Senha</Text>
+                <Text style={styles.cardSubTitle}>Digite seu e-mail abaixo para receber o código de validação.</Text>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>E-mail Cadastrado</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="seuemail@exemplo.com"
+                      placeholderTextColor={COLORS.placeholder}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      value={email}
+                      onChangeText={setEmail}
+                    />
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.primaryButton} onPress={handleSolicitarCodigo} disabled={loading}>
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.buttonText}>Enviar Código</Text>
+                      <Ionicons name="paper-plane-outline" size={20} color="#FFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.cardTitle}>Criar Nova Senha</Text>
+                <Text style={styles.cardSubTitle}>Insira o código enviado para {email} e defina sua nova senha.</Text>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Código de Verificação (6 dígitos)</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="key-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="123456"
+                      placeholderTextColor={COLORS.placeholder}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      value={codigo}
+                      onChangeText={setCodigo}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Nova Senha</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="••••••••"
+                      placeholderTextColor={COLORS.placeholder}
+                      secureTextEntry={!showPassword}
+                      value={novaSenha}
+                      onChangeText={setNovaSenha}
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textBody} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.label}>Confirme a Nova Senha</Text>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="••••••••"
+                      placeholderTextColor={COLORS.placeholder}
+                      secureTextEntry={!showPassword}
+                      value={confirmaSenha}
+                      onChangeText={setConfirmaSenha}
+                    />
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.primaryButton} onPress={handleRedefinirSenha} disabled={loading}>
+                  {loading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.buttonText}>Redefinir Senha</Text>
+                      <Ionicons name="checkmark-circle-outline" size={20} color="#FFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.resendButton} onPress={handleSolicitarCodigo}>
+                  <Text style={styles.resendText}>Não recebeu o código? Reenviar</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  stepIndicator: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  header: { alignItems: 'center', marginBottom: 16 },
+  logoImage: { width: 200, height: 160 },
+  card: { backgroundColor: COLORS.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)', elevation: 4 },
+  cardTitle: { fontSize: 20, fontWeight: '800', color: COLORS.primary, marginBottom: 6 },
+  cardSubTitle: { fontSize: 13, color: COLORS.textBody, marginBottom: 20, lineHeight: 18 },
+  inputWrapper: { marginBottom: 16 },
+  label: { fontSize: 12, fontWeight: '600', color: COLORS.textTitle, marginBottom: 6, textTransform: 'uppercase' },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 14, paddingHorizontal: 16, height: 52, borderWidth: 1, borderColor: COLORS.border },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 15, color: COLORS.textTitle, fontWeight: '500' },
+  primaryButton: { backgroundColor: COLORS.primary, borderRadius: 16, height: 54, justifyContent: 'center', alignItems: 'center', marginTop: 8 },
+  buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  buttonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  resendButton: { marginTop: 16, alignItems: 'center' },
+  resendText: { color: COLORS.primary, fontSize: 13, fontWeight: '600' },
+});
+
+================================================================================
+CAMINHO: src\mobile\src\screens\LoginScreen.tsx
+================================================================================
+
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+
+import api from "../services/api";
+import { useAuthStore } from "../store/useAuthStore";
+
+const COLORS = {
+  primary: "#1F5C4D",
+  primaryLight: "#E8F5E9",
+  accent: "#10B981",
+  background: "#F4F7F6",
+  surface: "#FFFFFF",
+  textTitle: "#1A1A1A",
+  textBody: "#666666",
+  border: "#E2E8F0",
+  placeholder: "#A0AEC0",
+};
+
+export default function LoginScreen({ navigation }: any) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const setAuth = useAuthStore((state) => state.setAuth);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Atenção", "Preencha seu e-mail e senha para continuar.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await api.post("/auth/login", {
+        email: email.trim().toLowerCase(),
+        senha: password,
+      });
+
+      const { access_token } = response.data;
+
+      setAuth(access_token, {
+        id: "1",
+        name: email,
+        email: email,
+        isOng: false,
+      });
+    } catch (error: any) {
+      Alert.alert(
+        "Falha no Acesso",
+        error.response?.data?.detail ||
+          "Verifique suas credenciais e tente novamente.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header com a Logo da aplicação */}
+          <View style={styles.header}>
+            <Image
+              source={require("../../assets/logo/logo.png")}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Form Card Premium */}
+          <View style={styles.card}>
+            {/* Input E-mail */}
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>E-mail</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color={COLORS.primary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="seuemail@exemplo.com"
+                  placeholderTextColor={COLORS.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </View>
+            </View>
+
+            {/* Input Senha */}
+            <View style={styles.inputWrapper}>
+              <Text style={styles.label}>Senha</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={COLORS.primary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor={COLORS.placeholder}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={20}
+                    color={COLORS.textBody}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Esqueceu a Senha */}
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => navigation.navigate("EsqueceuSenha")}
+            >
+              <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+            </TouchableOpacity>
+
+            {/* Botão Entrar */}
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              activeOpacity={0.8}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <View style={styles.buttonContent}>
+                  <Text style={styles.loginButtonText}>Entrar na Conta</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Ainda não possui uma conta? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("TipoCadastro")}
+            >
+              <Text style={styles.registerText}>Cadastre-se</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    // justify: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  logoImage: {
+    width: 220,
+    height: 180,
+  },
+  card: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.03)",
+  },
+  inputWrapper: {
+    marginBottom: 18,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.textTitle,
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: COLORS.textTitle,
+    fontWeight: "500",
+  },
+  eyeIcon: {
+    padding: 6,
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 24,
+  },
+  forgotPasswordText: {
+    color: COLORS.primary,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  loginButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  loginButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 24,
+  },
+  footerText: {
+    color: COLORS.textBody,
+    fontSize: 15,
+  },
+  registerText: {
+    color: COLORS.primary,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+});
+
+
+================================================================================
+CAMINHO: src\mobile\src\screens\TipoCadastroScreen.tsx
+================================================================================
+
+import React from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ScrollView 
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+
+// Paleta de Cores Premium (Verde)
+const COLORS = {
+  primary: '#1F5C4D',       // Verde Principal / Brand
+  primaryLight: '#E8F5E9',  // Fundo Suave para Ícones
+  accent: '#10B981',        // Verde Vibrante
+  accentLight: '#E6F4EA',   // Fundo Suave Secundário
+  background: '#F4F7F6',    // Fundo Neutro Elegante
+  surface: '#FFFFFF',       // Cards e Inputs
+  textTitle: '#1A1A1A',
+  textBody: '#666666',
+  border: '#E2E8F0',
+};
+
+export default function TipoCadastroScreen({ navigation }: any) {
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Botão de Voltar */}
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+        </TouchableOpacity>
+
+        {/* Header / Brand */}
+        <View style={styles.header}>
+          <View style={styles.logoBadge}>
+            <MaterialCommunityIcons name="paw" size={40} color={COLORS.primary} />
+          </View>
+          <Text style={styles.brandTitle}>Junte-se a nós</Text>
+          <Text style={styles.brandTagline}>Como você deseja utilizar o aplicativo?</Text>
+        </View>
+
+        {/* Opções de Cadastro */}
+        <View style={styles.cardsContainer}>
+          {/* Card Pessoa Física */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('CadastroUser')}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: COLORS.primaryLight }]}>
+              <MaterialCommunityIcons name="account-heart" size={32} color={COLORS.primary} />
+            </View>
+            <View style={styles.cardTextContainer}>
+              <Text style={styles.cardTitle}>Pessoa Física</Text>
+              <Text style={styles.cardDescription}>
+                Quero ajudar ou cadastrar animais perdidos.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
+
+          {/* Card ONG */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('CadastroONG')}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: COLORS.accentLight }]}>
+              <MaterialCommunityIcons name="domain" size={32} color={COLORS.accent} />
+            </View>
+            <View style={styles.cardTextContainer}>
+              <Text style={styles.cardTitle}>ONG ou Instituição</Text>
+              <Text style={styles.cardDescription}>
+                Represento uma organização e quero gerenciar um perfil.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Já possui uma conta? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginText}>Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { 
+    flex: 1, 
+    backgroundColor: COLORS.background 
+  },
+  scrollContent: { 
+    flexGrow: 1, 
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 24 
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  header: { 
+    alignItems: 'center', 
+    marginBottom: 24 
+  },
+  logoBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  brandTitle: { 
+    fontSize: 28, 
+    fontWeight: '800', 
+    color: COLORS.primary,
+    letterSpacing: -0.5 
+  },
+  brandTagline: { 
+    fontSize: 14, 
+    color: COLORS.textBody, 
+    marginTop: 4,
+    fontWeight: '500',
+    textAlign: 'center'
+  },
+  cardsContainer: {
+    gap: 16,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
+  },
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  cardTextContainer: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  cardTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textTitle,
+    marginBottom: 4,
+  },
+  cardDescription: {
+    fontSize: 13,
+    color: COLORS.textBody,
+    lineHeight: 18,
+  },
+  footer: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    marginTop: 28 
+  },
+  footerText: { 
+    color: COLORS.textBody, 
+    fontSize: 14 
+  },
+  loginText: { 
+    color: COLORS.primary, 
+    fontSize: 14, 
+    fontWeight: '700' 
+  },
+});
+
+================================================================================
+CAMINHO: src\mobile\src\services\api.ts
+================================================================================
+
+import axios from 'axios';
+import { useAuthStore } from '../store/useAuthStore';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.0.5:8000/api/v1';
+
+export const api = axios.create({
+  baseURL: API_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+api.interceptors.request.use(
+  (config) => {
+    // Obtém o token direto do estado da memória do Zustand
+    const token = useAuthStore.getState().token; 
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Executa o logout no Zustand limpa estado e storage automaticamente
+      useAuthStore.getState().logout();
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+
+================================================================================
+CAMINHO: src\mobile\src\store\useAuthStore.ts
+================================================================================
+
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  isOng: boolean;
+}
+
+interface AuthState {
+  token: string | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  setAuth: (token: string, user: User) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
+      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+    }),
+    {
+      name: '@petradar:auth',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
+
+================================================================================
+CAMINHO: src\mobile\src\theme\colors.ts
+================================================================================
+
+export const theme = {
+  colors: {
+    // Brand e Fundos
+    brand: '#1F5C4D',      // Verde Floresta Profundo
+    action: '#28A745',     // Verde Esmeralda Vivo
+    background: '#F5F6F8', // Cinza Off-white Quente
+    surface: '#FFFFFF',    // Branco Puro
+    
+    // Tipografia
+    textTitle: '#1A1A1A',  // Quase Preto (Títulos e Contadores)
+    textBody: '#666666',   // Cinza Médio (Textos longos)
+    
+    // UI Elements
+    inputBg: '#F0F0F0',    // Fundo de input translúcido
+    
+    // Cores Semânticas (Glassmorphism & Tags)
+    // O fundo já utiliza rgba com 15% de opacidade direto no token para evitar 
+    // o uso de `opacity` na View, o que deixaria o texto transparente também.
+    semantic: {
+      danger: {
+        bg: 'rgba(235, 87, 87, 0.15)',
+        text: '#EB5757', // SOS / Perdido
+      },
+      warning: {
+        bg: 'rgba(242, 201, 76, 0.15)',
+        text: '#B8860B', // Aviso / Avistado
+      },
+      success: {
+        bg: 'rgba(39, 174, 96, 0.15)',
+        text: '#27AE60', // Sucesso / Achado
+      }
+    }
+  },
+  
+  shadows: {
+    // Tactile Design: React Native não aceita múltiplas sombras nativamente em uma única View.
+    // Esta configuração cria uma sombra de profundidade otimizada para iOS e a elevação correspondente no Android.
+    elevation1: {
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.06,
+      shadowRadius: 16,
+      elevation: 4, // Android shadow
+    },
+    // Sombras coloridas funcionam perfeitamente no iOS. 
+    // No Android (antes da API 28), sombras coloridas ignoram a cor e ficam pretas. 
+    // Para manter a consistência, garantimos a cor no iOS e uma elevação limpa no Android.
+    buttonGlow: {
+      shadowColor: '#1F5C4D',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.35,
+      shadowRadius: 20,
+      elevation: 8, 
+    }
+  },
+  
+  spacing: {
+    globalMargin: 20,
+    cardGap: 24,
+    padding: 16,
+  },
+  
+  radius: {
+    card: 16,
+    image: 20, // Nova regra do V2 para imagens em destaque
+    button: 100, // Pill shape
+  }
+} as const;
+
+// Opcional, mas recomendado: Exportar os tipos para uso com TypeScript e Styled-Components/Emotion
+export type Theme = typeof theme;
+
+================================================================================
+CAMINHO: src\backend\docker-compose.yml
+================================================================================
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: petradar_db
+    restart: always
+    environment:
+      POSTGRES_DB: petradar_db
+      POSTGRES_USER: petradar_admin
+      POSTGRES_PASSWORD: petradar_pass_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petradar_admin -d petradar_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+# docker compose up -d
+# comando para iniciar
+# docker compose down
+# comando para parar
+
+# docker exec -it petradar_db psql -U petradar_admin -d petradar_db -c "SELECT PostGIS_Full_Version();"
+# para garantir que esta ativo
+
+================================================================================
+CAMINHO: src\backend\alembic.ini
+================================================================================
+
+# A generic, single database configuration.
+
+[alembic]
+script_location = alembic
+prepend_sys_path = .
+sqlalchemy.url = sqlite:///./petradar.db
+
+[post_write_hooks]
+
+# Logging configuration
+[loggers]
+keys = root,alembic,sqlalchemy
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = WARN
+handlers = console
+qualname =
+
+[logger_alembic]
+level = INFO
+handlers =
+qualname = alembic
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+
+================================================================================
+CAMINHO: src\backend\.env
+================================================================================
+
+PROJECT_NAME="petRadar API"
+API_V1_STR="/api/v1"
+
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="10070000Alexandre1207"
+POSTGRES_SERVER=db.eoyclmqxgvcjgqmtphxj.supabase.co
+POSTGRES_PORT="5432"
+POSTGRES_DB="postgres"
+
+SECRET_KEY="petradar_chave_secreta_super_segura_desenvolvimento_2026"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+
+CLOUDINARY_CLOUD_NAME="seu_cloud_name"
+CLOUDINARY_API_KEY="sua_api_key"
+CLOUDINARY_API_SECRET="sua_api_secret"

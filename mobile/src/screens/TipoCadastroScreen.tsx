@@ -1,146 +1,208 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as Haptics from 'expo-haptics';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ScrollView 
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { theme } from '../theme/colors';
-
-export type AuthStackParamList = {
-  Login: undefined;
-  TipoCadastro: undefined;
-  CadastroUser: undefined;
-  CadastroONG: undefined;
+// Paleta de Cores Premium (Verde)
+const COLORS = {
+  primary: '#1F5C4D',       // Verde Principal / Brand
+  primaryLight: '#E8F5E9',  // Fundo Suave para Ícones
+  accent: '#10B981',        // Verde Vibrante
+  accentLight: '#E6F4EA',   // Fundo Suave Secundário
+  background: '#F4F7F6',    // Fundo Neutro Elegante
+  surface: '#FFFFFF',       // Cards e Inputs
+  textTitle: '#1A1A1A',
+  textBody: '#666666',
+  border: '#E2E8F0',
 };
 
-type TipoCadastroNavProp = NativeStackNavigationProp<AuthStackParamList, 'TipoCadastro'>;
-
-export default function TipoCadastroScreen() {
-  const navigation = useNavigation<TipoCadastroNavProp>();
-  const insets = useSafeAreaInsets();
-
-  const handleSelectOption = (screenName: keyof AuthStackParamList) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate(screenName);
-  };
-
+export default function TipoCadastroScreen({ navigation }: any) {
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Como você deseja participar?</Text>
-          <Text style={styles.subtitle}>
-            Escolha o perfil que melhor descreve você para personalizarmos sua experiência no PetRadar.
-          </Text>
-        </View>
-
-        <View style={styles.cardsContainer}>
-          <TouchableOpacity
-            style={[styles.card, styles.cardUser]}
-            onPress={() => handleSelectOption('CadastroUser')}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Cadastrar como Usuário ou Tutor"
-          >
-            <Text style={styles.cardTitle}>Usuário / Tutor</Text>
-            <Text style={styles.cardDescription}>
-              Quero relatar avistamentos, buscar pets perdidos ou adotar um animal.
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.card, styles.cardONG]}
-            onPress={() => handleSelectOption('CadastroONG')}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Cadastrar como Organização Não Governamental"
-          >
-            <Text style={styles.cardTitle}>Sou uma ONG / Instituição</Text>
-            <Text style={styles.cardDescription}>
-              Represento um abrigo ou ONG e quero gerenciar resgates e feiras de adoção.
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => {
-            Haptics.selectionAsync();
-            navigation.goBack();
-          }}
-          accessibilityRole="button"
+    <SafeAreaView style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Botão de Voltar */}
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
         >
-          <Text style={styles.backButtonText}>Já tem uma conta? Voltar ao Login</Text>
+          <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
-      </View>
-    </View>
+
+        {/* Header / Brand */}
+        <View style={styles.header}>
+          <View style={styles.logoBadge}>
+            <MaterialCommunityIcons name="paw" size={40} color={COLORS.primary} />
+          </View>
+          <Text style={styles.brandTitle}>Junte-se a nós</Text>
+          <Text style={styles.brandTagline}>Como você deseja utilizar o aplicativo?</Text>
+        </View>
+
+        {/* Opções de Cadastro */}
+        <View style={styles.cardsContainer}>
+          {/* Card Pessoa Física */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('CadastroUser')}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: COLORS.primaryLight }]}>
+              <MaterialCommunityIcons name="account-heart" size={32} color={COLORS.primary} />
+            </View>
+            <View style={styles.cardTextContainer}>
+              <Text style={styles.cardTitle}>Pessoa Física</Text>
+              <Text style={styles.cardDescription}>
+                Quero ajudar ou cadastrar animais perdidos.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
+
+          {/* Card ONG */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('CadastroONG')}
+          >
+            <View style={[styles.iconContainer, { backgroundColor: COLORS.accentLight }]}>
+              <MaterialCommunityIcons name="domain" size={32} color={COLORS.accent} />
+            </View>
+            <View style={styles.cardTextContainer}>
+              <Text style={styles.cardTitle}>ONG ou Instituição</Text>
+              <Text style={styles.cardDescription}>
+                Represento uma organização e quero gerenciar um perfil.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Já possui uma conta? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginText}>Fazer Login</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
+  container: { 
+    flex: 1, 
+    backgroundColor: COLORS.background 
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.globalMargin,
+  scrollContent: { 
+    flexGrow: 1, 
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 24 
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  header: {
-    marginBottom: 32,
+  header: { 
+    alignItems: 'center', 
+    marginBottom: 24 
   },
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: theme.colors.textTitle,
-    marginBottom: 8,
-    letterSpacing: -0.5,
+  logoBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  subtitle: {
-    fontSize: 15,
-    color: theme.colors.textBody,
-    lineHeight: 22,
+  brandTitle: { 
+    fontSize: 28, 
+    fontWeight: '800', 
+    color: COLORS.primary,
+    letterSpacing: -0.5 
+  },
+  brandTagline: { 
+    fontSize: 14, 
+    color: COLORS.textBody, 
+    marginTop: 4,
+    fontWeight: '500',
+    textAlign: 'center'
   },
   cardsContainer: {
     gap: 16,
-    marginBottom: 32,
   },
   card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
     padding: 20,
-    borderRadius: theme.radius.card,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
     borderWidth: 1,
-    borderColor: theme.colors.inputBg,
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.elevation1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
-  cardUser: {
-    borderLeftWidth: 6,
-    borderLeftColor: theme.colors.brand,
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
-  cardONG: {
-    borderLeftWidth: 6,
-    borderLeftColor: theme.colors.action,
+  cardTextContainer: {
+    flex: 1,
+    paddingRight: 8,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    color: theme.colors.textTitle,
-    marginBottom: 6,
+    color: COLORS.textTitle,
+    marginBottom: 4,
   },
   cardDescription: {
-    fontSize: 14,
-    color: theme.colors.textBody,
-    lineHeight: 20,
+    fontSize: 13,
+    color: COLORS.textBody,
+    lineHeight: 18,
   },
-  backButton: {
-    alignItems: 'center',
-    paddingVertical: 14,
+  footer: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    marginTop: 28 
   },
-  backButtonText: {
-    color: theme.colors.brand,
-    fontSize: 15,
-    fontWeight: '600',
+  footerText: { 
+    color: COLORS.textBody, 
+    fontSize: 14 
+  },
+  loginText: { 
+    color: COLORS.primary, 
+    fontSize: 14, 
+    fontWeight: '700' 
   },
 });

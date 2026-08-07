@@ -1,17 +1,20 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuthStore } from '../store/useAuthStore';
 
-// Lê variável do ambiente Expo (SDK 49+) evitando hardcode no repositório
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:8000/api/v1';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.0.5:8000/api/v1';
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // Previne requisições infinitas em redes instáveis
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 api.interceptors.request.use(
-  async (config) => {
-    const token = await AsyncStorage.getItem('@PetRadar:token');
+  (config) => {
+    // Obtém o token direto do estado da memória do Zustand
+    const token = useAuthStore.getState().token; 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,10 +26,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Trata expiração do token JWT centralizadamente
     if (error.response?.status === 401) {
-      await AsyncStorage.multiRemove(['@PetRadar:token', '@PetRadar:user']);
-      // A mudança no AsyncStorage ou um evento no AuthContext deve forçar a desautenticação
+      // Executa o logout no Zustand limpa estado e storage automaticamente
+      useAuthStore.getState().logout();
     }
     return Promise.reject(error);
   }

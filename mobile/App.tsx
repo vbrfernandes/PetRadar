@@ -1,35 +1,62 @@
-// D:\Pesquisa Pucminas\Pesquisa de animais errantes\PetRadar\...\src\mobile\App.tsx
-
-import React, { useContext } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider as PaperProvider } from 'react-native-paper';
+import EsqueceuSenhaScreen from './src/screens/EsqueceuSenhaScreen';
 
-// Contextos
-import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
+// Store do Zustand (Caminho corrigido para 'store' no singular)
+import { useAuthStore } from './src/store/useAuthStore'; 
 
-// Telas (Importações Reais)
+// Telas Reais
 import LoginScreen from './src/screens/LoginScreen';
 import CadastroUserScreen from './src/screens/CadastroUserScreen';
 import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
+import CadastroONGScreen from './src/screens/CadastroONGScreen';
 
-// ==========================================
-// 1. TELAS TEMPORÁRIAS (Placeholders)
-// ==========================================
-const CadastroONGScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Cadastro ONG</Text></View>;
-const FeedScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Feed de Animais (PostGIS)</Text></View>;
-const SOSScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Alerta SOS</Text></View>;
-const ProfileScreen = () => <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Meu Perfil</Text></View>;
+// Tipagem das Rotas do Autenticação
+export type AuthStackParamList = {
+  Login: undefined;
+  TipoCadastro: undefined;
+  CadastroUser: undefined;
+  CadastroONG: undefined;
+  EsqueceuSenha: undefined;
+};
 
-// ==========================================
-// 2. CONFIGURAÇÃO DOS NAVEGADORES
-// ==========================================
-const AuthStack = createNativeStackNavigator();
-const AppTabs = createBottomTabNavigator();
 
-// Fluxo Público (Usuário Deslogado)
+// Tipagem das Rotas da Aplicação Principal
+export type AppTabParamList = {
+  Feed: undefined;
+  SOS: undefined;
+  Perfil: undefined;
+};
+
+
+// Telas Temporárias
+const FeedScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>Feed de Animais (PostGIS)</Text>
+  </View>
+);
+
+const SOSScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>Alerta SOS</Text>
+  </View>
+);
+
+const ProfileScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>Meu Perfil</Text>
+  </View>
+);
+
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const AppTabs = createBottomTabNavigator<AppTabParamList>();
+
 function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -37,11 +64,11 @@ function AuthNavigator() {
       <AuthStack.Screen name="TipoCadastro" component={TipoCadastroScreen} />
       <AuthStack.Screen name="CadastroUser" component={CadastroUserScreen} />
       <AuthStack.Screen name="CadastroONG" component={CadastroONGScreen} />
+      <AuthStack.Screen name="EsqueceuSenha" component={EsqueceuSenhaScreen} />
     </AuthStack.Navigator>
   );
 }
 
-// Fluxo Privado (Usuário Logado)
 function AppNavigator() {
   return (
     <AppTabs.Navigator screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}>
@@ -52,34 +79,21 @@ function AppNavigator() {
   );
 }
 
-// ==========================================
-// 3. COMPONENTE DE ROTAS (Ponte)
-// ==========================================
 function Routes() {
-  const { signed, loading } = useContext(AuthContext);
+  const { isAuthenticated } = useAuthStore();
 
-  // Loading state com UX agradável
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F6FA' }}>
-        <ActivityIndicator size="large" color="#0052CC" />
-      </View>
-    );
-  }
-
-  return signed ? <AppNavigator /> : <AuthNavigator />;
+  return isAuthenticated ? <AppNavigator /> : <AuthNavigator />;
 }
 
-// ==========================================
-// 4. COMPONENTE PRINCIPAL (Root)
-// ==========================================
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-      <AuthProvider>
-        <Routes />
-      </AuthProvider>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <PaperProvider>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <Routes />
+        </NavigationContainer>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }

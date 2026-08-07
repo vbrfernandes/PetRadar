@@ -4,6 +4,8 @@ from fastapi import HTTPException, status
 from app.modules.auth.models import Conta, UsuarioFisico, ONG
 from app.modules.auth.schemas import UsuarioFisicoCriar, ONGCriar, LoginSchema
 from app.core.security import gerar_hash_senha, verificar_senha, criar_token_acesso
+import random
+from datetime import datetime, timedelta, timezone
 
 async def criar_usuario_fisico(db: AsyncSession, dados: UsuarioFisicoCriar) -> Conta:
     query = select(Conta).where(Conta.email == dados.email)
@@ -43,7 +45,9 @@ async def criar_ong(db: AsyncSession, dados: ONGCriar) -> Conta:
         tipo_conta="ONG",
         email=dados.email,
         senha=gerar_hash_senha(dados.senha),
-        telefone=dados.telefone
+        telefone=dados.telefone,
+        localizacao_lat=dados.localizacao_lat,
+        localizacao_lng=dados.localizacao_lng
     )
     db.add(nova_conta)
     await db.commit()
@@ -76,3 +80,38 @@ async def autenticar_usuario(db: AsyncSession, dados_login: LoginSchema) -> str:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas.")
 
     return criar_token_acesso(subjetivo=conta.id_conta)
+
+
+async def solicitar_codigo_recuperacao(db: AsyncSession, email: str):
+    query = select(Conta).where(Conta.email == email)
+    resultado = await db.execute(query)
+    conta = resultado.scalar_one_or_none()
+    
+    if conta:
+        codigo = f"{random.randint(100000, 999999)}"
+        conta.codigo_recuperacao = codigo
+        conta.codigo_recuperacao_expira = datetime.now(timezone.utc) + timedelta(minutes=15)
+        await db.commit()
+        # TODO: Chavear a função de envio SMTP aqui
+        print(f"[SMTP MOCK] Código para {email}: {codigo}")
+
+async def redefinir_senha_com_codigo(db: AsyncSession, dados: RedefinirSenha):
+    query = select(Conta).where(Conta.email == dados.email)
+    resultado = await db.execute(query)
+    conta = resultado.scalar_one_or_none()
+
+    if not conta or conta.codigo_recuperacao != dados.codigo_verificacao:
+        raise HTTPException(status_code=400, detail="Código inválido ou expirado.")
+
+    if conta.codigo_recuperacao_expira and conta.codigo_recuperacao_expira.tzinfo is None:
+        expira = conta.codigo_recuperacao_expira.replace(tzinfo=timezone.utc)
+    else:
+        expira = conta.codigo_recuperacao_expira
+
+    if datetime.now(timezone.utc) > expira:
+        raise HTTPException(status_code=400, detail="Código expirado.")
+
+    conta.senha = gerar_hash_senha(dados.nova_senha)
+    conta.codigo_recuperacao = None
+    conta.codigo_recuperacao_expira = None
+    await db.commit()

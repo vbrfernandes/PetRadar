@@ -26,6 +26,8 @@ class ONGCriar(BaseModel):
     capacidade_total: int | None = None
     lotacao_atual: int | None = None
     link_prestacao_contas: str | None = None
+    localizacao_lat: float | None = None
+    localizacao_lng: float | None = None
 
 class LoginSchema(BaseModel):
     email: EmailStr
@@ -43,3 +45,11 @@ class ContaResposta(BaseModel):
 
     class Config:
         from_attributes = True
+
+class EsqueceuSenhaSolicitacao(BaseModel):
+    email: EmailStr
+
+class RedefinirSenha(BaseModel):
+    email: EmailStr
+    codigo_verificacao: str = Field(min_length=6, max_length=6)
+    nova_senha: str = Field(min_length=6)
