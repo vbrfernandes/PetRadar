@@ -28,6 +28,7 @@ async def criar_usuario_fisico(db: AsyncSession, dados: UsuarioFisicoCriar) -> C
     novo_usuario = UsuarioFisico(
         id_conta=nova_conta.id_conta,
         nome_completo=dados.nome_completo,
+        cpf=dados.cpf,
         tem_pet=dados.tem_pet,
         raio_pesquisa_km=dados.raio_pesquisa_km
     )

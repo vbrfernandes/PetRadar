@@ -18,6 +18,7 @@ import {
 import MapView, {
   PROVIDER_DEFAULT,
   Region,
+  Marker,
 } from "react-native-maps";
 
 import * as Location from "expo-location";
@@ -38,6 +39,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { AppTabParamList } from '../../App';
 
 
+
 const { width } = Dimensions.get("window");
 
 const DRAWER_WIDTH = Math.min(
@@ -52,10 +54,25 @@ const INITIAL_REGION: Region = {
   longitudeDelta: 0.015,
 };
 
+interface OcorrenciaMapa {
+  id_ocorrencia: number;
+  id_conta: number;
+  tipo_ocorrencia: string;
+  status_badge: string;
+  tipo_animal: string;
+  foto: string;
+  nivel_urgencia: string;
+  data_ocorrencia: string;
+  endereco_localizacao?: string | null;
+  latitude: number;
+  longitude: number;
+}
+
+
 export default function MapScreen() {
 
   const navigation =
-  useNavigation<BottomTabNavigationProp<AppTabParamList>>();
+    useNavigation<BottomTabNavigationProp<AppTabParamList>>();
   const logout = useAuthStore(
     (state) => state.logout
   );
@@ -122,6 +139,12 @@ export default function MapScreen() {
 
   const [discoveryVisible, setDiscoveryVisible] =
     useState(true);
+
+  const [ocorrencias, setOcorrencias] =
+    useState<OcorrenciaMapa[]>([]);
+
+  const [loadingOcorrencias, setLoadingOcorrencias] =
+    useState(false);
 
   /**
    * ==========================================================
@@ -210,6 +233,10 @@ export default function MapScreen() {
         setUserLocation(
           currentLocation
         );
+        await carregarOcorrenciasProximas(
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude
+        );
 
         const region: Region = {
           latitude:
@@ -249,6 +276,37 @@ export default function MapScreen() {
       );
     } else {
       obterLocalizacaoInicial();
+    }
+  };
+
+  const carregarOcorrenciasProximas = async (
+    latitude: number,
+    longitude: number
+  ) => {
+    try {
+      setLoadingOcorrencias(true);
+
+      const response = await api.get(
+        "/ocorrencias/proximas",
+        {
+          params: {
+            lat: latitude,
+            lng: longitude,
+            raio_km: 10,
+          },
+        }
+      );
+
+      setOcorrencias(
+        response.data || []
+      );
+    } catch (error) {
+      console.warn(
+        "Erro ao carregar ocorrências próximas:",
+        error
+      );
+    } finally {
+      setLoadingOcorrencias(false);
     }
   };
 
@@ -415,7 +473,42 @@ export default function MapScreen() {
         toolbarEnabled={false}
         rotateEnabled
         pitchEnabled
-      />
+      >
+        {ocorrencias.map((ocorrencia) => (
+          <Marker
+            key={ocorrencia.id_ocorrencia}
+            coordinate={{
+              latitude: ocorrencia.latitude,
+              longitude: ocorrencia.longitude,
+            }}
+            title={ocorrencia.tipo_animal || "Animal"}
+            description={
+              ocorrencia.endereco_localizacao ||
+              "Ocorrência próxima"
+            }
+          >
+            <View
+              style={styles.occurrenceMarker}
+              collapsable={false}
+            >
+              <View
+                style={styles.occurrenceMarkerImageWrapper}
+                collapsable={false}
+              >
+                <Image
+                  source={{
+                    uri: ocorrencia.foto,
+                  }}
+                  style={styles.occurrenceMarkerImage}
+                  resizeMode="cover"
+                />
+              </View>
+
+              <View style={styles.occurrenceMarkerDot} />
+            </View>
+          </Marker>
+        ))}
+      </MapView>
 
       {/* ======================================================
           LOADING
@@ -2582,6 +2675,50 @@ const styles = StyleSheet.create({
     color:
       theme.colors.surface,
   },
+
+  /**
+   * ==========================================================
+   * OCORRÊNCIAS – ESTILOS MELHORADOS (MAIORES)
+   * ==========================================================
+   */
+  occurrenceMarker: {
+  width: 64,
+  height: 64,
+  borderRadius: 32,
+  backgroundColor: theme.colors.surface,
+  borderWidth: 2,
+  borderColor: theme.colors.brand,
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "visible",
+  ...theme.shadows.elevation1,
+},
+
+occurrenceMarkerImageWrapper: {
+  width: 56,
+  height: 56,
+  borderRadius: 28,
+  overflow: "hidden",
+  backgroundColor: theme.colors.surface,
+},
+
+occurrenceMarkerImage: {
+  width: 56,
+  height: 56,
+  borderRadius: 28,
+  overflow: "hidden",
+},
+
+occurrenceMarkerDot: {
+  position: "absolute",
+  bottom: -6,
+  width: 12,
+  height: 12,
+  borderRadius: 6,
+  backgroundColor: theme.colors.brand,
+  borderWidth: 2,
+  borderColor: theme.colors.surface,
+},
 
   /**
    * ==========================================================

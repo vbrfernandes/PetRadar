@@ -34,6 +34,7 @@ ARQUITETURA DO PROJETO - BACKEND
 
 📁 src\backend\alembic
 ├── versions
+│   ├── 28a9a8d94dc2_add_cpf_usuario.py
 │   ├── 6ec9a90cf3ac_completar_modelos_der.py
 │   └── be3d516310b6_add_auth_verification_fields.py
 ├── env.py
@@ -53,29 +54,30 @@ ROTAS E SEQUÊNCIA DOS ARQUIVOS INCLUÍDOS (ORDENADOS DE CIMA PARA BAIXO)
 02. src\backend\alembic.ini
 03. src\backend\alembic\env.py
 04. src\backend\alembic\script.py.mako
-05. src\backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
-06. src\backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
-07. src\backend\app\core\cloudinary.py
-08. src\backend\app\core\config.py
-09. src\backend\app\core\database.py
-10. src\backend\app\core\deps.py
-11. src\backend\app\core\security.py
-12. src\backend\app\main.py
-13. src\backend\app\modules\auth\models.py
-14. src\backend\app\modules\auth\router.py
-15. src\backend\app\modules\auth\schemas.py
-16. src\backend\app\modules\auth\service.py
-17. src\backend\app\modules\chat\models.py
-18. src\backend\app\modules\engajamento\models.py
-19. src\backend\app\modules\ocorrencias\avistamento_router.py
-20. src\backend\app\modules\ocorrencias\models.py
-21. src\backend\app\modules\ocorrencias\router.py
-22. src\backend\app\modules\ocorrencias\schemas.py
-23. src\backend\app\modules\ong\models.py
-24. src\backend\app\modules\pets\models.py
-25. src\backend\app\modules\pets\router.py
-26. src\backend\app\modules\pets\schemas.py
-27. src\backend\docker-compose.yml
+05. src\backend\alembic\versions\28a9a8d94dc2_add_cpf_usuario.py
+06. src\backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
+07. src\backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
+08. src\backend\app\core\cloudinary.py
+09. src\backend\app\core\config.py
+10. src\backend\app\core\database.py
+11. src\backend\app\core\deps.py
+12. src\backend\app\core\security.py
+13. src\backend\app\main.py
+14. src\backend\app\modules\auth\models.py
+15. src\backend\app\modules\auth\router.py
+16. src\backend\app\modules\auth\schemas.py
+17. src\backend\app\modules\auth\service.py
+18. src\backend\app\modules\chat\models.py
+19. src\backend\app\modules\engajamento\models.py
+20. src\backend\app\modules\ocorrencias\avistamento_router.py
+21. src\backend\app\modules\ocorrencias\models.py
+22. src\backend\app\modules\ocorrencias\router.py
+23. src\backend\app\modules\ocorrencias\schemas.py
+24. src\backend\app\modules\ong\models.py
+25. src\backend\app\modules\pets\models.py
+26. src\backend\app\modules\pets\router.py
+27. src\backend\app\modules\pets\schemas.py
+28. src\backend\docker-compose.yml
 
 ================================================================================
 CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
@@ -274,6 +276,60 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     ${downgrades if downgrades else "pass"}
+
+================================================================================
+CAMINHO: src\backend\alembic\versions\28a9a8d94dc2_add_cpf_usuario.py
+================================================================================
+
+"""add cpf usuario
+
+Revision ID: 28a9a8d94dc2
+Revises: be3d516310b6
+Create Date: 2026-08-08 09:25:44.932371
+"""
+
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+
+revision: str = "28a9a8d94dc2"
+down_revision: Union[str, None] = "be3d516310b6"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    op.add_column(
+        "usuarios_fisicos",
+        sa.Column(
+            "cpf",
+            sa.String(length=14),
+            nullable=True
+        )
+    )
+
+    op.create_unique_constraint(
+        "uq_usuarios_fisicos_cpf",
+        "usuarios_fisicos",
+        ["cpf"]
+    )
+
+
+def downgrade() -> None:
+    op.drop_constraint(
+        "uq_usuarios_fisicos_cpf",
+        "usuarios_fisicos",
+        type_="unique"
+    )
+
+    op.drop_column(
+        "usuarios_fisicos",
+        "cpf"
+    )
 
 ================================================================================
 CAMINHO: src\backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
@@ -789,6 +845,11 @@ class UsuarioFisico(Base):
     id_usuario: Mapped[int] = mapped_column(primary_key=True, index=True)
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), unique=True, nullable=False)
     nome_completo: Mapped[str] = mapped_column(String(255), nullable=False)
+    cpf: Mapped[str] = mapped_column(
+        String(14),
+        unique=True,
+        nullable=False
+    )
     tem_pet: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     social_login_id: Mapped[str | None] = mapped_column(String(255))
     raio_pesquisa_km: Mapped[int] = mapped_column(default=10)
@@ -902,10 +963,12 @@ class UsuarioFisicoCriar(BaseModel):
     senha: str = Field(min_length=6)
     telefone: str | None = None
     nome_completo: str
+    cpf: str
     tem_pet: bool = False
     raio_pesquisa_km: int = 10
     localizacao_lat: float | None = None
     localizacao_lng: float | None = None
+    
 
 class ONGCriar(BaseModel):
     email: EmailStr
@@ -1026,6 +1089,7 @@ async def criar_usuario_fisico(db: AsyncSession, dados: UsuarioFisicoCriar) -> C
     novo_usuario = UsuarioFisico(
         id_conta=nova_conta.id_conta,
         nome_completo=dados.nome_completo,
+        cpf=dados.cpf,
         tem_pet=dados.tem_pet,
         raio_pesquisa_km=dados.raio_pesquisa_km
     )
@@ -1383,7 +1447,12 @@ CAMINHO: src\backend\app\modules\ocorrencias\router.py
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from geoalchemy2.functions import ST_GeomFromText, ST_DWithin
+from geoalchemy2.functions import (
+    ST_GeomFromText,
+    ST_DWithin,
+    ST_X,
+    ST_Y,
+)
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
@@ -1450,6 +1519,13 @@ async def criar_ocorrencia(
     await db.refresh(nova_ocorrencia)
     return nova_ocorrencia
 
+from geoalchemy2.functions import (
+    ST_GeomFromText,
+    ST_DWithin,
+    ST_X,
+    ST_Y,
+)
+
 @router.get("/proximas", response_model=list[OcorrenciaResposta])
 async def listar_ocorrencias_proximas(
     lat: float = Query(...),
@@ -1457,15 +1533,49 @@ async def listar_ocorrencias_proximas(
     raio_km: float = Query(10.0),
     db: AsyncSession = Depends(get_db)
 ):
-    ponto_usuario = ST_GeomFromText(f"POINT({lng} {lat})", 4326)
+    ponto_usuario = ST_GeomFromText(
+        f"POINT({lng} {lat})",
+        4326
+    )
+
     raio_metros = raio_km * 1000
 
-    query = select(Ocorrencia).where(
-        ST_DWithin(Ocorrencia.localizacao, ponto_usuario, raio_metros, use_spheroid=True)
+    query = select(
+        Ocorrencia,
+        ST_Y(Ocorrencia.localizacao).label("latitude"),
+        ST_X(Ocorrencia.localizacao).label("longitude"),
+    ).where(
+        ST_DWithin(
+            Ocorrencia.localizacao,
+            ponto_usuario,
+            raio_metros,
+            use_spheroid=True
+        )
     )
 
     resultado = await db.execute(query)
-    return resultado.scalars().all()
+
+    ocorrencias = []
+
+    for ocorrencia, latitude, longitude in resultado.all():
+        ocorrencias.append(
+            {
+                "id_ocorrencia": ocorrencia.id_ocorrencia,
+                "id_conta": ocorrencia.id_conta,
+                "tipo_ocorrencia": ocorrencia.tipo_ocorrencia,
+                "status_badge": ocorrencia.status_badge,
+                "tipo_animal": ocorrencia.tipo_animal,
+                "foto": ocorrencia.foto,
+                "nivel_urgencia": ocorrencia.nivel_urgencia,
+                "data_ocorrencia": ocorrencia.data_ocorrencia,
+                "endereco_localizacao": ocorrencia.endereco_localizacao,
+                "latitude": float(latitude),
+                "longitude": float(longitude),
+            }
+        )
+
+    return ocorrencias
+
 
 @router.get("/minhas", response_model=list[OcorrenciaResposta])
 async def listar_minhas_ocorrencias(
@@ -1515,6 +1625,8 @@ class OcorrenciaResposta(BaseModel):
     nivel_urgencia: str
     data_ocorrencia: datetime
     endereco_localizacao: str | None = None
+    latitude: float
+    longitude: float
 
     class Config:
         from_attributes = True

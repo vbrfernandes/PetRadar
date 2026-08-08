@@ -33,6 +33,8 @@ class OcorrenciaResposta(BaseModel):
     nivel_urgencia: str
     data_ocorrencia: datetime
     endereco_localizacao: str | None = None
+    latitude: float
+    longitude: float
 
     class Config:
         from_attributes = True

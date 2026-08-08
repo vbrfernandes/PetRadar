@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from geoalchemy2.functions import ST_GeomFromText, ST_DWithin
+from geoalchemy2.functions import (
+    ST_GeomFromText,
+    ST_DWithin,
+    ST_X,
+    ST_Y,
+)
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
@@ -68,6 +73,13 @@ async def criar_ocorrencia(
     await db.refresh(nova_ocorrencia)
     return nova_ocorrencia
 
+from geoalchemy2.functions import (
+    ST_GeomFromText,
+    ST_DWithin,
+    ST_X,
+    ST_Y,
+)
+
 @router.get("/proximas", response_model=list[OcorrenciaResposta])
 async def listar_ocorrencias_proximas(
     lat: float = Query(...),
@@ -75,15 +87,49 @@ async def listar_ocorrencias_proximas(
     raio_km: float = Query(10.0),
     db: AsyncSession = Depends(get_db)
 ):
-    ponto_usuario = ST_GeomFromText(f"POINT({lng} {lat})", 4326)
+    ponto_usuario = ST_GeomFromText(
+        f"POINT({lng} {lat})",
+        4326
+    )
+
     raio_metros = raio_km * 1000
 
-    query = select(Ocorrencia).where(
-        ST_DWithin(Ocorrencia.localizacao, ponto_usuario, raio_metros, use_spheroid=True)
+    query = select(
+        Ocorrencia,
+        ST_Y(Ocorrencia.localizacao).label("latitude"),
+        ST_X(Ocorrencia.localizacao).label("longitude"),
+    ).where(
+        ST_DWithin(
+            Ocorrencia.localizacao,
+            ponto_usuario,
+            raio_metros,
+            use_spheroid=True
+        )
     )
 
     resultado = await db.execute(query)
-    return resultado.scalars().all()
+
+    ocorrencias = []
+
+    for ocorrencia, latitude, longitude in resultado.all():
+        ocorrencias.append(
+            {
+                "id_ocorrencia": ocorrencia.id_ocorrencia,
+                "id_conta": ocorrencia.id_conta,
+                "tipo_ocorrencia": ocorrencia.tipo_ocorrencia,
+                "status_badge": ocorrencia.status_badge,
+                "tipo_animal": ocorrencia.tipo_animal,
+                "foto": ocorrencia.foto,
+                "nivel_urgencia": ocorrencia.nivel_urgencia,
+                "data_ocorrencia": ocorrencia.data_ocorrencia,
+                "endereco_localizacao": ocorrencia.endereco_localizacao,
+                "latitude": float(latitude),
+                "longitude": float(longitude),
+            }
+        )
+
+    return ocorrencias
+
 
 @router.get("/minhas", response_model=list[OcorrenciaResposta])
 async def listar_minhas_ocorrencias(

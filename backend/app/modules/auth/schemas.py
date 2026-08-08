@@ -6,10 +6,12 @@ class UsuarioFisicoCriar(BaseModel):
     senha: str = Field(min_length=6)
     telefone: str | None = None
     nome_completo: str
+    cpf: str
     tem_pet: bool = False
     raio_pesquisa_km: int = 10
     localizacao_lat: float | None = None
     localizacao_lng: float | None = None
+    
 
 class ONGCriar(BaseModel):
     email: EmailStr
