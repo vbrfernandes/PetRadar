@@ -19,6 +19,7 @@ import MapScreen from './src/screens/MapScreen';
 import CadastroUserScreen from './src/screens/CadastroUserScreen';
 import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
 import CadastroONGScreen from './src/screens/CadastroONGScreen';
+import CadastroOcorrenciaScreen from './src/screens/CadastroOcorrenciaScreen';
 
 // Tipagem das Rotas do Autenticação
 export type AuthStackParamList = {
@@ -35,6 +36,7 @@ export type AppTabParamList = {
   Mapa: undefined;
   SOS: undefined;
   Perfil: undefined;
+  CadastroOcorrencia: undefined;
 };
 
 
@@ -80,6 +82,10 @@ function AppNavigator() {
       <AppTabs.Screen name="Mapa" component={MapScreen} />
       <AppTabs.Screen name="SOS" component={SOSScreen} />
       <AppTabs.Screen name="Perfil" component={ProfileScreen} />
+      <AppTabs.Screen
+        name="CadastroOcorrencia"
+        component={CadastroOcorrenciaScreen}
+      />
     </AppTabs.Navigator>
   );
 }

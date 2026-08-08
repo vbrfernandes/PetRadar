@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 class OcorrenciaCriar(BaseModel):
-    id_conta: int
+
     tipo_ocorrencia: str
     status_badge: str
     tipo_animal: str
@@ -17,10 +17,10 @@ class OcorrenciaCriar(BaseModel):
     deficiencia: bool = False
     deficiencia_detalhes: str | None = None
     nivel_urgencia: str = "Moderado"
+    data_ocorrencia: datetime
     endereco_localizacao: str | None = None
     latitude: float
     longitude: float
-    foto: str
     observacao: str | None = None
 
 class OcorrenciaResposta(BaseModel):

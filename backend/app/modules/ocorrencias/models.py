@@ -11,7 +11,10 @@ class Ocorrencia(Base):
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
     
     tipo_ocorrencia: Mapped[str] = mapped_column(String(50), nullable=False)
-    status_badge: Mapped[str] = mapped_column(String(20), nullable=False) # PERDIDO | AVISTADO
+    status_badge: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False
+    ) # PERDIDO | AVISTADO | ANIMAL_DE_RUA
     tipo_animal: Mapped[str] = mapped_column(String(50), nullable=False)
     raca: Mapped[str | None] = mapped_column(String(100))
     sexo: Mapped[str | None] = mapped_column(String(20))

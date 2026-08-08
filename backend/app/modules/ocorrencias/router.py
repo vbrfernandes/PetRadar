@@ -8,6 +8,7 @@ from app.core.cloudinary import upload_foto_pet
 from app.modules.auth.models import Conta
 from app.modules.ocorrencias.models import Ocorrencia
 from app.modules.ocorrencias.schemas import OcorrenciaResposta
+from datetime import datetime
 
 router = APIRouter()
 
@@ -31,6 +32,7 @@ async def criar_ocorrencia(
     deficiencia_detalhes: str | None = Form(None),
     nivel_urgencia: str = Form("Moderado"),
     endereco_localizacao: str | None = Form(None),
+    data_ocorrencia: datetime = Form(...),
     observacao: str | None = Form(None),
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
@@ -55,6 +57,7 @@ async def criar_ocorrencia(
         deficiencia_detalhes=deficiencia_detalhes,
         nivel_urgencia=nivel_urgencia,
         endereco_localizacao=endereco_localizacao,
+        data_ocorrencia=data_ocorrencia,
         localizacao=ST_GeomFromText(ponto_wkt, 4326),
         foto=url_foto,
         observacao=observacao

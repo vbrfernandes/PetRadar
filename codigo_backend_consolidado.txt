@@ -1329,7 +1329,10 @@ class Ocorrencia(Base):
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
     
     tipo_ocorrencia: Mapped[str] = mapped_column(String(50), nullable=False)
-    status_badge: Mapped[str] = mapped_column(String(20), nullable=False) # PERDIDO | AVISTADO
+    status_badge: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False
+    ) # PERDIDO | AVISTADO | ANIMAL_DE_RUA
     tipo_animal: Mapped[str] = mapped_column(String(50), nullable=False)
     raca: Mapped[str | None] = mapped_column(String(100))
     sexo: Mapped[str | None] = mapped_column(String(20))
@@ -1387,6 +1390,7 @@ from app.core.cloudinary import upload_foto_pet
 from app.modules.auth.models import Conta
 from app.modules.ocorrencias.models import Ocorrencia
 from app.modules.ocorrencias.schemas import OcorrenciaResposta
+from datetime import datetime
 
 router = APIRouter()
 
@@ -1410,6 +1414,7 @@ async def criar_ocorrencia(
     deficiencia_detalhes: str | None = Form(None),
     nivel_urgencia: str = Form("Moderado"),
     endereco_localizacao: str | None = Form(None),
+    data_ocorrencia: datetime = Form(...),
     observacao: str | None = Form(None),
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
@@ -1434,6 +1439,7 @@ async def criar_ocorrencia(
         deficiencia_detalhes=deficiencia_detalhes,
         nivel_urgencia=nivel_urgencia,
         endereco_localizacao=endereco_localizacao,
+        data_ocorrencia=data_ocorrencia,
         localizacao=ST_GeomFromText(ponto_wkt, 4326),
         foto=url_foto,
         observacao=observacao
@@ -1478,7 +1484,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 class OcorrenciaCriar(BaseModel):
-    id_conta: int
+
     tipo_ocorrencia: str
     status_badge: str
     tipo_animal: str
@@ -1493,10 +1499,10 @@ class OcorrenciaCriar(BaseModel):
     deficiencia: bool = False
     deficiencia_detalhes: str | None = None
     nivel_urgencia: str = "Moderado"
+    data_ocorrencia: datetime
     endereco_localizacao: str | None = None
     latitude: float
     longitude: float
-    foto: str
     observacao: str | None = None
 
 class OcorrenciaResposta(BaseModel):
