@@ -37,6 +37,18 @@ import api from "../services/api";
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { AppTabParamList } from '../../App';
+import Svg, {
+  Circle,
+  Path,
+  Defs,
+  ClipPath,
+  Image as SvgImage,
+} from "react-native-svg";
+import Mapbox from "@rnmapbox/maps";
+
+Mapbox.setAccessToken(
+  process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN!
+);
 
 
 
@@ -486,25 +498,77 @@ export default function MapScreen() {
               ocorrencia.endereco_localizacao ||
               "Ocorrência próxima"
             }
+            anchor={{
+              x: 0.5,
+              y: 1,
+            }}
           >
             <View
               style={styles.occurrenceMarker}
               collapsable={false}
             >
-              <View
-                style={styles.occurrenceMarkerImageWrapper}
-                collapsable={false}
+              {/* PINO */}
+              <Svg
+                width={72}
+                height={88}
+                viewBox="0 0 72 88"
               >
-                <Image
-                  source={{
+                <Defs>
+                  <ClipPath id={`occurrence-photo-${ocorrencia.id_ocorrencia}`}>
+                    <Circle
+                      cx="36"
+                      cy="31"
+                      r="24"
+                    />
+                  </ClipPath>
+                </Defs>
+
+                {/* Corpo da gota */}
+                <Path
+                  d="
+          M36 84
+          C34 80 9 55 9 34
+          C9 18.5 21 6 36 6
+          C51 6 63 18.5 63 34
+          C63 55 38 80 36 84
+          Z
+        "
+                  fill={theme.colors.surface}
+                  stroke={theme.colors.brand}
+                  strokeWidth={3}
+                />
+
+                {/* Fundo branco atrás da foto */}
+                <Circle
+                  cx="36"
+                  cy="31"
+                  r="26"
+                  fill={theme.colors.surface}
+                />
+
+                {/* Foto */}
+                <SvgImage
+                  x="12"
+                  y="7"
+                  width="48"
+                  height="48"
+                  href={{
                     uri: ocorrencia.foto,
                   }}
-                  style={styles.occurrenceMarkerImage}
-                  resizeMode="cover"
+                  preserveAspectRatio="xMidYMid slice"
+                  clipPath={`url(#occurrence-photo-${ocorrencia.id_ocorrencia})`}
                 />
-              </View>
 
-              <View style={styles.occurrenceMarkerDot} />
+                {/* Borda da foto */}
+                <Circle
+                  cx="36"
+                  cy="31"
+                  r="24"
+                  fill="none"
+                  stroke={theme.colors.surface}
+                  strokeWidth={3}
+                />
+              </Svg>
             </View>
           </Marker>
         ))}
@@ -2681,43 +2745,12 @@ const styles = StyleSheet.create({
    * OCORRÊNCIAS – ESTILOS MELHORADOS (MAIORES)
    * ==========================================================
    */
-  occurrenceMarker: {
-  width: 64,
-  height: 64,
-  borderRadius: 32,
-  backgroundColor: theme.colors.surface,
-  borderWidth: 2,
-  borderColor: theme.colors.brand,
+occurrenceMarker: {
+  width: 72,
+  height: 88,
   alignItems: "center",
   justifyContent: "center",
   overflow: "visible",
-  ...theme.shadows.elevation1,
-},
-
-occurrenceMarkerImageWrapper: {
-  width: 56,
-  height: 56,
-  borderRadius: 28,
-  overflow: "hidden",
-  backgroundColor: theme.colors.surface,
-},
-
-occurrenceMarkerImage: {
-  width: 56,
-  height: 56,
-  borderRadius: 28,
-  overflow: "hidden",
-},
-
-occurrenceMarkerDot: {
-  position: "absolute",
-  bottom: -6,
-  width: 12,
-  height: 12,
-  borderRadius: 6,
-  backgroundColor: theme.colors.brand,
-  borderWidth: 2,
-  borderColor: theme.colors.surface,
 },
 
   /**
