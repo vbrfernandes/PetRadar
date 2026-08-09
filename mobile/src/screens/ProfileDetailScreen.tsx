@@ -1917,7 +1917,7 @@ const styles = StyleSheet.create({
   },
 
   uploadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
 
     borderRadius: 52,
 

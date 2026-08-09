@@ -50,6 +50,9 @@ async def criar_ocorrencia(
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
 ):
+    if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+
     url_foto = await upload_foto_pet(foto, pasta="ocorrencias")
     ponto_wkt = f"POINT({longitude} {latitude})"
 
@@ -100,6 +103,7 @@ async def listar_ocorrencias_proximas(
         gt=0,
         le=100
     ),
+    limite: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -170,6 +174,7 @@ async def listar_ocorrencias_proximas(
         .order_by(
             Ocorrencia.data_ocorrencia.desc()
         )
+        .limit(limite)
     )
 
     resultado = await db.execute(query)
@@ -202,8 +207,52 @@ async def listar_ocorrencias_proximas(
 
     return ocorrencias
 
+@router.get("/minhas", response_model=list[OcorrenciaResposta])
+async def listar_minhas_ocorrencias(
+    conta_atual: Conta = Depends(obter_conta_atual),
+    limite: int = Query(100, ge=1, le=500),
+    db: AsyncSession = Depends(get_db)
+):
+    query = (
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        )
+        .where(
+            Ocorrencia.id_conta == conta_atual.id_conta
+        )
+        .order_by(
+            Ocorrencia.data_ocorrencia.desc()
+        )
+        .limit(limite)
+    )
+
+    resultado = await db.execute(query)
+
+    ocorrencias = []
+
+    for ocorrencia, latitude, longitude in resultado.all():
+        ocorrencias.append(
+            {
+                "id_ocorrencia": ocorrencia.id_ocorrencia,
+                "id_conta": ocorrencia.id_conta,
+                "tipo_ocorrencia": ocorrencia.tipo_ocorrencia,
+                "status_badge": ocorrencia.status_badge,
+                "tipo_animal": ocorrencia.tipo_animal,
+                "foto": ocorrencia.foto,
+                "nivel_urgencia": ocorrencia.nivel_urgencia,
+                "data_ocorrencia": ocorrencia.data_ocorrencia,
+                "endereco_localizacao": ocorrencia.endereco_localizacao,
+                "latitude": float(latitude),
+                "longitude": float(longitude),
+            }
+        )
+
+    return ocorrencias
+
 @router.get(
-    "/{id_ocorrencia}",
+    "/{id_ocorrencia:int}",
     response_model=OcorrenciaDetalheResposta
 )
 async def obter_ocorrencia_detalhada(
@@ -234,45 +283,3 @@ async def obter_ocorrencia_detalhada(
         )
 
     return ocorrencia
-
-@router.get("/minhas", response_model=list[OcorrenciaResposta])
-async def listar_minhas_ocorrencias(
-    conta_atual: Conta = Depends(obter_conta_atual),
-    db: AsyncSession = Depends(get_db)
-):
-    query = (
-        select(
-            Ocorrencia,
-            ST_Y(Ocorrencia.localizacao).label("latitude"),
-            ST_X(Ocorrencia.localizacao).label("longitude"),
-        )
-        .where(
-            Ocorrencia.id_conta == conta_atual.id_conta
-        )
-        .order_by(
-            Ocorrencia.data_ocorrencia.desc()
-        )
-    )
-
-    resultado = await db.execute(query)
-
-    ocorrencias = []
-
-    for ocorrencia, latitude, longitude in resultado.all():
-        ocorrencias.append(
-            {
-                "id_ocorrencia": ocorrencia.id_ocorrencia,
-                "id_conta": ocorrencia.id_conta,
-                "tipo_ocorrencia": ocorrencia.tipo_ocorrencia,
-                "status_badge": ocorrencia.status_badge,
-                "tipo_animal": ocorrencia.tipo_animal,
-                "foto": ocorrencia.foto,
-                "nivel_urgencia": ocorrencia.nivel_urgencia,
-                "data_ocorrencia": ocorrencia.data_ocorrencia,
-                "endereco_localizacao": ocorrencia.endereco_localizacao,
-                "latitude": float(latitude),
-                "longitude": float(longitude),
-            }
-        )
-
-    return ocorrencias

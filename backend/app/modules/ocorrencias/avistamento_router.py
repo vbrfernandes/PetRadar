@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, UploadFile, File, Form, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from geoalchemy2.functions import ST_GeomFromText
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
 from app.modules.auth.models import Conta
-from app.modules.ocorrencias.models import Avistamento
+from app.modules.ocorrencias.models import Avistamento, Ocorrencia
 
 router = APIRouter()
 
@@ -21,6 +22,15 @@ async def registrar_avistamento(
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
 ):
+    if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+
+    ocorrencia = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(Ocorrencia.id_ocorrencia == id_ocorrencia)
+    )
+    if ocorrencia is None:
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada.")
+
     url_foto = None
     if foto:
         url_foto = await upload_foto_pet(foto, pasta="avistamentos")

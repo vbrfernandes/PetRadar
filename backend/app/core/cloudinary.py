@@ -1,5 +1,6 @@
 import cloudinary
 import cloudinary.uploader
+import asyncio
 from fastapi import UploadFile, HTTPException, status
 from app.core.config import settings
 
@@ -11,9 +12,19 @@ cloudinary.config(
 )
 
 async def upload_foto_pet(arquivo: UploadFile, pasta: str = "ocorrencias") -> str:
+    tipos_permitidos = {"image/jpeg", "image/png", "image/webp"}
+    tamanho_maximo = 10 * 1024 * 1024
+    if arquivo.content_type not in tipos_permitidos:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Formato de imagem não suportado.")
+    if arquivo.size is not None and arquivo.size > tamanho_maximo:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="A imagem excede o limite de 10 MB.")
+
     try:
         conteudo = await arquivo.read()
-        resultado = cloudinary.uploader.upload(
+        if len(conteudo) > tamanho_maximo:
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="A imagem excede o limite de 10 MB.")
+        resultado = await asyncio.to_thread(
+            cloudinary.uploader.upload,
             conteudo,
             folder=f"petradar/{pasta}",
             transformation=[
@@ -21,9 +32,14 @@ async def upload_foto_pet(arquivo: UploadFile, pasta: str = "ocorrencias") -> st
                 {"quality": "auto", "fetch_format": "auto"}
             ]
         )
-        return resultado.get("secure_url")
-    except Exception as erro:
+        url = resultado.get("secure_url")
+        if not url:
+            raise RuntimeError("Cloudinary não retornou uma URL segura.")
+        return url
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao realizar upload da imagem: {str(erro)}"
+            detail="Não foi possível enviar a imagem. Tente novamente."
         )

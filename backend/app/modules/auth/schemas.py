@@ -8,7 +8,7 @@ class UsuarioFisicoCriar(BaseModel):
     nome_completo: str
     cpf: str
     tem_pet: bool = False
-    raio_pesquisa_km: int = 10
+    raio_pesquisa_km: int = Field(default=10, ge=1, le=100)
     localizacao_lat: float | None = None
     localizacao_lng: float | None = None
     
@@ -68,7 +68,7 @@ class TokenSchema(BaseModel):
 class PerfilAtualizacao(BaseModel):
     nome: str | None = None  # nome_completo (Pessoa Física) ou nome_fantasia (ONG)
     telefone: str | None = None
-    raio_pesquisa_km: int | None = None
+    raio_pesquisa_km: int | None = Field(default=None, ge=1, le=100)
     endereco_completo: str | None = None  
     tem_pet: bool | None = None
 

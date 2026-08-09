@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   View,
@@ -170,6 +170,8 @@ export default function MapScreen() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const [tipoFiltro, setTipoFiltro] = useState("Todas");
+  const [urgenciaFiltro, setUrgenciaFiltro] = useState("Todas");
 
   const [discoveryVisible, setDiscoveryVisible] = useState(true);
 
@@ -180,6 +182,24 @@ export default function MapScreen() {
   const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<
     number | null
   >(null);
+
+  const ocorrenciasVisiveis = useMemo(() => {
+    const termo = search.trim().toLocaleLowerCase();
+    return ocorrencias.filter((ocorrencia) => {
+      const correspondeBusca = !termo || [
+        ocorrencia.tipo_animal,
+        ocorrencia.tipo_ocorrencia,
+        ocorrencia.status_badge,
+        ocorrencia.endereco_localizacao || "",
+      ].some((valor) => valor.toLocaleLowerCase().includes(termo));
+      const correspondeTipo = tipoFiltro === "Todas" ||
+        (tipoFiltro === "Perdidos" && ocorrencia.status_badge.toLocaleLowerCase().includes("perdid")) ||
+        (tipoFiltro === "Avistados" && ocorrencia.status_badge.toLocaleLowerCase().includes("avist"));
+      const correspondeUrgencia = urgenciaFiltro === "Todas" ||
+        ocorrencia.nivel_urgencia.toLocaleLowerCase().startsWith(urgenciaFiltro.toLocaleLowerCase().replace("moderada", "moderad"));
+      return correspondeBusca && correspondeTipo && correspondeUrgencia;
+    });
+  }, [ocorrencias, search, tipoFiltro, urgenciaFiltro]);
 
   /**
    * ==========================================================
@@ -536,7 +556,7 @@ export default function MapScreen() {
             MARCADORES DAS OCORRÊNCIAS
         =================================================== */}
 
-{ocorrencias.map((ocorrencia) => {
+{ocorrenciasVisiveis.map((ocorrencia) => {
   const latitude = Number(ocorrencia.latitude);
   const longitude = Number(ocorrencia.longitude);
 
@@ -1074,13 +1094,14 @@ export default function MapScreen() {
                   key={label}
                   style={[
                     styles.filterChip,
-                    label === "Todas" && styles.filterChipSelected,
-                  ]}
+                      label === tipoFiltro && styles.filterChipSelected,
+                    ]}
+                    onPress={() => setTipoFiltro(label)}
                 >
                   <Text
                     style={[
                       styles.filterChipText,
-                      label === "Todas" && styles.filterChipTextSelected,
+                      label === tipoFiltro && styles.filterChipTextSelected,
                     ]}
                   >
                     {label}
@@ -1101,13 +1122,14 @@ export default function MapScreen() {
                   key={label}
                   style={[
                     styles.filterChip,
-                    label === "Todas" && styles.filterChipSelected,
-                  ]}
+                      label === urgenciaFiltro && styles.filterChipSelected,
+                    ]}
+                    onPress={() => setUrgenciaFiltro(label)}
                 >
                   <Text
                     style={[
                       styles.filterChipText,
-                      label === "Todas" && styles.filterChipTextSelected,
+                      label === urgenciaFiltro && styles.filterChipTextSelected,
                     ]}
                   >
                     {label}
@@ -1118,7 +1140,10 @@ export default function MapScreen() {
 
             <View style={styles.filterActions}>
               <Pressable
-                onPress={() => setFiltersVisible(false)}
+                onPress={() => {
+                  setTipoFiltro("Todas");
+                  setUrgenciaFiltro("Todas");
+                }}
                 style={styles.clearFiltersButton}
               >
                 <Text style={styles.clearFiltersText}>Limpar</Text>

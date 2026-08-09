@@ -25,8 +25,9 @@ class Conta(Base):
 
     email_confirmado: Mapped[bool] = mapped_column(Boolean, default=False)
     codigo_confirmacao: Mapped[str | None] = mapped_column(String(6))
-    codigo_recuperacao: Mapped[str | None] = mapped_column(String(6))
+    codigo_recuperacao: Mapped[str | None] = mapped_column(String(128))
     codigo_recuperacao_expira: Mapped[datetime | None] = mapped_column(DateTime)
+    tentativas_recuperacao: Mapped[int] = mapped_column(default=0, nullable=False)
 
     usuario_fisico: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="conta", uselist=False)
     ong: Mapped["ONG"] = relationship("ONG", back_populates="conta", uselist=False)
@@ -37,10 +38,10 @@ class UsuarioFisico(Base):
     id_usuario: Mapped[int] = mapped_column(primary_key=True, index=True)
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), unique=True, nullable=False)
     nome_completo: Mapped[str] = mapped_column(String(255), nullable=False)
-    cpf: Mapped[str] = mapped_column(
+    cpf: Mapped[str | None] = mapped_column(
         String(14),
         unique=True,
-        nullable=False
+        nullable=True
     )
     tem_pet: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     social_login_id: Mapped[str | None] = mapped_column(String(255))
