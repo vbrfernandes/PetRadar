@@ -35,9 +35,7 @@ class LoginSchema(BaseModel):
     email: EmailStr
     senha: str
 
-class TokenSchema(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+
 
 class ContaResposta(BaseModel):
     id_conta: int
