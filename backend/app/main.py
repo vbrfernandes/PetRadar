@@ -13,7 +13,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        "http://192.168.0.5:8081",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,7 +25,19 @@ app.add_middleware(
 
 @app.get("/health", tags=["Healthcheck"])
 async def health_check():
-    return {"status": "ok", "app": settings.PROJECT_NAME}
+    return {
+        "status": "ok",
+        "app": settings.PROJECT_NAME,
+        "api": settings.API_V1_STR,
+    }
+
+@app.get("/health/network", tags=["Healthcheck"])
+async def network_health_check():
+    return {
+        "status": "ok",
+        "message": "Backend acessível pela rede",
+        "content_type": "application/json",
+    }
 
 app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Autenticação"])
 app.include_router(ocorrencias_router, prefix=f"{settings.API_V1_STR}/ocorrencias", tags=["Ocorrências"])

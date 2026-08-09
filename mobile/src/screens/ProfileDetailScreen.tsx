@@ -232,7 +232,7 @@ const TabBar = React.memo(
           style={[
             styles.tabIconContainer,
             activeTab === 'perfil' &&
-              styles.tabIconContainerActive,
+            styles.tabIconContainerActive,
           ]}
         >
           <Ionicons
@@ -250,7 +250,7 @@ const TabBar = React.memo(
           style={[
             styles.tabText,
             activeTab === 'perfil' &&
-              styles.tabTextActive,
+            styles.tabTextActive,
           ]}
         >
           Perfil
@@ -261,7 +261,7 @@ const TabBar = React.memo(
         style={[
           styles.tabButton,
           activeTab === 'ocorrencias' &&
-            styles.tabButtonActive,
+          styles.tabButtonActive,
         ]}
         onPress={() => onTabChange('ocorrencias')}
         accessibilityRole="tab"
@@ -273,7 +273,7 @@ const TabBar = React.memo(
           style={[
             styles.tabIconContainer,
             activeTab === 'ocorrencias' &&
-              styles.tabIconContainerActive,
+            styles.tabIconContainerActive,
           ]}
         >
           <MaterialCommunityIcons
@@ -291,7 +291,7 @@ const TabBar = React.memo(
           style={[
             styles.tabText,
             activeTab === 'ocorrencias' &&
-              styles.tabTextActive,
+            styles.tabTextActive,
           ]}
         >
           Ocorrências
@@ -555,8 +555,8 @@ export default function ProfileDetailScreen({
     (data: UserProfile) => {
       setNome(
         data.nome_completo ||
-          data.nome_fantasia ||
-          ''
+        data.nome_fantasia ||
+        ''
       );
 
       setTelefone(data.telefone || '');
@@ -584,33 +584,67 @@ export default function ProfileDetailScreen({
     setLoading(true);
 
     try {
-      const [
-        resPerfil,
-        resOcorrencias,
-      ] = await Promise.all([
-        api.get('/auth/me'),
-        api.get('/ocorrencias/minhas'),
-      ]);
+      // ========================================================
+      // 1. CARREGAR PERFIL
+      // ========================================================
+      // O perfil é independente das ocorrências.
+      // Se /ocorrencias/minhas falhar, o perfil continua carregando.
 
-      const data = resPerfil.data as UserProfile;
+      try {
+        const resPerfil = await api.get('/auth/me');
 
-      setProfile(data);
-      preencherCampos(data);
+        const data = resPerfil.data as UserProfile;
 
-      setMinhasOcorrencias(
-        resOcorrencias.data || []
-      );
-    } catch (error) {
-      Alert.alert(
-        'Não foi possível carregar',
-        'Verifique sua conexão e tente novamente.'
-      );
+        setProfile(data);
+        preencherCampos(data);
+      } catch (error: any) {
+        console.error(
+          '[ProfileDetailScreen] Erro ao carregar perfil:',
+          error?.response?.status,
+          error?.response?.data || error?.message
+        );
+
+        Alert.alert(
+          'Não foi possível carregar seu perfil',
+          error?.response?.data?.detail ||
+          'Não foi possível obter seus dados. Verifique sua conexão e tente novamente.'
+        );
+
+        return;
+      }
+
+      // ========================================================
+      // 2. CARREGAR OCORRÊNCIAS
+      // ========================================================
+      // Essa requisição não pode impedir o carregamento do perfil.
+
+      try {
+        const resOcorrencias =
+          await api.get('/ocorrencias/minhas');
+
+        setMinhasOcorrencias(
+          Array.isArray(resOcorrencias.data)
+            ? resOcorrencias.data
+            : []
+        );
+      } catch (error: any) {
+        console.error(
+          '[ProfileDetailScreen] Erro ao carregar ocorrências:',
+          error?.response?.status,
+          error?.response?.data || error?.message
+        );
+
+        // O perfil já foi carregado.
+        // Se as ocorrências falharem, mostramos uma lista vazia
+        // em vez de derrubar a tela inteira.
+
+        setMinhasOcorrencias([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [preencherCampos]);
-
   // ----------------------------------------------------------
   // SALVAR PERFIL
   // ----------------------------------------------------------
@@ -691,7 +725,7 @@ export default function ProfileDetailScreen({
         Alert.alert(
           'Erro ao salvar',
           error.response?.data?.detail ||
-            'Não foi possível atualizar seu perfil.'
+          'Não foi possível atualizar seu perfil.'
         );
       } finally {
         setSaving(false);
@@ -789,9 +823,9 @@ export default function ProfileDetailScreen({
           setProfile((currentProfile) =>
             currentProfile
               ? {
-                  ...currentProfile,
-                  foto_perfil: novaFoto,
-                }
+                ...currentProfile,
+                foto_perfil: novaFoto,
+              }
               : currentProfile
           );
         }
@@ -806,7 +840,7 @@ export default function ProfileDetailScreen({
         Alert.alert(
           'Erro ao atualizar foto',
           error.response?.data?.detail ||
-            'Não foi possível enviar a imagem. Tente novamente.'
+          'Não foi possível enviar a imagem. Tente novamente.'
         );
       } finally {
         setUploadingImage(false);
@@ -1015,91 +1049,91 @@ export default function ProfileDetailScreen({
 
             {profile?.tipo_conta ===
               'PESSOA_FISICA' && (
-              <>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>
-                    Raio de pesquisa
-                  </Text>
-
-                  <View style={styles.inputWrapper}>
-                    <Ionicons
-                      name="location-outline"
-                      size={19}
-                      color={COLORS.primary}
-                    />
-
-                    <TextInput
-                      style={styles.input}
-                      value={raio}
-                      onChangeText={setRaio}
-                      placeholder="10"
-                      placeholderTextColor={
-                        COLORS.muted
-                      }
-                      keyboardType="number-pad"
-                      maxLength={3}
-                      accessibilityLabel="Raio de pesquisa em quilômetros"
-                    />
-
-                    <Text style={styles.inputSuffix}>
-                      km
+                <>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>
+                      Raio de pesquisa
                     </Text>
-                  </View>
 
-                  <Text style={styles.helperText}>
-                    Defina uma área entre 1 e
-                    100 km para receber
-                    informações relevantes.
-                  </Text>
-                </View>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons
+                        name="location-outline"
+                        size={19}
+                        color={COLORS.primary}
+                      />
 
-                <View
-                  style={styles.preferenceRow}
-                >
-                  <View
-                    style={styles.preferenceIcon}
-                  >
-                    <MaterialCommunityIcons
-                      name="paw-outline"
-                      size={21}
-                      color={COLORS.primary}
-                    />
+                      <TextInput
+                        style={styles.input}
+                        value={raio}
+                        onChangeText={setRaio}
+                        placeholder="10"
+                        placeholderTextColor={
+                          COLORS.muted
+                        }
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        accessibilityLabel="Raio de pesquisa em quilômetros"
+                      />
+
+                      <Text style={styles.inputSuffix}>
+                        km
+                      </Text>
+                    </View>
+
+                    <Text style={styles.helperText}>
+                      Defina uma área entre 1 e
+                      100 km para receber
+                      informações relevantes.
+                    </Text>
                   </View>
 
                   <View
-                    style={
-                      styles.preferenceContent
-                    }
+                    style={styles.preferenceRow}
                   >
-                    <Text
-                      style={
-                        styles.preferenceTitle
-                      }
+                    <View
+                      style={styles.preferenceIcon}
                     >
-                      Tenho um pet
-                    </Text>
+                      <MaterialCommunityIcons
+                        name="paw-outline"
+                        size={21}
+                        color={COLORS.primary}
+                      />
+                    </View>
 
-                    <Text
+                    <View
                       style={
-                        styles.preferenceDescription
+                        styles.preferenceContent
                       }
                     >
-                      Ajuda a personalizar sua
-                      experiência no PetRadar.
-                    </Text>
+                      <Text
+                        style={
+                          styles.preferenceTitle
+                        }
+                      >
+                        Tenho um pet
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.preferenceDescription
+                        }
+                      >
+                        Ajuda a personalizar sua
+                        experiência no PetRadar.
+                      </Text>
+                    </View>
+
+                    <PetSwitch
+                      value={temPet}
+                      onChange={() =>
+                        setTemPet(
+                          (current) => !current
+                        )
+                      }
+                    />
                   </View>
-
-                  <PetSwitch
-                    value={temPet}
-                    onChange={() =>
-                      setTemPet(
-                        (current) => !current
-                      )
-                    }
-                  />
-                </View>
-              </>
-            )}
+                </>
+              )}
 
             {profile?.tipo_conta === 'ONG' && (
               <View style={styles.inputGroup}>
@@ -1148,7 +1182,7 @@ export default function ProfileDetailScreen({
               style={[
                 styles.primaryButton,
                 saving &&
-                  styles.primaryButtonDisabled,
+                styles.primaryButtonDisabled,
               ]}
               onPress={handleSalvarPerfil}
               disabled={saving}
@@ -1275,37 +1309,37 @@ export default function ProfileDetailScreen({
 
         {profile?.tipo_conta ===
           'PESSOA_FISICA' && (
-          <>
-            <Text style={styles.cardSectionTitle}>
-              Preferências
-            </Text>
+            <>
+              <Text style={styles.cardSectionTitle}>
+                Preferências
+              </Text>
 
-            <View style={styles.infoCard}>
-              <InfoRow
-                icon="location-outline"
-                label="Raio de pesquisa"
-                value={`${profile?.raio_pesquisa_km || 10} km`}
-              />
+              <View style={styles.infoCard}>
+                <InfoRow
+                  icon="location-outline"
+                  label="Raio de pesquisa"
+                  value={`${profile?.raio_pesquisa_km || 10} km`}
+                />
 
-              <View style={styles.infoDivider} />
+                <View style={styles.infoDivider} />
 
-              <InfoRow
-                icon="heart-outline"
-                label="Possui pet"
-                value={
-                  profile?.tem_pet
-                    ? 'Sim'
-                    : 'Não'
-                }
-                iconBackground={
-                  profile?.tem_pet
-                    ? COLORS.successBg
-                    : COLORS.warningBg
-                }
-              />
-            </View>
-          </>
-        )}
+                <InfoRow
+                  icon="heart-outline"
+                  label="Possui pet"
+                  value={
+                    profile?.tem_pet
+                      ? 'Sim'
+                      : 'Não'
+                  }
+                  iconBackground={
+                    profile?.tem_pet
+                      ? COLORS.successBg
+                      : COLORS.warningBg
+                  }
+                />
+              </View>
+            </>
+          )}
 
         {profile?.tipo_conta === 'ONG' && (
           <>
