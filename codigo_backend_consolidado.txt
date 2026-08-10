@@ -2,7 +2,7 @@
 ARQUITETURA DO PROJETO - BACKEND
 ================================================================================
 
-📁 src\backend\app
+📁 backend\app
 ├── core
 │   ├── cloudinary.py
 │   ├── config.py
@@ -32,52 +32,60 @@ ARQUITETURA DO PROJETO - BACKEND
 │       └── schemas.py
 └── main.py
 
-📁 src\backend\alembic
+📁 backend\alembic
 ├── versions
 │   ├── 28a9a8d94dc2_add_cpf_usuario.py
 │   ├── 6ec9a90cf3ac_completar_modelos_der.py
-│   └── be3d516310b6_add_auth_verification_fields.py
+│   ├── a4b7c9d2e5f1_create_occurrence_care_history.py
+│   ├── be3d516310b6_add_auth_verification_fields.py
+│   ├── d3a8b6c4e1f2_add_occurrence_spatial_index.py
+│   └── f7c1e4d2a9b0_secure_password_reset_codes.py
 ├── env.py
 └── script.py.mako
 
 📄 ARQUIVOS DE CONFIGURAÇÃO ADICIONADOS:
-  └── src\backend\docker-compose.yml
-  └── src\backend\alembic.ini
-  └── src\backend\.env
-  └── src\backend\alembic\env.py
+  └── backend\docker-compose.yml
+  └── backend\alembic.ini
+  └── backend\requirements.txt
+  └── backend\.env.example
+  └── backend\alembic\env.py
 
 ================================================================================
 ROTAS E SEQUÊNCIA DOS ARQUIVOS INCLUÍDOS (ORDENADOS DE CIMA PARA BAIXO)
 ================================================================================
 
-01. src\backend\.env
-02. src\backend\alembic.ini
-03. src\backend\alembic\env.py
-04. src\backend\alembic\script.py.mako
-05. src\backend\alembic\versions\28a9a8d94dc2_add_cpf_usuario.py
-06. src\backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
-07. src\backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
-08. src\backend\app\core\cloudinary.py
-09. src\backend\app\core\config.py
-10. src\backend\app\core\database.py
-11. src\backend\app\core\deps.py
-12. src\backend\app\core\security.py
-13. src\backend\app\main.py
-14. src\backend\app\modules\auth\models.py
-15. src\backend\app\modules\auth\router.py
-16. src\backend\app\modules\auth\schemas.py
-17. src\backend\app\modules\auth\service.py
-18. src\backend\app\modules\chat\models.py
-19. src\backend\app\modules\engajamento\models.py
-20. src\backend\app\modules\ocorrencias\avistamento_router.py
-21. src\backend\app\modules\ocorrencias\models.py
-22. src\backend\app\modules\ocorrencias\router.py
-23. src\backend\app\modules\ocorrencias\schemas.py
-24. src\backend\app\modules\ong\models.py
-25. src\backend\app\modules\pets\models.py
-26. src\backend\app\modules\pets\router.py
-27. src\backend\app\modules\pets\schemas.py
-28. src\backend\docker-compose.yml
+01. backend\.env.example
+02. backend\alembic.ini
+03. backend\alembic\env.py
+04. backend\alembic\script.py.mako
+05. backend\alembic\versions\28a9a8d94dc2_add_cpf_usuario.py
+06. backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
+07. backend\alembic\versions\a4b7c9d2e5f1_create_occurrence_care_history.py
+08. backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
+09. backend\alembic\versions\d3a8b6c4e1f2_add_occurrence_spatial_index.py
+10. backend\alembic\versions\f7c1e4d2a9b0_secure_password_reset_codes.py
+11. backend\app\core\cloudinary.py
+12. backend\app\core\config.py
+13. backend\app\core\database.py
+14. backend\app\core\deps.py
+15. backend\app\core\security.py
+16. backend\app\main.py
+17. backend\app\modules\auth\models.py
+18. backend\app\modules\auth\router.py
+19. backend\app\modules\auth\schemas.py
+20. backend\app\modules\auth\service.py
+21. backend\app\modules\chat\models.py
+22. backend\app\modules\engajamento\models.py
+23. backend\app\modules\ocorrencias\avistamento_router.py
+24. backend\app\modules\ocorrencias\models.py
+25. backend\app\modules\ocorrencias\router.py
+26. backend\app\modules\ocorrencias\schemas.py
+27. backend\app\modules\ong\models.py
+28. backend\app\modules\pets\models.py
+29. backend\app\modules\pets\router.py
+30. backend\app\modules\pets\schemas.py
+31. backend\docker-compose.yml
+32. backend\requirements.txt
 
 ================================================================================
 CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
@@ -85,28 +93,23 @@ CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
 
 
 ================================================================================
-CAMINHO: src\backend\.env
+CAMINHO: backend\.env.example
 ================================================================================
 
-PROJECT_NAME="petRadar API"
-API_V1_STR="/api/v1"
+POSTGRES_USER=petradar_admin
+POSTGRES_PASSWORD=change-me-to-a-strong-password
+POSTGRES_SERVER=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=petradar_db
+SECRET_KEY=generate-a-long-random-secret-before-use
+SQL_ECHO=false
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 
-POSTGRES_USER="postgres"
-POSTGRES_PASSWORD="10070000Alexandre1207"
-POSTGRES_SERVER=db.eoyclmqxgvcjgqmtphxj.supabase.co
-POSTGRES_PORT="5432"
-POSTGRES_DB="postgres"
-
-SECRET_KEY="petradar_chave_secreta_super_segura_desenvolvimento_2026"
-ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=10080
-
-CLOUDINARY_CLOUD_NAME="cf7grg4n"
-CLOUDINARY_API_KEY="128216416486598"
-CLOUDINARY_API_SECRET="2BhND8bzifUhGuLW0tAnydXPDP8"
 
 ================================================================================
-CAMINHO: src\backend\alembic.ini
+CAMINHO: backend\alembic.ini
 ================================================================================
 
 # A generic, single database configuration.
@@ -154,7 +157,7 @@ format = %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %H:%M:%S
 
 ================================================================================
-CAMINHO: src\backend\alembic\env.py
+CAMINHO: backend\alembic\env.py
 ================================================================================
 
 import asyncio
@@ -246,7 +249,7 @@ else:
     run_migrations_online()
 
 ================================================================================
-CAMINHO: src\backend\alembic\script.py.mako
+CAMINHO: backend\alembic\script.py.mako
 ================================================================================
 
 """${message}
@@ -278,7 +281,7 @@ def downgrade() -> None:
     ${downgrades if downgrades else "pass"}
 
 ================================================================================
-CAMINHO: src\backend\alembic\versions\28a9a8d94dc2_add_cpf_usuario.py
+CAMINHO: backend\alembic\versions\28a9a8d94dc2_add_cpf_usuario.py
 ================================================================================
 
 """add cpf usuario
@@ -332,7 +335,7 @@ def downgrade() -> None:
     )
 
 ================================================================================
-CAMINHO: src\backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
+CAMINHO: backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
 ================================================================================
 
 """completar_modelos_der
@@ -562,7 +565,78 @@ def downgrade() -> None:
     # ### end Alembic commands ###
 
 ================================================================================
-CAMINHO: src\backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
+CAMINHO: backend\alembic\versions\a4b7c9d2e5f1_create_occurrence_care_history.py
+================================================================================
+
+"""create occurrence care history
+
+Revision ID: a4b7c9d2e5f1
+Revises: d3a8b6c4e1f2
+"""
+from alembic import op
+import sqlalchemy as sa
+
+
+revision = "a4b7c9d2e5f1"
+down_revision = "d3a8b6c4e1f2"
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.create_table(
+        "historico_cuidados_ocorrencia",
+        sa.Column("id_historico", sa.Integer(), nullable=False),
+        sa.Column("id_ocorrencia", sa.Integer(), nullable=False),
+        sa.Column("id_conta", sa.Integer(), nullable=False),
+        sa.Column("tipo_cuidado", sa.String(length=10), nullable=False),
+        sa.Column("data_cuidado", sa.DateTime(), nullable=False),
+        sa.Column(
+            "data_registro", sa.DateTime(), nullable=False, server_default=sa.func.now()
+        ),
+        sa.CheckConstraint(
+            "tipo_cuidado IN ('AGUA', 'COMIDA')",
+            name="ck_historico_cuidados_tipo",
+        ),
+        sa.ForeignKeyConstraint(["id_ocorrencia"], ["ocorrencias.id_ocorrencia"]),
+        sa.ForeignKeyConstraint(["id_conta"], ["contas.id_conta"]),
+        sa.PrimaryKeyConstraint("id_historico"),
+    )
+    op.create_index(
+        "ix_historico_cuidados_ocorrencia_id_ocorrencia",
+        "historico_cuidados_ocorrencia",
+        ["id_ocorrencia"],
+    )
+    op.create_index(
+        "ix_historico_cuidados_ocorrencia_id_conta",
+        "historico_cuidados_ocorrencia",
+        ["id_conta"],
+    )
+    op.create_index(
+        "ix_historico_cuidados_ocorrencia_estado",
+        "historico_cuidados_ocorrencia",
+        ["id_ocorrencia", "tipo_cuidado", "data_cuidado"],
+    )
+
+
+def downgrade() -> None:
+    op.drop_index(
+        "ix_historico_cuidados_ocorrencia_estado",
+        table_name="historico_cuidados_ocorrencia",
+    )
+    op.drop_index(
+        "ix_historico_cuidados_ocorrencia_id_conta",
+        table_name="historico_cuidados_ocorrencia",
+    )
+    op.drop_index(
+        "ix_historico_cuidados_ocorrencia_id_ocorrencia",
+        table_name="historico_cuidados_ocorrencia",
+    )
+    op.drop_table("historico_cuidados_ocorrencia")
+
+
+================================================================================
+CAMINHO: backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
 ================================================================================
 
 """add_auth_verification_fields
@@ -588,7 +662,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.add_column('contas', sa.Column('email_confirmado', sa.Boolean(), nullable=False))
+    op.add_column('contas', sa.Column('email_confirmado', sa.Boolean(), nullable=False, server_default=sa.false()))
     op.add_column('contas', sa.Column('codigo_confirmacao', sa.String(length=6), nullable=True))
     op.add_column('contas', sa.Column('codigo_recuperacao', sa.String(length=6), nullable=True))
     op.add_column('contas', sa.Column('codigo_recuperacao_expira', sa.DateTime(), nullable=True))
@@ -603,12 +677,73 @@ def downgrade() -> None:
     op.drop_column('contas', 'email_confirmado')
     # ### end Alembic commands ###
 
+
 ================================================================================
-CAMINHO: src\backend\app\core\cloudinary.py
+CAMINHO: backend\alembic\versions\d3a8b6c4e1f2_add_occurrence_spatial_index.py
+================================================================================
+
+"""add spatial index for occurrence search
+
+Revision ID: d3a8b6c4e1f2
+Revises: f7c1e4d2a9b0
+"""
+from alembic import op
+
+revision = "d3a8b6c4e1f2"
+down_revision = "f7c1e4d2a9b0"
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.execute(
+        "CREATE INDEX ix_ocorrencias_localizacao_geography "
+        "ON ocorrencias USING gist ((localizacao::geography))"
+    )
+
+
+def downgrade() -> None:
+    op.drop_index("ix_ocorrencias_localizacao_geography", table_name="ocorrencias")
+
+
+================================================================================
+CAMINHO: backend\alembic\versions\f7c1e4d2a9b0_secure_password_reset_codes.py
+================================================================================
+
+"""secure password-reset code storage
+
+Revision ID: f7c1e4d2a9b0
+Revises: 28a9a8d94dc2
+"""
+from alembic import op
+import sqlalchemy as sa
+
+revision = "f7c1e4d2a9b0"
+down_revision = "28a9a8d94dc2"
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.alter_column("contas", "codigo_recuperacao", type_=sa.String(length=128))
+    op.add_column(
+        "contas",
+        sa.Column("tentativas_recuperacao", sa.Integer(), nullable=False, server_default="0"),
+    )
+
+
+def downgrade() -> None:
+    op.drop_column("contas", "tentativas_recuperacao")
+    op.alter_column("contas", "codigo_recuperacao", type_=sa.String(length=6))
+
+
+================================================================================
+CAMINHO: backend\app\core\cloudinary.py
 ================================================================================
 
 import cloudinary
 import cloudinary.uploader
+import asyncio
 from fastapi import UploadFile, HTTPException, status
 from app.core.config import settings
 
@@ -620,9 +755,19 @@ cloudinary.config(
 )
 
 async def upload_foto_pet(arquivo: UploadFile, pasta: str = "ocorrencias") -> str:
+    tipos_permitidos = {"image/jpeg", "image/png", "image/webp"}
+    tamanho_maximo = 10 * 1024 * 1024
+    if arquivo.content_type not in tipos_permitidos:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Formato de imagem não suportado.")
+    if arquivo.size is not None and arquivo.size > tamanho_maximo:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="A imagem excede o limite de 10 MB.")
+
     try:
         conteudo = await arquivo.read()
-        resultado = cloudinary.uploader.upload(
+        if len(conteudo) > tamanho_maximo:
+            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="A imagem excede o limite de 10 MB.")
+        resultado = await asyncio.to_thread(
+            cloudinary.uploader.upload,
             conteudo,
             folder=f"petradar/{pasta}",
             transformation=[
@@ -630,15 +775,21 @@ async def upload_foto_pet(arquivo: UploadFile, pasta: str = "ocorrencias") -> st
                 {"quality": "auto", "fetch_format": "auto"}
             ]
         )
-        return resultado.get("secure_url")
-    except Exception as erro:
+        url = resultado.get("secure_url")
+        if not url:
+            raise RuntimeError("Cloudinary não retornou uma URL segura.")
+        return url
+    except HTTPException:
+        raise
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao realizar upload da imagem: {str(erro)}"
+            detail="Não foi possível enviar a imagem. Tente novamente."
         )
 
+
 ================================================================================
-CAMINHO: src\backend\app\core\config.py
+CAMINHO: backend\app\core\config.py
 ================================================================================
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -648,16 +799,17 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Banco de Dados
-    POSTGRES_USER: str = "petradar_admin"
-    POSTGRES_PASSWORD: str = "petradar_pass_dev"
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: str = "5432"
-    POSTGRES_DB: str = "petradar_db"
+    POSTGRES_DB: str
 
     # Segurança JWT
-    SECRET_KEY: str = "petradar_chave_secreta_super_segura_desenvolvimento_2026"
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
+    SQL_ECHO: bool = False
 
     # Cloudinary
     CLOUDINARY_CLOUD_NAME: str = ""
@@ -668,12 +820,13 @@ class Settings(BaseSettings):
     def ASYNC_DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
 settings = Settings()
 
+
 ================================================================================
-CAMINHO: src\backend\app\core\database.py
+CAMINHO: backend\app\core\database.py
 ================================================================================
 
 from typing import AsyncGenerator
@@ -681,7 +834,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import DeclarativeBase
 from app.core.config import settings
 
-engine = create_async_engine(settings.ASYNC_DATABASE_URL, echo=True, future=True)
+engine = create_async_engine(settings.ASYNC_DATABASE_URL, echo=settings.SQL_ECHO, future=True)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
@@ -701,8 +854,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
+
 ================================================================================
-CAMINHO: src\backend\app\core\deps.py
+CAMINHO: backend\app\core\deps.py
 ================================================================================
 
 from fastapi import Depends, HTTPException, status
@@ -742,7 +896,7 @@ async def obter_conta_atual(
     return conta
 
 ================================================================================
-CAMINHO: src\backend\app\core\security.py
+CAMINHO: backend\app\core\security.py
 ================================================================================
 
 from datetime import datetime, timedelta, timezone
@@ -769,7 +923,7 @@ def criar_token_acesso(subjetivo: str | Any, tempo_expiracao: timedelta | None =
     return jwt.encode(dados_token, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 ================================================================================
-CAMINHO: src\backend\app\main.py
+CAMINHO: backend\app\main.py
 ================================================================================
 
 from fastapi import FastAPI
@@ -787,7 +941,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        "http://192.168.0.5:8081",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -795,7 +953,19 @@ app.add_middleware(
 
 @app.get("/health", tags=["Healthcheck"])
 async def health_check():
-    return {"status": "ok", "app": settings.PROJECT_NAME}
+    return {
+        "status": "ok",
+        "app": settings.PROJECT_NAME,
+        "api": settings.API_V1_STR,
+    }
+
+@app.get("/health/network", tags=["Healthcheck"])
+async def network_health_check():
+    return {
+        "status": "ok",
+        "message": "Backend acessível pela rede",
+        "content_type": "application/json",
+    }
 
 app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["Autenticação"])
 app.include_router(ocorrencias_router, prefix=f"{settings.API_V1_STR}/ocorrencias", tags=["Ocorrências"])
@@ -803,7 +973,7 @@ app.include_router(avistamento_router, prefix=f"{settings.API_V1_STR}/avistament
 app.include_router(pets_router, prefix=f"{settings.API_V1_STR}/pets", tags=["Pets"])
 
 ================================================================================
-CAMINHO: src\backend\app\modules\auth\models.py
+CAMINHO: backend\app\modules\auth\models.py
 ================================================================================
 
 from pydantic import BaseModel, EmailStr, Field
@@ -833,11 +1003,15 @@ class Conta(Base):
 
     email_confirmado: Mapped[bool] = mapped_column(Boolean, default=False)
     codigo_confirmacao: Mapped[str | None] = mapped_column(String(6))
-    codigo_recuperacao: Mapped[str | None] = mapped_column(String(6))
+    codigo_recuperacao: Mapped[str | None] = mapped_column(String(128))
     codigo_recuperacao_expira: Mapped[datetime | None] = mapped_column(DateTime)
+    tentativas_recuperacao: Mapped[int] = mapped_column(default=0, nullable=False)
 
     usuario_fisico: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="conta", uselist=False)
     ong: Mapped["ONG"] = relationship("ONG", back_populates="conta", uselist=False)
+    historico_cuidados_ocorrencia: Mapped[list["HistoricoCuidadoOcorrencia"]] = relationship(
+        "HistoricoCuidadoOcorrencia", back_populates="conta"
+    )
 
 class UsuarioFisico(Base):
     __tablename__ = "usuarios_fisicos"
@@ -845,10 +1019,10 @@ class UsuarioFisico(Base):
     id_usuario: Mapped[int] = mapped_column(primary_key=True, index=True)
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), unique=True, nullable=False)
     nome_completo: Mapped[str] = mapped_column(String(255), nullable=False)
-    cpf: Mapped[str] = mapped_column(
+    cpf: Mapped[str | None] = mapped_column(
         String(14),
         unique=True,
-        nullable=False
+        nullable=True
     )
     tem_pet: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     social_login_id: Mapped[str | None] = mapped_column(String(255))
@@ -880,7 +1054,7 @@ class ONG(Base):
 
 
 ================================================================================
-CAMINHO: src\backend\app\modules\auth\router.py
+CAMINHO: backend\app\modules\auth\router.py
 ================================================================================
 
 from fastapi import APIRouter, Depends, status, File, UploadFile
@@ -952,7 +1126,7 @@ async def atualizar_foto_perfil(
     return {"foto_perfil": url_foto}
 
 ================================================================================
-CAMINHO: src\backend\app\modules\auth\schemas.py
+CAMINHO: backend\app\modules\auth\schemas.py
 ================================================================================
 
 from pydantic import BaseModel, EmailStr, Field
@@ -965,7 +1139,7 @@ class UsuarioFisicoCriar(BaseModel):
     nome_completo: str
     cpf: str
     tem_pet: bool = False
-    raio_pesquisa_km: int = 10
+    raio_pesquisa_km: int = Field(default=10, ge=1, le=100)
     localizacao_lat: float | None = None
     localizacao_lng: float | None = None
     
@@ -992,9 +1166,7 @@ class LoginSchema(BaseModel):
     email: EmailStr
     senha: str
 
-class TokenSchema(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+
 
 class ContaResposta(BaseModel):
     id_conta: int
@@ -1027,7 +1199,7 @@ class TokenSchema(BaseModel):
 class PerfilAtualizacao(BaseModel):
     nome: str | None = None  # nome_completo (Pessoa Física) ou nome_fantasia (ONG)
     telefone: str | None = None
-    raio_pesquisa_km: int | None = None
+    raio_pesquisa_km: int | None = Field(default=None, ge=1, le=100)
     endereco_completo: str | None = None  
     tem_pet: bool | None = None
 
@@ -1055,17 +1227,19 @@ class PerfilDetalhadoResposta(BaseModel):
     class Config:
         from_attributes = True
 
+
 ================================================================================
-CAMINHO: src\backend\app\modules\auth\service.py
+CAMINHO: backend\app\modules\auth\service.py
 ================================================================================
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from app.modules.auth.models import Conta, UsuarioFisico, ONG
-from app.modules.auth.schemas import UsuarioFisicoCriar, ONGCriar, LoginSchema
+from app.modules.auth.schemas import UsuarioFisicoCriar, ONGCriar, LoginSchema, RedefinirSenha, PerfilAtualizacao
 from app.core.security import gerar_hash_senha, verificar_senha, criar_token_acesso
-import random
+import secrets
 from datetime import datetime, timedelta, timezone
 
 async def criar_usuario_fisico(db: AsyncSession, dados: UsuarioFisicoCriar) -> Conta:
@@ -1073,6 +1247,9 @@ async def criar_usuario_fisico(db: AsyncSession, dados: UsuarioFisicoCriar) -> C
     resultado = await db.execute(query)
     if resultado.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail já cadastrado.")
+    cpf_existente = await db.scalar(select(UsuarioFisico.id_usuario).where(UsuarioFisico.cpf == dados.cpf))
+    if cpf_existente is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CPF já cadastrado.")
 
     nova_conta = Conta(
         tipo_conta="PESSOA_FISICA",
@@ -1082,19 +1259,21 @@ async def criar_usuario_fisico(db: AsyncSession, dados: UsuarioFisicoCriar) -> C
         localizacao_lat=dados.localizacao_lat,
         localizacao_lng=dados.localizacao_lng
     )
-    db.add(nova_conta)
-    await db.commit()
+    try:
+        db.add(nova_conta)
+        await db.flush()
+        db.add(UsuarioFisico(
+            id_conta=nova_conta.id_conta,
+            nome_completo=dados.nome_completo,
+            cpf=dados.cpf,
+            tem_pet=dados.tem_pet,
+            raio_pesquisa_km=dados.raio_pesquisa_km
+        ))
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail ou CPF já cadastrado.")
     await db.refresh(nova_conta)
-
-    novo_usuario = UsuarioFisico(
-        id_conta=nova_conta.id_conta,
-        nome_completo=dados.nome_completo,
-        cpf=dados.cpf,
-        tem_pet=dados.tem_pet,
-        raio_pesquisa_km=dados.raio_pesquisa_km
-    )
-    db.add(novo_usuario)
-    await db.commit()
     return nova_conta
 
 async def criar_ong(db: AsyncSession, dados: ONGCriar) -> Conta:
@@ -1102,6 +1281,9 @@ async def criar_ong(db: AsyncSession, dados: ONGCriar) -> Conta:
     resultado = await db.execute(query)
     if resultado.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail já cadastrado.")
+    cnpj_existente = await db.scalar(select(ONG.id_ong).where(ONG.cnpj == dados.cnpj))
+    if cnpj_existente is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CNPJ já cadastrado.")
 
     nova_conta = Conta(
         tipo_conta="ONG",
@@ -1111,26 +1293,28 @@ async def criar_ong(db: AsyncSession, dados: ONGCriar) -> Conta:
         localizacao_lat=dados.localizacao_lat,
         localizacao_lng=dados.localizacao_lng
     )
-    db.add(nova_conta)
-    await db.commit()
+    try:
+        db.add(nova_conta)
+        await db.flush()
+        db.add(ONG(
+            id_conta=nova_conta.id_conta,
+            cnpj=dados.cnpj,
+            razao_social=dados.razao_social,
+            nome_fantasia=dados.nome_fantasia,
+            endereco_completo=dados.endereco_completo,
+            nome_gestor=dados.nome_gestor,
+            cpf_gestor=dados.cpf_gestor,
+            oferece_lar_temporario=dados.oferece_lar_temporario,
+            vagas_emergenciais=dados.vagas_emergenciais,
+            capacidade_total=dados.capacidade_total,
+            lotacao_atual=dados.lotacao_atual,
+            link_prestacao_contas=dados.link_prestacao_contas
+        ))
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="E-mail ou CNPJ já cadastrado.")
     await db.refresh(nova_conta)
-
-    nova_ong = ONG(
-        id_conta=nova_conta.id_conta,
-        cnpj=dados.cnpj,
-        razao_social=dados.razao_social,
-        nome_fantasia=dados.nome_fantasia,
-        endereco_completo=dados.endereco_completo,
-        nome_gestor=dados.nome_gestor,
-        cpf_gestor=dados.cpf_gestor,
-        oferece_lar_temporario=dados.oferece_lar_temporario,
-        vagas_emergenciais=dados.vagas_emergenciais,
-        capacidade_total=dados.capacidade_total,
-        lotacao_atual=dados.lotacao_atual,
-        link_prestacao_contas=dados.link_prestacao_contas
-    )
-    db.add(nova_ong)
-    await db.commit()
     return nova_conta
 
 async def autenticar_usuario(db: AsyncSession, dados_login: LoginSchema) -> dict:
@@ -1175,19 +1359,18 @@ async def solicitar_codigo_recuperacao(db: AsyncSession, email: str):
     conta = resultado.scalar_one_or_none()
     
     if conta:
-        codigo = f"{random.randint(100000, 999999)}"
-        conta.codigo_recuperacao = codigo
+        codigo = f"{secrets.randbelow(900000) + 100000}"
+        conta.codigo_recuperacao = gerar_hash_senha(codigo)
         conta.codigo_recuperacao_expira = datetime.now(timezone.utc) + timedelta(minutes=15)
+        conta.tentativas_recuperacao = 0
         await db.commit()
-        # TODO: Chavear a função de envio SMTP aqui
-        print(f"[SMTP MOCK] Código para {email}: {codigo}")
 
 async def redefinir_senha_com_codigo(db: AsyncSession, dados: RedefinirSenha):
     query = select(Conta).where(Conta.email == dados.email)
     resultado = await db.execute(query)
     conta = resultado.scalar_one_or_none()
 
-    if not conta or conta.codigo_recuperacao != dados.codigo_verificacao:
+    if not conta or not conta.codigo_recuperacao:
         raise HTTPException(status_code=400, detail="Código inválido ou expirado.")
 
     if conta.codigo_recuperacao_expira and conta.codigo_recuperacao_expira.tzinfo is None:
@@ -1195,12 +1378,21 @@ async def redefinir_senha_com_codigo(db: AsyncSession, dados: RedefinirSenha):
     else:
         expira = conta.codigo_recuperacao_expira
 
-    if datetime.now(timezone.utc) > expira:
+    if not expira or datetime.now(timezone.utc) > expira:
         raise HTTPException(status_code=400, detail="Código expirado.")
+
+    if conta.tentativas_recuperacao >= 5:
+        raise HTTPException(status_code=429, detail="Muitas tentativas. Solicite um novo código.")
+
+    if not verificar_senha(dados.codigo_verificacao, conta.codigo_recuperacao):
+        conta.tentativas_recuperacao += 1
+        await db.commit()
+        raise HTTPException(status_code=400, detail="Código inválido ou expirado.")
 
     conta.senha = gerar_hash_senha(dados.nova_senha)
     conta.codigo_recuperacao = None
     conta.codigo_recuperacao_expira = None
+    conta.tentativas_recuperacao = 0
     await db.commit()
 
 async def obter_perfil_completo(db: AsyncSession, conta: Conta) -> dict:
@@ -1268,8 +1460,9 @@ async def atualizar_perfil(db: AsyncSession, conta: Conta, dados: PerfilAtualiza
     await db.refresh(conta)
     return await obter_perfil_completo(db, conta)
 
+
 ================================================================================
-CAMINHO: src\backend\app\modules\chat\models.py
+CAMINHO: backend\app\modules\chat\models.py
 ================================================================================
 
 # app/modules/chat/models.py
@@ -1289,7 +1482,7 @@ class MensagemChat(Base):
     lida: Mapped[bool] = mapped_column(Boolean, default=False)
 
 ================================================================================
-CAMINHO: src\backend\app\modules\engajamento\models.py
+CAMINHO: backend\app\modules\engajamento\models.py
 ================================================================================
 
 from datetime import datetime
@@ -1328,17 +1521,18 @@ class Denuncia(Base):
     data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 ================================================================================
-CAMINHO: src\backend\app\modules\ocorrencias\avistamento_router.py
+CAMINHO: backend\app\modules\ocorrencias\avistamento_router.py
 ================================================================================
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, UploadFile, File, Form, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from geoalchemy2.functions import ST_GeomFromText
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
 from app.modules.auth.models import Conta
-from app.modules.ocorrencias.models import Avistamento
+from app.modules.ocorrencias.models import Avistamento, Ocorrencia
 
 router = APIRouter()
 
@@ -1354,6 +1548,15 @@ async def registrar_avistamento(
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
 ):
+    if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+
+    ocorrencia = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(Ocorrencia.id_ocorrencia == id_ocorrencia)
+    )
+    if ocorrencia is None:
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada.")
+
     url_foto = None
     if foto:
         url_foto = await upload_foto_pet(foto, pasta="avistamentos")
@@ -1376,12 +1579,13 @@ async def registrar_avistamento(
 
     return {"status": "sucesso", "id_avistamento": novo_avistamento.id_avistamento}
 
+
 ================================================================================
-CAMINHO: src\backend\app\modules\ocorrencias\models.py
+CAMINHO: backend\app\modules\ocorrencias\models.py
 ================================================================================
 
 from datetime import datetime
-from sqlalchemy import String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import String, Text, DateTime, Boolean, CheckConstraint, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
 from app.core.database import Base
@@ -1420,6 +1624,39 @@ class Ocorrencia(Base):
     observacao: Mapped[str | None] = mapped_column(Text)
 
     avistamentos: Mapped[list["Avistamento"]] = relationship("Avistamento", back_populates="ocorrencia")
+    historico_cuidados: Mapped[list["HistoricoCuidadoOcorrencia"]] = relationship(
+        "HistoricoCuidadoOcorrencia", back_populates="ocorrencia"
+    )
+
+
+class HistoricoCuidadoOcorrencia(Base):
+    __tablename__ = "historico_cuidados_ocorrencia"
+    __table_args__ = (
+        CheckConstraint(
+            "tipo_cuidado IN ('AGUA', 'COMIDA')",
+            name="ck_historico_cuidados_tipo",
+        ),
+    )
+
+    id_historico: Mapped[int] = mapped_column(primary_key=True)
+    id_ocorrencia: Mapped[int] = mapped_column(
+        ForeignKey("ocorrencias.id_ocorrencia"), nullable=False, index=True
+    )
+    id_conta: Mapped[int] = mapped_column(
+        ForeignKey("contas.id_conta"), nullable=False, index=True
+    )
+    tipo_cuidado: Mapped[str] = mapped_column(String(10), nullable=False)
+    data_cuidado: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    data_registro: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )
+
+    ocorrencia: Mapped["Ocorrencia"] = relationship(
+        "Ocorrencia", back_populates="historico_cuidados"
+    )
+    conta: Mapped["Conta"] = relationship(
+        "Conta", back_populates="historico_cuidados_ocorrencia"
+    )
 
 class Avistamento(Base):
     __tablename__ = "avistamentos"
@@ -1440,13 +1677,15 @@ class Avistamento(Base):
 
     ocorrencia: Mapped["Ocorrencia"] = relationship("Ocorrencia", back_populates="avistamentos")
 
+
 ================================================================================
-CAMINHO: src\backend\app\modules\ocorrencias\router.py
+CAMINHO: backend\app\modules\ocorrencias\router.py
 ================================================================================
 
-from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from geoalchemy2.functions import (
     ST_GeomFromText,
     ST_DWithin,
@@ -1456,12 +1695,53 @@ from geoalchemy2.functions import (
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
-from app.modules.auth.models import Conta
-from app.modules.ocorrencias.models import Ocorrencia
-from app.modules.ocorrencias.schemas import OcorrenciaResposta
+from app.modules.auth.models import Conta, ONG, UsuarioFisico
+from app.modules.ocorrencias.models import (
+    HistoricoCuidadoOcorrencia,
+    Ocorrencia,
+)
+from app.modules.ocorrencias.schemas import (
+    CuidadoOcorrenciaCriar,
+    CuidadoOcorrenciaResposta,
+    OcorrenciaResposta,
+    OcorrenciaDetalheResposta,
+)
 from datetime import datetime
+from sqlalchemy import cast, func
+from geoalchemy2 import Geography
 
 router = APIRouter()
+
+
+def _serializar_cuidado(
+    cuidado: HistoricoCuidadoOcorrencia,
+    nome_autor: str,
+) -> dict:
+    return {
+        "id_historico": cuidado.id_historico,
+        "tipo_cuidado": cuidado.tipo_cuidado,
+        "data_cuidado": cuidado.data_cuidado,
+        "data_registro": cuidado.data_registro,
+        "usuario": {
+            "id_conta": cuidado.id_conta,
+            "nome": nome_autor,
+        },
+    }
+
+
+def _query_cuidados_com_autor(id_ocorrencia: int):
+    nome_autor = func.coalesce(
+        UsuarioFisico.nome_completo,
+        ONG.nome_fantasia,
+        Conta.email,
+    ).label("nome_autor")
+    return (
+        select(HistoricoCuidadoOcorrencia, nome_autor)
+        .join(Conta, Conta.id_conta == HistoricoCuidadoOcorrencia.id_conta)
+        .outerjoin(UsuarioFisico, UsuarioFisico.id_conta == Conta.id_conta)
+        .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
+        .where(HistoricoCuidadoOcorrencia.id_ocorrencia == id_ocorrencia)
+    )
 
 @router.post("/", response_model=OcorrenciaResposta, status_code=status.HTTP_201_CREATED)
 async def criar_ocorrencia(
@@ -1488,6 +1768,9 @@ async def criar_ocorrencia(
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
 ):
+    if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+
     url_foto = await upload_foto_pet(foto, pasta="ocorrencias")
     ponto_wkt = f"POINT({longitude} {latitude})"
 
@@ -1526,31 +1809,141 @@ from geoalchemy2.functions import (
     ST_Y,
 )
 
-@router.get("/proximas", response_model=list[OcorrenciaResposta])
+@router.get(
+    "/proximas",
+    response_model=list[OcorrenciaResposta]
+)
 async def listar_ocorrencias_proximas(
-    lat: float = Query(...),
-    lng: float = Query(...),
-    raio_km: float = Query(10.0),
+    lat: float = Query(..., ge=-90, le=90),
+    lng: float = Query(..., ge=-180, le=180),
+    raio_km: float = Query(
+        10.0,
+        gt=0,
+        le=100
+    ),
+    limite: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db)
 ):
-    ponto_usuario = ST_GeomFromText(
+    """
+    Retorna as ocorrências localizadas dentro do raio informado,
+    em quilômetros, a partir da localização do usuário.
+
+    A coluna localizacao é armazenada como Geometry SRID 4326.
+    Para calcular distância corretamente em metros, a geometria
+    é convertida para Geography antes do ST_DWithin.
+    """
+
+    # ---------------------------------------------------------
+    # PONTO DA LOCALIZAÇÃO DO USUÁRIO
+    # ---------------------------------------------------------
+
+    ponto_usuario_geometry = ST_GeomFromText(
         f"POINT({lng} {lat})",
         4326
     )
 
+    ponto_usuario_geography = cast(
+        ponto_usuario_geometry,
+        Geography(
+            geometry_type="POINT",
+            srid=4326
+        )
+    )
+
+    # ---------------------------------------------------------
+    # CONVERSÃO DO RAIO
+    # ---------------------------------------------------------
+
     raio_metros = raio_km * 1000
 
-    query = select(
-        Ocorrencia,
-        ST_Y(Ocorrencia.localizacao).label("latitude"),
-        ST_X(Ocorrencia.localizacao).label("longitude"),
-    ).where(
-        ST_DWithin(
-            Ocorrencia.localizacao,
-            ponto_usuario,
-            raio_metros,
-            use_spheroid=True
+    # ---------------------------------------------------------
+    # LOCALIZAÇÃO DAS OCORRÊNCIAS COMO GEOGRAPHY
+    # ---------------------------------------------------------
+
+    ocorrencia_geography = cast(
+        Ocorrencia.localizacao,
+        Geography(
+            geometry_type="POINT",
+            srid=4326
         )
+    )
+
+    # ---------------------------------------------------------
+    # CONSULTA ESPACIAL
+    # ---------------------------------------------------------
+
+    query = (
+        select(
+            Ocorrencia,
+            ST_Y(
+                Ocorrencia.localizacao
+            ).label("latitude"),
+            ST_X(
+                Ocorrencia.localizacao
+            ).label("longitude"),
+        )
+        .where(
+            ST_DWithin(
+                ocorrencia_geography,
+                ponto_usuario_geography,
+                raio_metros
+            )
+        )
+        .order_by(
+            Ocorrencia.data_ocorrencia.desc()
+        )
+        .limit(limite)
+    )
+
+    resultado = await db.execute(query)
+
+    # ---------------------------------------------------------
+    # FORMATAÇÃO DA RESPOSTA
+    # ---------------------------------------------------------
+
+    ocorrencias = []
+
+    for ocorrencia, latitude, longitude in resultado.all():
+
+        ocorrencias.append(
+            {
+                "id_ocorrencia": ocorrencia.id_ocorrencia,
+                "id_conta": ocorrencia.id_conta,
+                "tipo_ocorrencia": ocorrencia.tipo_ocorrencia,
+                "status_badge": ocorrencia.status_badge,
+                "tipo_animal": ocorrencia.tipo_animal,
+                "foto": ocorrencia.foto,
+                "nivel_urgencia": ocorrencia.nivel_urgencia,
+                "data_ocorrencia": ocorrencia.data_ocorrencia,
+                "endereco_localizacao": (
+                    ocorrencia.endereco_localizacao
+                ),
+                "latitude": float(latitude),
+                "longitude": float(longitude),
+            }
+        )
+
+    return ocorrencias
+
+@router.get("/minhas", response_model=list[OcorrenciaResposta])
+async def listar_minhas_ocorrencias(
+    conta_atual: Conta = Depends(obter_conta_atual),
+    limite: int = Query(100, ge=1, le=500),
+    db: AsyncSession = Depends(get_db)
+):
+    query = (
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        )
+        .where(
+            Ocorrencia.id_conta == conta_atual.id_conta
+        )
+        .order_by(
+            Ocorrencia.data_ocorrencia.desc()
+        )
+        .limit(limite)
     )
 
     resultado = await db.execute(query)
@@ -1576,21 +1969,137 @@ async def listar_ocorrencias_proximas(
 
     return ocorrencias
 
-
-@router.get("/minhas", response_model=list[OcorrenciaResposta])
-async def listar_minhas_ocorrencias(
-    conta_atual: Conta = Depends(obter_conta_atual),
+@router.get(
+    "/{id_ocorrencia:int}",
+    response_model=OcorrenciaDetalheResposta
+)
+async def obter_ocorrencia_detalhada(
+    id_ocorrencia: int,
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(Ocorrencia).where(Ocorrencia.id_conta == conta_atual.id_conta).order_by(Ocorrencia.data_ocorrencia.desc())
+    query = (
+        select(Ocorrencia)
+        .options(
+            selectinload(
+                Ocorrencia.avistamentos
+            )
+        )
+        .where(
+            Ocorrencia.id_ocorrencia
+            == id_ocorrencia
+        )
+    )
+
     resultado = await db.execute(query)
-    return resultado.scalars().all()
+
+    ocorrencia = resultado.scalar_one_or_none()
+
+    if ocorrencia is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Ocorrência não encontrada."
+        )
+
+    cuidados_resultado = await db.execute(
+        _query_cuidados_com_autor(id_ocorrencia)
+        .distinct(HistoricoCuidadoOcorrencia.tipo_cuidado)
+        .order_by(
+            HistoricoCuidadoOcorrencia.tipo_cuidado,
+            HistoricoCuidadoOcorrencia.data_cuidado.desc(),
+            HistoricoCuidadoOcorrencia.id_historico.desc(),
+        )
+    )
+    cuidados_atuais = {"agua": None, "comida": None}
+    for cuidado, nome_autor in cuidados_resultado.all():
+        chave = cuidado.tipo_cuidado.lower()
+        if cuidados_atuais[chave] is None:
+            cuidados_atuais[chave] = _serializar_cuidado(cuidado, nome_autor)
+    ocorrencia.cuidados_atuais = cuidados_atuais
+    return ocorrencia
+
+
+@router.post(
+    "/{id_ocorrencia:int}/cuidados",
+    response_model=CuidadoOcorrenciaResposta,
+    status_code=status.HTTP_201_CREATED,
+)
+async def registrar_cuidado(
+    id_ocorrencia: int,
+    dados: CuidadoOcorrenciaCriar,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    ocorrencia = await db.get(Ocorrencia, id_ocorrencia)
+    if ocorrencia is None:
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada.")
+
+    agora = datetime.now(tz=dados.data_cuidado.tzinfo)
+    if dados.data_cuidado > agora:
+        raise HTTPException(
+            status_code=422,
+            detail="A data do cuidado não pode estar no futuro.",
+        )
+
+    novo_cuidado = HistoricoCuidadoOcorrencia(
+        id_ocorrencia=id_ocorrencia,
+        id_conta=conta_atual.id_conta,
+        tipo_cuidado=dados.tipo_cuidado,
+        data_cuidado=dados.data_cuidado,
+    )
+    try:
+        db.add(novo_cuidado)
+        await db.commit()
+        await db.refresh(novo_cuidado)
+    except Exception:
+        await db.rollback()
+        raise
+
+    autor_resultado = await db.execute(
+        select(
+            func.coalesce(
+                UsuarioFisico.nome_completo,
+                ONG.nome_fantasia,
+                Conta.email,
+            )
+        )
+        .select_from(Conta)
+        .outerjoin(UsuarioFisico, UsuarioFisico.id_conta == Conta.id_conta)
+        .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
+        .where(Conta.id_conta == conta_atual.id_conta)
+    )
+    return _serializar_cuidado(novo_cuidado, autor_resultado.scalar_one())
+
+
+@router.get(
+    "/{id_ocorrencia:int}/cuidados/historico",
+    response_model=list[CuidadoOcorrenciaResposta],
+)
+async def listar_historico_cuidados(
+    id_ocorrencia: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    if await db.get(Ocorrencia, id_ocorrencia) is None:
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada.")
+
+    resultado = await db.execute(
+        _query_cuidados_com_autor(id_ocorrencia).order_by(
+            HistoricoCuidadoOcorrencia.data_registro.desc(),
+            HistoricoCuidadoOcorrencia.id_historico.desc(),
+        )
+    )
+    return [
+        _serializar_cuidado(cuidado, nome_autor)
+        for cuidado, nome_autor in resultado.all()
+    ]
+
 
 ================================================================================
-CAMINHO: src\backend\app\modules\ocorrencias\schemas.py
+CAMINHO: backend\app\modules\ocorrencias\schemas.py
 ================================================================================
 
-from pydantic import BaseModel
+from typing import Literal
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 class OcorrenciaCriar(BaseModel):
@@ -1631,8 +2140,81 @@ class OcorrenciaResposta(BaseModel):
     class Config:
         from_attributes = True
 
+class AvistamentoResposta(BaseModel):
+    id_avistamento: int
+    raca: str | None = None
+    data_hora: datetime
+    foto: str | None = None
+    observacao: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class AutorCuidadoResposta(BaseModel):
+    id_conta: int
+    nome: str
+
+
+class CuidadoOcorrenciaCriar(BaseModel):
+    tipo_cuidado: Literal["AGUA", "COMIDA"]
+    data_cuidado: datetime
+
+
+class CuidadoOcorrenciaResposta(BaseModel):
+    id_historico: int
+    tipo_cuidado: Literal["AGUA", "COMIDA"]
+    data_cuidado: datetime
+    data_registro: datetime
+    usuario: AutorCuidadoResposta
+
+
+class EstadoCuidadosResposta(BaseModel):
+    agua: CuidadoOcorrenciaResposta | None = None
+    comida: CuidadoOcorrenciaResposta | None = None
+
+
+class OcorrenciaDetalheResposta(BaseModel):
+    id_ocorrencia: int
+    id_conta: int
+
+    tipo_ocorrencia: str
+    status_badge: str
+    tipo_animal: str
+
+    raca: str | None = None
+    sexo: str | None = None
+    cor: str | None = None
+    porte: str | None = None
+    idade: str | None = None
+
+    saude_critica: bool = False
+    saude_detalhes: str | None = None
+
+    cuidados_iniciais: str | None = None
+    cuidados_atuais: EstadoCuidadosResposta = Field(
+        default_factory=EstadoCuidadosResposta
+    )
+
+    deficiencia: bool = False
+    deficiencia_detalhes: str | None = None
+
+    nivel_urgencia: str
+    data_ocorrencia: datetime
+
+    endereco_localizacao: str | None = None
+
+    foto: str
+    observacao: str | None = None
+
+    avistamentos: list[AvistamentoResposta] = []
+
+    class Config:
+        from_attributes = True
+
+
 ================================================================================
-CAMINHO: src\backend\app\modules\ong\models.py
+CAMINHO: backend\app\modules\ong\models.py
 ================================================================================
 
 # app/modules/ong/models.py
@@ -1663,7 +2245,7 @@ class VoluntariadoSeguidor(Base):
     status_aprovacao: Mapped[str] = mapped_column(String(20), default="PENDENTE")
 
 ================================================================================
-CAMINHO: src\backend\app\modules\pets\models.py
+CAMINHO: backend\app\modules\pets\models.py
 ================================================================================
 
 from sqlalchemy import String, ForeignKey
@@ -1685,7 +2267,7 @@ class Pet(Base):
     usuario: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="pets")
 
 ================================================================================
-CAMINHO: src\backend\app\modules\pets\router.py
+CAMINHO: backend\app\modules\pets\router.py
 ================================================================================
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
@@ -1720,6 +2302,8 @@ async def cadastrar_pet(
     query_user = select(UsuarioFisico).where(UsuarioFisico.id_conta == conta_atual.id_conta)
     user_res = await db.execute(query_user)
     usuario = user_res.scalar_one_or_none()
+    if usuario is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Perfil de usuário não encontrado.")
 
     url_foto = None
     if foto:
@@ -1745,16 +2329,22 @@ async def listar_meus_pets(
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
 ):
+    if conta_atual.tipo_conta != "PESSOA_FISICA":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Apenas contas de Pessoa Física possuem pets de tutor.")
+
     query_user = select(UsuarioFisico).where(UsuarioFisico.id_conta == conta_atual.id_conta)
     user_res = await db.execute(query_user)
     usuario = user_res.scalar_one_or_none()
+    if usuario is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Perfil de usuário não encontrado.")
 
     query_pets = select(Pet).where(Pet.id_usuario == usuario.id_usuario)
     resultado = await db.execute(query_pets)
     return resultado.scalars().all()
 
+
 ================================================================================
-CAMINHO: src\backend\app\modules\pets\schemas.py
+CAMINHO: backend\app\modules\pets\schemas.py
 ================================================================================
 
 from pydantic import BaseModel
@@ -1777,7 +2367,7 @@ class PetResposta(PetBase):
         from_attributes = True
 
 ================================================================================
-CAMINHO: src\backend\docker-compose.yml
+CAMINHO: backend\docker-compose.yml
 ================================================================================
 
 services:
@@ -1786,15 +2376,15 @@ services:
     container_name: petradar_db
     restart: always
     environment:
-      POSTGRES_DB: petradar_db
-      POSTGRES_USER: petradar_admin
-      POSTGRES_PASSWORD: petradar_pass_dev
+      POSTGRES_DB: ${POSTGRES_DB:?Configure POSTGRES_DB no arquivo .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Configure POSTGRES_USER no arquivo .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD no arquivo .env}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U petradar_admin -d petradar_db"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -1810,3 +2400,20 @@ volumes:
 
 # docker exec -it petradar_db psql -U petradar_admin -d petradar_db -c "SELECT PostGIS_Full_Version();"
 # para garantir que esta ativo
+
+
+================================================================================
+CAMINHO: backend\requirements.txt
+================================================================================
+
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+sqlalchemy[asyncio]>=2.0.28
+asyncpg>=0.29.0
+alembic>=1.13.1
+pydantic-settings>=2.2.1
+geoalchemy2>=0.14.7
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.9
+cloudinary>=1.36.0

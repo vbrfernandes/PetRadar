@@ -31,6 +31,9 @@ class Conta(Base):
 
     usuario_fisico: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="conta", uselist=False)
     ong: Mapped["ONG"] = relationship("ONG", back_populates="conta", uselist=False)
+    historico_cuidados_ocorrencia: Mapped[list["HistoricoCuidadoOcorrencia"]] = relationship(
+        "HistoricoCuidadoOcorrencia", back_populates="conta"
+    )
 
 class UsuarioFisico(Base):
     __tablename__ = "usuarios_fisicos"

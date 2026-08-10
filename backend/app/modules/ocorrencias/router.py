@@ -11,19 +11,53 @@ from geoalchemy2.functions import (
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
-from app.modules.auth.models import Conta
+from app.modules.auth.models import Conta, ONG, UsuarioFisico
 from app.modules.ocorrencias.models import (
+    HistoricoCuidadoOcorrencia,
     Ocorrencia,
 )
 from app.modules.ocorrencias.schemas import (
+    CuidadoOcorrenciaCriar,
+    CuidadoOcorrenciaResposta,
     OcorrenciaResposta,
     OcorrenciaDetalheResposta,
 )
 from datetime import datetime
-from sqlalchemy import cast
+from sqlalchemy import cast, func
 from geoalchemy2 import Geography
 
 router = APIRouter()
+
+
+def _serializar_cuidado(
+    cuidado: HistoricoCuidadoOcorrencia,
+    nome_autor: str,
+) -> dict:
+    return {
+        "id_historico": cuidado.id_historico,
+        "tipo_cuidado": cuidado.tipo_cuidado,
+        "data_cuidado": cuidado.data_cuidado,
+        "data_registro": cuidado.data_registro,
+        "usuario": {
+            "id_conta": cuidado.id_conta,
+            "nome": nome_autor,
+        },
+    }
+
+
+def _query_cuidados_com_autor(id_ocorrencia: int):
+    nome_autor = func.coalesce(
+        UsuarioFisico.nome_completo,
+        ONG.nome_fantasia,
+        Conta.email,
+    ).label("nome_autor")
+    return (
+        select(HistoricoCuidadoOcorrencia, nome_autor)
+        .join(Conta, Conta.id_conta == HistoricoCuidadoOcorrencia.id_conta)
+        .outerjoin(UsuarioFisico, UsuarioFisico.id_conta == Conta.id_conta)
+        .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
+        .where(HistoricoCuidadoOcorrencia.id_ocorrencia == id_ocorrencia)
+    )
 
 @router.post("/", response_model=OcorrenciaResposta, status_code=status.HTTP_201_CREATED)
 async def criar_ocorrencia(
@@ -282,4 +316,95 @@ async def obter_ocorrencia_detalhada(
             detail="Ocorrência não encontrada."
         )
 
+    cuidados_resultado = await db.execute(
+        _query_cuidados_com_autor(id_ocorrencia)
+        .distinct(HistoricoCuidadoOcorrencia.tipo_cuidado)
+        .order_by(
+            HistoricoCuidadoOcorrencia.tipo_cuidado,
+            HistoricoCuidadoOcorrencia.data_cuidado.desc(),
+            HistoricoCuidadoOcorrencia.id_historico.desc(),
+        )
+    )
+    cuidados_atuais = {"agua": None, "comida": None}
+    for cuidado, nome_autor in cuidados_resultado.all():
+        chave = cuidado.tipo_cuidado.lower()
+        if cuidados_atuais[chave] is None:
+            cuidados_atuais[chave] = _serializar_cuidado(cuidado, nome_autor)
+    ocorrencia.cuidados_atuais = cuidados_atuais
     return ocorrencia
+
+
+@router.post(
+    "/{id_ocorrencia:int}/cuidados",
+    response_model=CuidadoOcorrenciaResposta,
+    status_code=status.HTTP_201_CREATED,
+)
+async def registrar_cuidado(
+    id_ocorrencia: int,
+    dados: CuidadoOcorrenciaCriar,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    ocorrencia = await db.get(Ocorrencia, id_ocorrencia)
+    if ocorrencia is None:
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada.")
+
+    agora = datetime.now(tz=dados.data_cuidado.tzinfo)
+    if dados.data_cuidado > agora:
+        raise HTTPException(
+            status_code=422,
+            detail="A data do cuidado não pode estar no futuro.",
+        )
+
+    novo_cuidado = HistoricoCuidadoOcorrencia(
+        id_ocorrencia=id_ocorrencia,
+        id_conta=conta_atual.id_conta,
+        tipo_cuidado=dados.tipo_cuidado,
+        data_cuidado=dados.data_cuidado,
+    )
+    try:
+        db.add(novo_cuidado)
+        await db.commit()
+        await db.refresh(novo_cuidado)
+    except Exception:
+        await db.rollback()
+        raise
+
+    autor_resultado = await db.execute(
+        select(
+            func.coalesce(
+                UsuarioFisico.nome_completo,
+                ONG.nome_fantasia,
+                Conta.email,
+            )
+        )
+        .select_from(Conta)
+        .outerjoin(UsuarioFisico, UsuarioFisico.id_conta == Conta.id_conta)
+        .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
+        .where(Conta.id_conta == conta_atual.id_conta)
+    )
+    return _serializar_cuidado(novo_cuidado, autor_resultado.scalar_one())
+
+
+@router.get(
+    "/{id_ocorrencia:int}/cuidados/historico",
+    response_model=list[CuidadoOcorrenciaResposta],
+)
+async def listar_historico_cuidados(
+    id_ocorrencia: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    if await db.get(Ocorrencia, id_ocorrencia) is None:
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada.")
+
+    resultado = await db.execute(
+        _query_cuidados_com_autor(id_ocorrencia).order_by(
+            HistoricoCuidadoOcorrencia.data_registro.desc(),
+            HistoricoCuidadoOcorrencia.id_historico.desc(),
+        )
+    )
+    return [
+        _serializar_cuidado(cuidado, nome_autor)
+        for cuidado, nome_autor in resultado.all()
+    ]

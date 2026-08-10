@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import String, Text, DateTime, Boolean, CheckConstraint, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
 from app.core.database import Base
@@ -38,6 +38,39 @@ class Ocorrencia(Base):
     observacao: Mapped[str | None] = mapped_column(Text)
 
     avistamentos: Mapped[list["Avistamento"]] = relationship("Avistamento", back_populates="ocorrencia")
+    historico_cuidados: Mapped[list["HistoricoCuidadoOcorrencia"]] = relationship(
+        "HistoricoCuidadoOcorrencia", back_populates="ocorrencia"
+    )
+
+
+class HistoricoCuidadoOcorrencia(Base):
+    __tablename__ = "historico_cuidados_ocorrencia"
+    __table_args__ = (
+        CheckConstraint(
+            "tipo_cuidado IN ('AGUA', 'COMIDA')",
+            name="ck_historico_cuidados_tipo",
+        ),
+    )
+
+    id_historico: Mapped[int] = mapped_column(primary_key=True)
+    id_ocorrencia: Mapped[int] = mapped_column(
+        ForeignKey("ocorrencias.id_ocorrencia"), nullable=False, index=True
+    )
+    id_conta: Mapped[int] = mapped_column(
+        ForeignKey("contas.id_conta"), nullable=False, index=True
+    )
+    tipo_cuidado: Mapped[str] = mapped_column(String(10), nullable=False)
+    data_cuidado: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    data_registro: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )
+
+    ocorrencia: Mapped["Ocorrencia"] = relationship(
+        "Ocorrencia", back_populates="historico_cuidados"
+    )
+    conta: Mapped["Conta"] = relationship(
+        "Conta", back_populates="historico_cuidados_ocorrencia"
+    )
 
 class Avistamento(Base):
     __tablename__ = "avistamentos"

@@ -6,13 +6,11 @@ from typing import List, Set
 # CONFIGURAÇÕES DE CAMINHO E DIRETÓRIOS
 # ==============================================================================
 
-# Caminho base do repositório
-RAIZ_PROJETO = Path(
-    r"D:\Pesquisa Pucminas\Pesquisa de animais errantes\PetRadar\pmv-ads-2026-1-e2-proj-int-t6-pmv-ads-2026-1-e2-proj-int-t6-IntApplicationProject-Template-8827313f65d1bdbbcd7921e29482da59512116ae"
-)
+# Caminho base do código-fonte do projeto (pasta onde este script está salvo)
+RAIZ_PROJETO = Path(__file__).resolve().parent
 
 # Pasta de destino onde os arquivos .txt consolidados serão salvos
-PASTA_SAIDA = RAIZ_PROJETO / "src"
+PASTA_SAIDA = RAIZ_PROJETO
 
 # Nomes dos arquivos TXT de saída
 NOME_ARQUIVO_COMPLETO = "codigo_projeto_consolidado.txt"
@@ -21,24 +19,27 @@ NOME_ARQUIVO_FRONTEND = "codigo_frontend_consolidado.txt"
 
 # 1. Diretórios para varredura recursiva
 DIRETORIOS_BACKEND: List[Path] = [
-    RAIZ_PROJETO / "src" / "backend" / "app",
-    RAIZ_PROJETO / "src" / "backend" / "alembic",
+    RAIZ_PROJETO / "backend" / "app",
+    RAIZ_PROJETO / "backend" / "alembic",
 ]
 
 DIRETORIOS_FRONTEND: List[Path] = [
-    RAIZ_PROJETO / "src" / "mobile",
+    RAIZ_PROJETO / "mobile",
 ]
 
 # 2. Arquivos de configuração específicos fora das subpastas
 ARQUIVOS_BACKEND: List[Path] = [
-    RAIZ_PROJETO / "src" / "backend" / "docker-compose.yml",
-    RAIZ_PROJETO / "src" / "backend" / "alembic.ini",
-    RAIZ_PROJETO / "src" / "backend" / ".env",
-    RAIZ_PROJETO / "src" / "backend" / "alembic" / "env.py",
+    RAIZ_PROJETO / "backend" / "docker-compose.yml",
+    RAIZ_PROJETO / "backend" / "alembic.ini",
+    RAIZ_PROJETO / "backend" / "requirements.txt",
+    RAIZ_PROJETO / "backend" / ".env.example",
+    RAIZ_PROJETO / "backend" / "alembic" / "env.py",
 ]
 
 ARQUIVOS_FRONTEND: List[Path] = [
-    RAIZ_PROJETO / "src" / "mobile" / "package.json",
+    RAIZ_PROJETO / "mobile" / "package.json",
+    RAIZ_PROJETO / "mobile" / "app.json",
+    RAIZ_PROJETO / "mobile" / "tsconfig.json",
 ]
 
 # Pastas ignoradas na varredura
@@ -50,6 +51,7 @@ PASTAS_IGNORADAS: Set[str] = {
 # Arquivos ignorados (travas de pacotes e os próprios arquivos de saída)
 ARQUIVOS_IGNORADOS: Set[str] = {
     "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb",
+    ".env",
     NOME_ARQUIVO_COMPLETO, NOME_ARQUIVO_BACKEND, NOME_ARQUIVO_FRONTEND, "exportar_frontend.py"
 }
 
@@ -61,7 +63,8 @@ EXTENSOES_RELEVANTES: Set[str] = {
 
 # Nomes exatos de arquivos permitidos
 NOMES_PERMITIDOS: Set[str] = {
-    ".env", ".env.example", "docker-compose.yml", "alembic.ini", "package.json", "env.py"
+    ".env.example", "docker-compose.yml", "alembic.ini", "requirements.txt",
+    "package.json", "app.json", "tsconfig.json", "env.py"
 }
 
 TAMANHO_MAXIMO_KB = 500
@@ -224,7 +227,7 @@ def gerar_arquivo_txt(
 # ==============================================================================
 
 def exportar_codigos_separados() -> None:
-    # Garante a criação da pasta 'src' se ela não existir
+    # Garante que a pasta de saída exista
     PASTA_SAIDA.mkdir(parents=True, exist_ok=True)
 
     # Coleta de arquivos por módulo

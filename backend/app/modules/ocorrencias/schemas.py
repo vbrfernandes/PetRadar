@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from typing import Literal
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 class OcorrenciaCriar(BaseModel):
@@ -50,6 +51,29 @@ class AvistamentoResposta(BaseModel):
         from_attributes = True
 
 
+class AutorCuidadoResposta(BaseModel):
+    id_conta: int
+    nome: str
+
+
+class CuidadoOcorrenciaCriar(BaseModel):
+    tipo_cuidado: Literal["AGUA", "COMIDA"]
+    data_cuidado: datetime
+
+
+class CuidadoOcorrenciaResposta(BaseModel):
+    id_historico: int
+    tipo_cuidado: Literal["AGUA", "COMIDA"]
+    data_cuidado: datetime
+    data_registro: datetime
+    usuario: AutorCuidadoResposta
+
+
+class EstadoCuidadosResposta(BaseModel):
+    agua: CuidadoOcorrenciaResposta | None = None
+    comida: CuidadoOcorrenciaResposta | None = None
+
+
 class OcorrenciaDetalheResposta(BaseModel):
     id_ocorrencia: int
     id_conta: int
@@ -68,6 +92,9 @@ class OcorrenciaDetalheResposta(BaseModel):
     saude_detalhes: str | None = None
 
     cuidados_iniciais: str | None = None
+    cuidados_atuais: EstadoCuidadosResposta = Field(
+        default_factory=EstadoCuidadosResposta
+    )
 
     deficiencia: bool = False
     deficiencia_detalhes: str | None = None
