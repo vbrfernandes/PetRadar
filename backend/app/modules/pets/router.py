@@ -14,9 +14,22 @@ router = APIRouter()
 async def cadastrar_pet(
     nome: str = Form(...),
     especie: str = Form(...),
+
     raca: str | None = Form(None),
+
+    
+    sexo: str | None = Form(None),
+
+    
+    cor: str | None = Form(None),
+
     porte: str | None = Form(None),
+
+    
+    idade: str | None = Form(None),
+
     foto: UploadFile | None = File(None),
+
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
 ):
@@ -43,6 +56,9 @@ async def cadastrar_pet(
         especie=especie,
         raca=raca,
         porte=porte,
+        sexo=sexo,
+        cor=cor,
+        idade=idade,
         foto=url_foto
     )
     

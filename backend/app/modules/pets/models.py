@@ -13,5 +13,28 @@ class Pet(Base):
     raca: Mapped[str | None] = mapped_column(String(100))
     porte: Mapped[str | None] = mapped_column(String(20))
     foto: Mapped[str | None] = mapped_column(String(500))
+ 
+    sexo: Mapped[str | None] = mapped_column(
+        String(20)
+    )
+
+   
+    cor: Mapped[str | None] = mapped_column(
+        String(50)
+    )
+
+    porte: Mapped[str | None] = mapped_column(
+        String(20)
+    )
+
+   
+    idade: Mapped[str | None] = mapped_column(
+        String(20)
+    )
+
+    foto: Mapped[str | None] = mapped_column(
+        String(500)
+    )
+
 
     usuario: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="pets")

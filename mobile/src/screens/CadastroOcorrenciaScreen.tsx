@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,20 +17,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { theme } from "../theme/colors";
 import { useAuthStore } from "../store/useAuthStore";
 import api from "../services/api";
 
-type TipoOcorrencia =
-  | "PET_PERDIDO"
-  | "PET_AVISTADO"
-  | "ANIMAL_DE_RUA";
+import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
-type TipoAnimal =
-  | "CACHORRO"
-  | "GATO"
-  | "OUTRO";
+import type { AppTabParamList } from "../../App";
+
+type CadastroOcorrenciaScreenProps = BottomTabScreenProps<
+  AppTabParamList,
+  "CadastroOcorrencia"
+>;
+
+const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+type TipoOcorrencia = "PET_PERDIDO" | "PET_AVISTADO" | "ANIMAL_DE_RUA";
+
+type TipoAnimal = "CACHORRO" | "GATO" | "OUTRO";
 
 type Opcao = {
   valor: string;
@@ -121,45 +127,79 @@ const criarNomeArquivo = (uri: string) => {
   return nome.includes(".") ? nome : `${nome}.jpg`;
 };
 
-export default function CadastroOcorrenciaScreen({ navigation }: any) {
-  const [tipoOcorrencia, setTipoOcorrencia] =
-    useState<TipoOcorrencia | null>(null);
+interface SugestaoEndereco {
+  id: string;
 
-  const [tipoAnimal, setTipoAnimal] =
-    useState<TipoAnimal | null>(null);
+  geometry: {
+    type: "Point";
+    coordinates: [number, number];
+  };
+
+  properties: {
+    mapbox_id: string;
+    feature_type: string;
+    name: string;
+    name_preferred?: string;
+    place_formatted?: string;
+    full_address?: string;
+  };
+}
+
+interface RespostaGeocodingMapbox {
+  type: "FeatureCollection";
+  features: SugestaoEndereco[];
+}
+
+export default function CadastroOcorrenciaScreen({
+  navigation,
+  route,
+}: CadastroOcorrenciaScreenProps) {
+  const [tipoOcorrencia, setTipoOcorrencia] = useState<TipoOcorrencia | null>(
+    null,
+  );
+
+  const [tipoAnimal, setTipoAnimal] = useState<TipoAnimal | null>(null);
   const [tipoAnimalOutro, setTipoAnimalOutro] = useState("");
 
   const [endereco, setEndereco] = useState("");
+
   const [latitude, setLatitude] = useState<number | null>(null);
+
   const [longitude, setLongitude] = useState<number | null>(null);
+
+  const [sugestoesEndereco, setSugestoesEndereco] = useState<
+    SugestaoEndereco[]
+  >([]);
+
+  const [buscandoEndereco, setBuscandoEndereco] = useState(false);
+
+  const [enderecoSelecionado, setEnderecoSelecionado] = useState(false);
 
   const [sexo, setSexo] = useState("");
   const [cor, setCor] = useState("");
   const [porte, setPorte] = useState("");
   const [idade, setIdade] = useState("");
 
-  const [racaConhecida, setRacaConhecida] =
-    useState<boolean | null>(null);
+  const [racaConhecida, setRacaConhecida] = useState<boolean | null>(null);
   const [raca, setRaca] = useState("");
 
   const [saudeCritica, setSaudeCritica] = useState(false);
-  const [problemasSelecionados, setProblemasSelecionados] =
-    useState<string[]>([]);
+  const [problemasSelecionados, setProblemasSelecionados] = useState<string[]>(
+    [],
+  );
 
   const [deficiencia, setDeficiencia] = useState(false);
-  const [deficienciasSelecionadas, setDeficienciasSelecionadas] =
-    useState<string[]>([]);
+  const [deficienciasSelecionadas, setDeficienciasSelecionadas] = useState<
+    string[]
+  >([]);
 
-  const [aguaRegistrada, setAguaRegistrada] =
-    useState<Date | null>(null);
+  const [aguaRegistrada, setAguaRegistrada] = useState<Date | null>(null);
 
-  const [comidaRegistrada, setComidaRegistrada] =
-    useState<Date | null>(null);
+  const [comidaRegistrada, setComidaRegistrada] = useState<Date | null>(null);
 
   const [fotoUri, setFotoUri] = useState<string | null>(null);
 
-  const [nivelUrgencia, setNivelUrgencia] =
-    useState("Moderado");
+  const [nivelUrgencia, setNivelUrgencia] = useState("Moderado");
 
   const [dataOcorrencia, setDataOcorrencia] = useState<Date>(new Date());
   const [dataOcorrenciaTexto, setDataOcorrenciaTexto] = useState("");
@@ -170,11 +210,94 @@ export default function CadastroOcorrenciaScreen({ navigation }: any) {
   const [salvando, setSalvando] = useState(false);
   const [localizando, setLocalizando] = useState(false);
 
+  const limparFormulario = useCallback(() => {
+    setTipoOcorrencia(null);
+
+    setTipoAnimal(null);
+    setTipoAnimalOutro("");
+
+    setEndereco("");
+    setLatitude(null);
+    setLongitude(null);
+    setSugestoesEndereco([]);
+    setBuscandoEndereco(false);
+    setEnderecoSelecionado(false);
+
+    setSexo("");
+    setCor("");
+    setPorte("");
+    setIdade("");
+
+    setRacaConhecida(null);
+    setRaca("");
+
+    setSaudeCritica(false);
+    setProblemasSelecionados([]);
+
+    setDeficiencia(false);
+    setDeficienciasSelecionadas([]);
+
+    setAguaRegistrada(null);
+    setComidaRegistrada(null);
+
+    setFotoUri(null);
+
+    setNivelUrgencia("Moderado");
+
+    setDataOcorrencia(new Date());
+    setDataOcorrenciaTexto("");
+    setMostrarSeletorData(false);
+
+    setObservacao("");
+  }, []);
+
+  const petOrigem =
+    route.params?.pet ?? null;
+
+  useFocusEffect(
+    useCallback(() => {
+      limparFormulario();
+
+      if (petOrigem) {
+        // É um animal pertencente ao usuário.
+        setTipoOcorrencia("PET_PERDIDO");
+
+        const especieNormalizada = petOrigem.especie.trim().toUpperCase();
+
+        if (especieNormalizada === "CACHORRO") {
+          setTipoAnimal("CACHORRO");
+          setTipoAnimalOutro("");
+        } else if (especieNormalizada === "GATO") {
+          setTipoAnimal("GATO");
+          setTipoAnimalOutro("");
+        } else {
+          setTipoAnimal("OUTRO");
+          setTipoAnimalOutro(petOrigem.especie);
+        }
+
+        setRaca(petOrigem.raca || "");
+        setRacaConhecida(Boolean(petOrigem.raca));
+        setSexo(petOrigem.sexo || "");
+        setCor(petOrigem.cor || "");
+        setPorte(petOrigem.porte || "");
+        setIdade(petOrigem.idade || "");
+        setFotoUri(petOrigem.foto ?? null);
+      }
+
+      return () => {
+        limparFormulario();
+      };
+    }, [limparFormulario, petOrigem]),
+  );
+
+  const voltarParaMapa = () => {
+    limparFormulario();
+    navigation.goBack();
+  };
+
   const ehPet = useMemo(
-    () =>
-      tipoOcorrencia === "PET_PERDIDO" ||
-      tipoOcorrencia === "PET_AVISTADO",
-    [tipoOcorrencia]
+    () => tipoOcorrencia === "PET_PERDIDO" || tipoOcorrencia === "PET_AVISTADO",
+    [tipoOcorrencia],
   );
 
   const nomeTipoAnimal = useMemo(() => {
@@ -203,74 +326,157 @@ export default function CadastroOcorrenciaScreen({ navigation }: any) {
     }
   }, [tipoOcorrencia]);
 
-const statusBadge =
-  tipoOcorrencia === "PET_PERDIDO"
-    ? "PERDIDO"
-    : tipoOcorrencia === "PET_AVISTADO"
-      ? "AVISTADO"
-      : "ANIMAL_DE_RUA";
+  const statusBadge =
+    tipoOcorrencia === "PET_PERDIDO"
+      ? "PERDIDO"
+      : tipoOcorrencia === "PET_AVISTADO"
+        ? "AVISTADO"
+        : "ANIMAL_DE_RUA";
 
   const alternarItem = (
     item: string,
-    setSelecionados: React.Dispatch<
-      React.SetStateAction<string[]>
-    >
+    setSelecionados: React.Dispatch<React.SetStateAction<string[]>>,
   ) => {
     setSelecionados((atual) =>
       atual.includes(item)
         ? atual.filter((valor) => valor !== item)
-        : [...atual, item]
+        : [...atual, item],
     );
   };
 
-  const selecionarTipoOcorrencia = (
-    tipo: TipoOcorrencia
-  ) => {
+  const selecionarTipoOcorrencia = (tipo: TipoOcorrencia) => {
     setTipoOcorrencia(tipo);
 
-    if (
-      tipo !== "PET_PERDIDO" &&
-      tipo !== "PET_AVISTADO"
-    ) {
+    if (tipo !== "PET_PERDIDO" && tipo !== "PET_AVISTADO") {
       setRacaConhecida(null);
       setRaca("");
     }
   };
 
+  const alterarEnderecoManual = (texto: string) => {
+    setEndereco(texto);
+
+    setEnderecoSelecionado(false);
+
+    if (texto.trim().length < 3) {
+      setSugestoesEndereco([]);
+    }
+  };
+
+  const selecionarSugestaoEndereco = (sugestao: SugestaoEndereco) => {
+    const [longitudeSelecionada, latitudeSelecionada] =
+      sugestao.geometry.coordinates;
+
+    const enderecoFormatado =
+      sugestao.properties.full_address ||
+      [sugestao.properties.name, sugestao.properties.place_formatted]
+        .filter(Boolean)
+        .join(", ");
+
+    setEndereco(enderecoFormatado);
+
+    setLatitude(latitudeSelecionada);
+    setLongitude(longitudeSelecionada);
+
+    setEnderecoSelecionado(true);
+    setSugestoesEndereco([]);
+  };
+
+  const buscarSugestoesEndereco = async (texto: string) => {
+    const busca = texto.trim();
+
+    if (busca.length < 3) {
+      setSugestoesEndereco([]);
+      setBuscandoEndereco(false);
+      return;
+    }
+
+    if (!MAPBOX_ACCESS_TOKEN) {
+      console.warn("[CadastroOcorrencia] Token do Mapbox não configurado.");
+
+      setSugestoesEndereco([]);
+      setBuscandoEndereco(false);
+      return;
+    }
+
+    try {
+      setBuscandoEndereco(true);
+
+      const parametros = new URLSearchParams({
+        q: busca,
+        access_token: MAPBOX_ACCESS_TOKEN,
+        autocomplete: "true",
+        country: "br",
+        language: "pt",
+        limit: "5",
+        types: "address,street,place,locality,neighborhood",
+      });
+
+      const response = await fetch(
+        `https://api.mapbox.com/search/geocode/v6/forward?${parametros.toString()}`,
+      );
+
+      if (!response.ok) {
+        throw new Error(`Mapbox retornou HTTP ${response.status}`);
+      }
+
+      const data = (await response.json()) as RespostaGeocodingMapbox;
+
+      setSugestoesEndereco(Array.isArray(data.features) ? data.features : []);
+    } catch (error) {
+      console.warn("[CadastroOcorrencia] Erro ao buscar endereço:", error);
+
+      setSugestoesEndereco([]);
+    } finally {
+      setBuscandoEndereco(false);
+    }
+  };
+
+  useEffect(() => {
+    if (enderecoSelecionado || endereco.trim().length < 3) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void buscarSugestoesEndereco(endereco);
+    }, 450);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [endereco, enderecoSelecionado]);
+
   const obterLocalizacaoAtual = async () => {
     try {
       setLocalizando(true);
 
-      const { status } =
-        await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
         Alert.alert(
           "Localização necessária",
-          "Permita o acesso à localização para marcar o ponto da ocorrência."
+          "Permita o acesso à localização para marcar o ponto da ocorrência.",
         );
         return;
       }
 
-      const localizacao =
-        await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+      const localizacao = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
 
-      const {
-        latitude: lat,
-        longitude: lng,
-      } = localizacao.coords;
+      const { latitude: lat, longitude: lng } = localizacao.coords;
 
       setLatitude(lat);
       setLongitude(lng);
 
+      setEnderecoSelecionado(true);
+      setSugestoesEndereco([]);
+
       try {
-        const enderecos =
-          await Location.reverseGeocodeAsync({
-            latitude: lat,
-            longitude: lng,
-          });
+        const enderecos = await Location.reverseGeocodeAsync({
+          latitude: lat,
+          longitude: lng,
+        });
 
         const local = enderecos[0];
 
@@ -294,7 +500,7 @@ const statusBadge =
     } catch {
       Alert.alert(
         "Não foi possível localizar",
-        "Tente novamente ou informe o endereço manualmente."
+        "Tente novamente ou informe o endereço manualmente.",
       );
     } finally {
       setLocalizando(false);
@@ -303,50 +509,40 @@ const statusBadge =
 
   const selecionarFoto = async () => {
     try {
-      const resultado =
-        await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ["images"],
-          allowsEditing: true,
-          aspect: [4, 3],
-          quality: 0.8,
-        });
+      const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
 
-      if (
-        !resultado.canceled &&
-        resultado.assets[0]?.uri
-      ) {
+      if (!resultado.canceled && resultado.assets[0]?.uri) {
         setFotoUri(resultado.assets[0].uri);
       }
     } catch {
       Alert.alert(
         "Erro ao selecionar foto",
-        "Não foi possível acessar suas imagens."
+        "Não foi possível acessar suas imagens.",
       );
     }
   };
 
-  const registrarCuidado = (
-    tipo: "agua" | "comida"
-  ) => {
+  const registrarCuidado = (tipo: "agua" | "comida") => {
     const agora = new Date();
 
     if (tipo === "agua") {
-      setAguaRegistrada(
-        aguaRegistrada ? null : agora
-      );
+      setAguaRegistrada(aguaRegistrada ? null : agora);
       return;
     }
 
-    setComidaRegistrada(
-      comidaRegistrada ? null : agora
-    );
+    setComidaRegistrada(comidaRegistrada ? null : agora);
   };
 
   const validarFormulario = () => {
     if (!tipoOcorrencia) {
       Alert.alert(
         "Tipo de ocorrência",
-        "Selecione o tipo de ocorrência para continuar."
+        "Selecione o tipo de ocorrência para continuar.",
       );
       return false;
     }
@@ -354,34 +550,28 @@ const statusBadge =
     if (!tipoAnimal) {
       Alert.alert(
         "Tipo de animal",
-        "Informe se o animal é cachorro, gato ou outro."
+        "Informe se o animal é cachorro, gato ou outro.",
       );
       return false;
     }
 
     if (tipoAnimal === "OUTRO" && !tipoAnimalOutro.trim()) {
-      Alert.alert(
-        "Qual animal?",
-        "Digite o tipo do animal para continuar."
-      );
+      Alert.alert("Qual animal?", "Digite o tipo do animal para continuar.");
       return false;
     }
 
     if (!endereco.trim()) {
       Alert.alert(
         "Endereço",
-        "Informe o endereço onde o animal foi visto pela última vez."
+        "Informe o endereço onde o animal foi visto pela última vez.",
       );
       return false;
     }
 
-    if (
-      latitude === null ||
-      longitude === null
-    ) {
+    if (latitude === null || longitude === null) {
       Alert.alert(
         "Localização",
-        "Marque a localização da ocorrência usando o botão de localização."
+        "Marque a localização da ocorrência usando o botão de localização.",
       );
       return false;
     }
@@ -389,20 +579,13 @@ const statusBadge =
     if (!fotoUri) {
       Alert.alert(
         "Foto do animal",
-        "Adicione pelo menos uma foto do animal para registrar a ocorrência."
+        "Adicione pelo menos uma foto do animal para registrar a ocorrência.",
       );
       return false;
     }
 
-    if (
-      ehPet &&
-      racaConhecida === true &&
-      !raca.trim()
-    ) {
-      Alert.alert(
-        "Raça",
-        "Informe a raça ou selecione que não sabe a raça."
-      );
+    if (ehPet && racaConhecida === true && !raca.trim()) {
+      Alert.alert("Raça", "Informe a raça ou selecione que não sabe a raça.");
       return false;
     }
 
@@ -413,20 +596,18 @@ const statusBadge =
     const cuidados = [
       aguaRegistrada
         ? `Água: ${formatarDataCurta(
-            aguaRegistrada
-          )} ${formatarHora(aguaRegistrada)}`
+          aguaRegistrada,
+        )} ${formatarHora(aguaRegistrada)}`
         : null,
 
       comidaRegistrada
         ? `Comida: ${formatarDataCurta(
-            comidaRegistrada
-          )} ${formatarHora(comidaRegistrada)}`
+          comidaRegistrada,
+        )} ${formatarHora(comidaRegistrada)}`
         : null,
     ];
 
-    return cuidados
-      .filter(Boolean)
-      .join(" | ");
+    return cuidados.filter(Boolean).join(" | ");
   }, [aguaRegistrada, comidaRegistrada]);
 
   const handleSalvar = async () => {
@@ -449,37 +630,20 @@ const statusBadge =
 
       const formData = new FormData();
 
-      formData.append(
-        "tipo_ocorrencia",
-        tipoOcorrencia
-      );
+      formData.append("tipo_ocorrencia", tipoOcorrencia);
 
-      formData.append(
-        "status_badge",
-        statusBadge
-      );
+      formData.append("status_badge", statusBadge);
 
       formData.append(
         "tipo_animal",
-        tipoAnimal === "OUTRO"
-          ? tipoAnimalOutro.trim()
-          : tipoAnimal
+        tipoAnimal === "OUTRO" ? tipoAnimalOutro.trim() : tipoAnimal,
       );
 
-      formData.append(
-        "latitude",
-        String(latitude)
-      );
+      formData.append("latitude", String(latitude));
 
-      formData.append(
-        "longitude",
-        String(longitude)
-      );
+      formData.append("longitude", String(longitude));
 
-      formData.append(
-        "endereco_localizacao",
-        endereco.trim()
-      );
+      formData.append("endereco_localizacao", endereco.trim());
 
       const ano = dataOcorrencia.getFullYear();
       const mes = String(dataOcorrencia.getMonth() + 1).padStart(2, "0");
@@ -489,36 +653,21 @@ const statusBadge =
 
       formData.append("data_ocorrencia", dataOcorrenciaApi);
 
-      formData.append(
-        "sexo",
-        sexo || ""
-      );
+      formData.append("sexo", sexo || "");
 
-      formData.append(
-        "cor",
-        cor.trim() || ""
-      );
+      formData.append("cor", cor.trim() || "");
 
-      formData.append(
-        "porte",
-        porte || ""
-      );
+      formData.append("porte", porte || "");
 
-      formData.append(
-        "idade",
-        idade || ""
-      );
+      formData.append("idade", idade || "");
 
-      formData.append(
-        "saude_critica",
-        String(saudeCritica)
-      );
+      formData.append("saude_critica", String(saudeCritica));
 
       formData.append(
         "saude_detalhes",
         problemasSelecionados.length > 0
           ? problemasSelecionados.join(", ")
-          : ""
+          : "",
       );
 
       /*
@@ -526,68 +675,73 @@ const statusBadge =
        * como texto. Posteriormente vamos normalizar esses dados
        * no backend em campos próprios.
        */
-      formData.append(
-        "cuidados_iniciais",
-        cuidadosFormatados
-      );
+      formData.append("cuidados_iniciais", cuidadosFormatados);
 
-      formData.append(
-        "deficiencia",
-        String(deficiencia)
-      );
+      formData.append("deficiencia", String(deficiencia));
 
       formData.append(
         "deficiencia_detalhes",
         deficienciasSelecionadas.length > 0
           ? deficienciasSelecionadas.join(", ")
-          : ""
+          : "",
       );
 
-      formData.append(
-        "nivel_urgencia",
-        nivelUrgencia
-      );
+      formData.append("nivel_urgencia", nivelUrgencia);
 
-      formData.append(
-        "observacao",
-        observacao.trim()
-      );
+      formData.append("observacao", observacao.trim());
 
-      if (
-        ehPet &&
-        racaConhecida === true
-      ) {
-        formData.append(
-          "raca",
-          raca.trim()
-        );
+      if (ehPet && racaConhecida === true) {
+        formData.append("raca", raca.trim());
       } else {
         formData.append("raca", "");
       }
 
-      const nomeArquivo =
-        criarNomeArquivo(fotoUri);
+      const fotoEhDoPet =
+        Boolean(
+          petOrigem?.foto &&
+          fotoUri === petOrigem.foto
+        );
 
-      formData.append(
-        "foto",
-        {
-          uri: fotoUri,
-          name: nomeArquivo,
-          type: "image/jpeg",
-        } as any
-      );
+      if (
+        fotoEhDoPet &&
+        petOrigem
+      ) {
+        // A foto já está no servidor.
+        // O backend valida o dono e reutiliza a URL.
+        formData.append(
+          'id_pet',
+          String(petOrigem.id_pet)
+        );
+      } else {
+        const fotoEhRemota = /^https?:\/\//i.test(fotoUri.trim());
 
-      await api.post(
-        "/ocorrencias/",
-        formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data",
-          },
-          timeout: 30000,
+        if (fotoEhRemota) {
+          Alert.alert(
+            "Foto inválida",
+            "Selecione novamente a foto do animal para continuar.",
+          );
+          return;
         }
-      );
+
+        const nomeArquivo =
+          criarNomeArquivo(fotoUri);
+
+        formData.append(
+          'foto',
+          {
+            uri: fotoUri,
+            name: nomeArquivo,
+            type: 'image/jpeg',
+          } as any
+        );
+      }
+
+      await api.post("/ocorrencias/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 30000,
+      });
 
       Alert.alert(
         "Ocorrência registrada",
@@ -595,20 +749,22 @@ const statusBadge =
         [
           {
             text: "Voltar ao mapa",
-            onPress: () =>
-              navigation.goBack(),
+            onPress: voltarParaMapa,
           },
-        ]
+        ],
       );
     } catch (error: any) {
+      console.error(
+        "[CadastroOcorrencia] Erro ao registrar ocorrência:",
+        error?.response?.status,
+        error?.response?.data || error?.message,
+      );
+
       const mensagem =
         error?.response?.data?.detail ||
         "Não foi possível registrar a ocorrência. Verifique sua conexão e tente novamente.";
 
-      Alert.alert(
-        "Não foi possível registrar",
-        mensagem
-      );
+      Alert.alert("Não foi possível registrar", mensagem);
     } finally {
       setSalvando(false);
     }
@@ -617,7 +773,7 @@ const statusBadge =
   const renderOpcoes = (
     opcoes: string[],
     valor: string,
-    onChange: (valor: string) => void
+    onChange: (valor: string) => void,
   ) => (
     <View style={styles.optionsGrid}>
       {opcoes.map((opcao) => {
@@ -633,16 +789,14 @@ const statusBadge =
             onPress={() => onChange(opcao)}
             style={({ pressed }) => [
               styles.optionChip,
-              ativo &&
-                styles.optionChipActive,
+              ativo && styles.optionChipActive,
               pressed && styles.pressed,
             ]}
           >
             <Text
               style={[
                 styles.optionChipText,
-                ativo &&
-                  styles.optionChipTextActive,
+                ativo && styles.optionChipTextActive,
               ]}
             >
               {opcao}
@@ -656,14 +810,11 @@ const statusBadge =
   const renderMultiOpcoes = (
     opcoes: string[],
     selecionados: string[],
-    setSelecionados: React.Dispatch<
-      React.SetStateAction<string[]>
-    >
+    setSelecionados: React.Dispatch<React.SetStateAction<string[]>>,
   ) => (
     <View style={styles.optionsGrid}>
       {opcoes.map((opcao) => {
-        const ativo =
-          selecionados.includes(opcao);
+        const ativo = selecionados.includes(opcao);
 
         return (
           <Pressable
@@ -672,25 +823,15 @@ const statusBadge =
             accessibilityState={{
               checked: ativo,
             }}
-            onPress={() =>
-              alternarItem(
-                opcao,
-                setSelecionados
-              )
-            }
+            onPress={() => alternarItem(opcao, setSelecionados)}
             style={({ pressed }) => [
               styles.optionChip,
-              ativo &&
-                styles.optionChipActive,
+              ativo && styles.optionChipActive,
               pressed && styles.pressed,
             ]}
           >
             <View
-              style={[
-                styles.checkCircle,
-                ativo &&
-                  styles.checkCircleActive,
-              ]}
+              style={[styles.checkCircle, ativo && styles.checkCircleActive]}
             >
               {ativo && (
                 <Ionicons
@@ -704,8 +845,7 @@ const statusBadge =
             <Text
               style={[
                 styles.optionChipText,
-                ativo &&
-                  styles.optionChipTextActive,
+                ativo && styles.optionChipTextActive,
               ]}
             >
               {opcao}
@@ -716,18 +856,10 @@ const statusBadge =
     </View>
   );
 
-  const renderResumo = (
-    label: string,
-    value: string
-  ) => (
+  const renderResumo = (label: string, value: string) => (
     <View style={styles.reviewItem}>
-      <Text style={styles.reviewLabel}>
-        {label}
-      </Text>
-      <Text
-        style={styles.reviewValue}
-        numberOfLines={3}
-      >
+      <Text style={styles.reviewLabel}>{label}</Text>
+      <Text style={styles.reviewValue} numberOfLines={3}>
         {value || "Não informado"}
       </Text>
     </View>
@@ -748,7 +880,7 @@ const statusBadge =
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Voltar"
-              onPress={() => navigation.goBack()}
+              onPress={voltarParaMapa}
               style={({ pressed }) => [
                 styles.backButton,
                 pressed && styles.pressed,
@@ -1053,12 +1185,84 @@ const statusBadge =
               <TextInput
                 style={styles.input}
                 value={endereco}
-                onChangeText={setEndereco}
+                onChangeText={alterarEnderecoManual}
                 placeholder="Rua, número, bairro e cidade"
                 placeholderTextColor={theme.colors.textBody}
                 multiline
               />
+
+              {buscandoEndereco && (
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.brand}
+                  style={styles.addressLoading}
+                />
+              )}
             </View>
+
+            {sugestoesEndereco.length > 0 && (
+              <View style={styles.addressSuggestions}>
+                {sugestoesEndereco.map((sugestao, index) => {
+                  const titulo =
+                    sugestao.properties.name_preferred ||
+                    sugestao.properties.name;
+
+                  const subtitulo =
+                    sugestao.properties.place_formatted ||
+                    sugestao.properties.full_address;
+
+                  return (
+                    <React.Fragment key={sugestao.id}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Selecionar endereço ${titulo}`}
+                        onPress={() => selecionarSugestaoEndereco(sugestao)}
+                        style={({ pressed }) => [
+                          styles.addressSuggestionItem,
+                          pressed && styles.pressed,
+                        ]}
+                      >
+                        <View style={styles.addressSuggestionIcon}>
+                          <Ionicons
+                            name="location-outline"
+                            size={18}
+                            color={theme.colors.brand}
+                          />
+                        </View>
+
+                        <View style={styles.addressSuggestionContent}>
+                          <Text
+                            style={styles.addressSuggestionTitle}
+                            numberOfLines={1}
+                          >
+                            {titulo}
+                          </Text>
+
+                          {subtitulo ? (
+                            <Text
+                              style={styles.addressSuggestionSubtitle}
+                              numberOfLines={2}
+                            >
+                              {subtitulo}
+                            </Text>
+                          ) : null}
+                        </View>
+
+                        <Ionicons
+                          name="chevron-forward"
+                          size={17}
+                          color={theme.colors.textBody}
+                        />
+                      </Pressable>
+
+                      {index < sugestoesEndereco.length - 1 && (
+                        <View style={styles.addressSuggestionDivider} />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </View>
+            )}
 
             <Pressable
               accessibilityRole="button"
@@ -1122,7 +1326,7 @@ const statusBadge =
                     style={[
                       styles.dateChoiceTitle,
                       dataOcorrenciaTexto === "" &&
-                        styles.dateChoiceTitleActive,
+                      styles.dateChoiceTitleActive,
                     ]}
                   >
                     Hoje
@@ -1155,7 +1359,7 @@ const statusBadge =
                     style={[
                       styles.dateChoiceTitle,
                       dataOcorrenciaTexto !== "" &&
-                        styles.dateChoiceTitleActive,
+                      styles.dateChoiceTitleActive,
                     ]}
                   >
                     Outra data
@@ -1359,8 +1563,8 @@ const statusBadge =
                   value={
                     aguaRegistrada
                       ? `${formatarDataCurta(aguaRegistrada)} ${formatarHora(
-                          aguaRegistrada,
-                        )}`
+                        aguaRegistrada,
+                      )}`
                       : "Não registrada"
                   }
                 />
@@ -1371,8 +1575,8 @@ const statusBadge =
                   value={
                     comidaRegistrada
                       ? `${formatarDataCurta(comidaRegistrada)} ${formatarHora(
-                          comidaRegistrada,
-                        )}`
+                        comidaRegistrada,
+                      )}`
                       : "Não registrada"
                   }
                 />
@@ -1631,7 +1835,7 @@ const statusBadge =
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => navigation.goBack()}
+            onPress={voltarParaMapa}
             style={styles.cancelButton}
           >
             <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -1719,7 +1923,7 @@ const statusBadge =
                 if (numeros.length !== 8) {
                   Alert.alert(
                     "Data incompleta",
-                    "Digite a data completa no formato DD/MM/AAAA."
+                    "Digite a data completa no formato DD/MM/AAAA.",
                   );
                   return;
                 }
@@ -1744,7 +1948,7 @@ const statusBadge =
                 if (!valida) {
                   Alert.alert(
                     "Data inválida",
-                    "Informe uma data válida no formato DD/MM/AAAA."
+                    "Informe uma data válida no formato DD/MM/AAAA.",
                   );
                   return;
                 }
@@ -1787,37 +1991,15 @@ function SectionHeader({
   subtitle: string;
 }) {
   return (
-    <View
-      style={styles.sectionHeader}
-    >
-      <View
-        style={styles.sectionNumber}
-      >
-        <Text
-          style={
-            styles.sectionNumberText
-          }
-        >
-          {number}
-        </Text>
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionNumber}>
+        <Text style={styles.sectionNumberText}>{number}</Text>
       </View>
 
-      <View
-        style={
-          styles.sectionHeaderContent
-        }
-      >
-        <Text
-          style={styles.sectionTitle}
-        >
-          {title}
-        </Text>
+      <View style={styles.sectionHeaderContent}>
+        <Text style={styles.sectionTitle}>{title}</Text>
 
-        <Text
-          style={styles.sectionSubtitle}
-        >
-          {subtitle}
-        </Text>
+        <Text style={styles.sectionSubtitle}>{subtitle}</Text>
       </View>
     </View>
   );
@@ -1843,23 +2025,16 @@ function ChoiceButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.choiceButton,
-        active &&
-          styles.choiceButtonActive,
-        active &&
-          danger &&
-          styles.choiceButtonDanger,
-        pressed &&
-          styles.pressed,
+        active && styles.choiceButtonActive,
+        active && danger && styles.choiceButtonDanger,
+        pressed && styles.pressed,
       ]}
     >
       <Text
         style={[
           styles.choiceButtonText,
-          active &&
-            styles.choiceButtonTextActive,
-          active &&
-            danger &&
-            styles.choiceButtonTextDanger,
+          active && styles.choiceButtonTextActive,
+          active && danger && styles.choiceButtonTextDanger,
         ]}
       >
         {label}
@@ -1870,10 +2045,7 @@ function ChoiceButton({
           name="checkmark-circle"
           size={18}
           color={
-            danger
-              ? theme.colors.semantic
-                  .danger.text
-              : theme.colors.brand
+            danger ? theme.colors.semantic.danger.text : theme.colors.brand
           }
         />
       )}
@@ -1901,55 +2073,27 @@ function CareButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.careButton,
-        active &&
-          styles.careButtonActive,
-        pressed &&
-          styles.pressed,
+        active && styles.careButtonActive,
+        pressed && styles.pressed,
       ]}
     >
-      <View
-        style={[
-          styles.careIcon,
-          active &&
-            styles.careIconActive,
-        ]}
-      >
+      <View style={[styles.careIcon, active && styles.careIconActive]}>
         <MaterialCommunityIcons
-          name={
-            icon === "water"
-              ? "water"
-              : "food"
-          }
+          name={icon === "water" ? "water" : "food"}
           size={25}
-          color={
-            active
-              ? theme.colors.surface
-              : theme.colors.brand
-          }
+          color={active ? theme.colors.surface : theme.colors.brand}
         />
       </View>
 
       <Text
-        style={[
-          styles.careButtonText,
-          active &&
-            styles.careButtonTextActive,
-        ]}
+        style={[styles.careButtonText, active && styles.careButtonTextActive]}
       >
         {label}
       </Text>
 
       {active && (
-        <View
-          style={styles.careCheck}
-        >
-          <Ionicons
-            name="checkmark"
-            size={12}
-            color={
-              theme.colors.surface
-            }
-          />
+        <View style={styles.careCheck}>
+          <Ionicons name="checkmark" size={12} color={theme.colors.surface} />
         </View>
       )}
     </Pressable>
@@ -1967,34 +2111,17 @@ function CareInfo({
 }) {
   return (
     <View style={styles.careInfo}>
-      <View
-        style={styles.careInfoHeader}
-      >
+      <View style={styles.careInfoHeader}>
         <MaterialCommunityIcons
-          name={
-            icon === "water"
-              ? "water"
-              : "food"
-          }
+          name={icon === "water" ? "water" : "food"}
           size={15}
-          color={
-            theme.colors.brand
-          }
+          color={theme.colors.brand}
         />
 
-        <Text
-          style={
-            styles.careInfoLabel
-          }
-        >
-          {label}
-        </Text>
+        <Text style={styles.careInfoLabel}>{label}</Text>
       </View>
 
-      <Text
-        style={styles.careInfoValue}
-        numberOfLines={1}
-      >
+      <Text style={styles.careInfoValue} numberOfLines={1}>
         {value}
       </Text>
     </View>
@@ -2004,8 +2131,7 @@ function CareInfo({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:
-      theme.colors.background,
+    backgroundColor: theme.colors.background,
   },
 
   flex: {
@@ -2022,8 +2148,7 @@ const styles = StyleSheet.create({
     minHeight: 54,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent:
-      "space-between",
+    justifyContent: "space-between",
     marginBottom: 18,
   },
 
@@ -2045,8 +2170,7 @@ const styles = StyleSheet.create({
   },
 
   screenTitle: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 17,
     fontWeight: "800",
   },
@@ -2055,19 +2179,16 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.08)",
+    borderColor: "rgba(31, 92, 77, 0.08)",
     ...theme.shadows.elevation1,
   },
 
   hero: {
-    backgroundColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
     borderRadius: 24,
     padding: 22,
     marginBottom: 14,
@@ -2078,16 +2199,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor:
-      "rgba(255,255,255,0.14)",
+    backgroundColor: "rgba(255,255,255,0.14)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 15,
   },
 
   heroTitle: {
-    color:
-      theme.colors.surface,
+    color: theme.colors.surface,
     fontSize: 24,
     lineHeight: 30,
     fontWeight: "800",
@@ -2095,8 +2214,7 @@ const styles = StyleSheet.create({
   },
 
   heroDescription: {
-    color:
-      "rgba(255,255,255,0.82)",
+    color: "rgba(255,255,255,0.82)",
     fontSize: 14,
     lineHeight: 21,
     marginTop: 8,
@@ -2105,8 +2223,7 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 5,
     borderRadius: 3,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.10)",
+    backgroundColor: "rgba(31, 92, 77, 0.10)",
     marginBottom: 24,
     overflow: "hidden",
   },
@@ -2115,19 +2232,16 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 3,
-    backgroundColor:
-      theme.colors.action,
+    backgroundColor: theme.colors.action,
   },
 
   section: {
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 22,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.06)",
+    borderColor: "rgba(31, 92, 77, 0.06)",
     ...theme.shadows.elevation1,
   },
 
@@ -2141,8 +2255,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 10,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.10)",
+    backgroundColor: "rgba(31, 92, 77, 0.10)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 11,
@@ -2159,16 +2272,14 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 18,
     fontWeight: "800",
     letterSpacing: -0.2,
   },
 
   sectionSubtitle: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 13,
     lineHeight: 18,
     marginTop: 3,
@@ -2185,33 +2296,27 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 17,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.10)",
-    backgroundColor:
-      theme.colors.background,
+    borderColor: "rgba(31, 92, 77, 0.10)",
+    backgroundColor: theme.colors.background,
   },
 
   typeCardActive: {
-    borderColor:
-      theme.colors.brand,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.06)",
+    borderColor: theme.colors.brand,
+    backgroundColor: "rgba(31, 92, 77, 0.06)",
   },
 
   typeIcon: {
     width: 46,
     height: 46,
     borderRadius: 14,
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
 
   typeIconActive: {
-    backgroundColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
   },
 
   typeContent: {
@@ -2219,20 +2324,17 @@ const styles = StyleSheet.create({
   },
 
   typeTitle: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 14,
     fontWeight: "700",
   },
 
   typeTitleActive: {
-    color:
-      theme.colors.brand,
+    color: theme.colors.brand,
   },
 
   typeDescription: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 12,
     marginTop: 3,
     lineHeight: 16,
@@ -2243,29 +2345,25 @@ const styles = StyleSheet.create({
     height: 21,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor:
-      "rgba(31, 92, 77, 0.20)",
+    borderColor: "rgba(31, 92, 77, 0.20)",
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,
   },
 
   radioOuterActive: {
-    borderColor:
-      theme.colors.brand,
+    borderColor: theme.colors.brand,
   },
 
   radioInner: {
     width: 9,
     height: 9,
     borderRadius: 5,
-    backgroundColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
   },
 
   fieldLabel: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 13,
     fontWeight: "700",
     marginBottom: 8,
@@ -2287,48 +2385,40 @@ const styles = StyleSheet.create({
     minHeight: 92,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.10)",
-    backgroundColor:
-      theme.colors.background,
+    borderColor: "rgba(31, 92, 77, 0.10)",
+    backgroundColor: theme.colors.background,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 6,
   },
 
   animalCardActive: {
-    borderColor:
-      theme.colors.brand,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.07)",
+    borderColor: theme.colors.brand,
+    backgroundColor: "rgba(31, 92, 77, 0.07)",
   },
 
   animalIcon: {
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 7,
   },
 
   animalIconActive: {
-    backgroundColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
   },
 
   animalTitle: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 12,
     fontWeight: "700",
   },
 
   animalTitleActive: {
-    color:
-      theme.colors.brand,
+    color: theme.colors.brand,
   },
 
   otherAnimalField: {
@@ -2339,12 +2429,10 @@ const styles = StyleSheet.create({
     minHeight: 54,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor:
-      theme.colors.inputBg,
+    backgroundColor: theme.colors.inputBg,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.08)",
+    borderColor: "rgba(31, 92, 77, 0.08)",
     paddingHorizontal: 14,
     marginBottom: 12,
   },
@@ -2355,6 +2443,64 @@ const styles = StyleSheet.create({
     paddingBottom: 3,
   },
 
+  addressLoading: {
+    marginTop: 14,
+    marginLeft: 8,
+  },
+
+  addressSuggestions: {
+    marginTop: -4,
+    marginBottom: 12,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "rgba(31, 92, 77, 0.10)",
+    backgroundColor: theme.colors.surface,
+    overflow: "hidden",
+    ...theme.shadows.elevation1,
+  },
+
+  addressSuggestionItem: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+
+  addressSuggestionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+    backgroundColor: "rgba(31, 92, 77, 0.06)",
+  },
+
+  addressSuggestionContent: {
+    flex: 1,
+    paddingRight: 8,
+  },
+
+  addressSuggestionTitle: {
+    color: theme.colors.textTitle,
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 3,
+  },
+
+  addressSuggestionSubtitle: {
+    color: theme.colors.textBody,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
+  addressSuggestionDivider: {
+    height: 1,
+    marginLeft: 58,
+    backgroundColor: "rgba(31, 92, 77, 0.08)",
+  },
+
   inputIcon: {
     marginRight: 10,
     marginTop: 1,
@@ -2362,16 +2508,14 @@ const styles = StyleSheet.create({
 
   input: {
     flex: 1,
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 15,
     lineHeight: 21,
     paddingVertical: 12,
   },
 
   optionalText: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 10,
     fontWeight: "700",
   },
@@ -2390,29 +2534,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     borderRadius: 13,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.10)",
-    backgroundColor:
-      theme.colors.background,
+    borderColor: "rgba(31, 92, 77, 0.10)",
+    backgroundColor: theme.colors.background,
   },
 
   optionChipActive: {
-    borderColor:
-      theme.colors.brand,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.08)",
+    borderColor: theme.colors.brand,
+    backgroundColor: "rgba(31, 92, 77, 0.08)",
   },
 
   optionChipText: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 13,
     fontWeight: "600",
   },
 
   optionChipTextActive: {
-    color:
-      theme.colors.brand,
+    color: theme.colors.brand,
     fontWeight: "700",
   },
 
@@ -2421,18 +2559,15 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 1.5,
-    borderColor:
-      "rgba(31, 92, 77, 0.20)",
+    borderColor: "rgba(31, 92, 77, 0.20)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 7,
   },
 
   checkCircleActive: {
-    backgroundColor:
-      theme.colors.brand,
-    borderColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
+    borderColor: theme.colors.brand,
   },
 
   binaryRow: {
@@ -2446,10 +2581,8 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.10)",
-    backgroundColor:
-      theme.colors.background,
+    borderColor: "rgba(31, 92, 77, 0.10)",
+    backgroundColor: theme.colors.background,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -2458,53 +2591,40 @@ const styles = StyleSheet.create({
   },
 
   choiceButtonActive: {
-    borderColor:
-      theme.colors.brand,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.07)",
+    borderColor: theme.colors.brand,
+    backgroundColor: "rgba(31, 92, 77, 0.07)",
   },
 
   choiceButtonDanger: {
-    borderColor:
-      theme.colors.semantic
-        .danger.text,
-    backgroundColor:
-      theme.colors.semantic
-        .danger.bg,
+    borderColor: theme.colors.semantic.danger.text,
+    backgroundColor: theme.colors.semantic.danger.bg,
   },
 
   choiceButtonText: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 14,
     fontWeight: "700",
   },
 
   choiceButtonTextActive: {
-    color:
-      theme.colors.brand,
+    color: theme.colors.brand,
   },
 
   choiceButtonTextDanger: {
-    color:
-      theme.colors.semantic
-        .danger.text,
+    color: theme.colors.semantic.danger.text,
   },
 
   conditionalBox: {
     marginTop: 14,
     padding: 13,
     borderRadius: 16,
-    backgroundColor:
-      theme.colors.background,
+    backgroundColor: theme.colors.background,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.07)",
+    borderColor: "rgba(31, 92, 77, 0.07)",
   },
 
   conditionalTitle: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 12,
     fontWeight: "800",
     marginBottom: 10,
@@ -2512,8 +2632,7 @@ const styles = StyleSheet.create({
 
   sectionDivider: {
     height: 1,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.08)",
+    backgroundColor: "rgba(31, 92, 77, 0.08)",
     marginVertical: 20,
   },
 
@@ -2521,10 +2640,8 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.14)",
-    backgroundColor:
-      "rgba(31, 92, 77, 0.05)",
+    borderColor: "rgba(31, 92, 77, 0.14)",
+    backgroundColor: "rgba(31, 92, 77, 0.05)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -2533,8 +2650,7 @@ const styles = StyleSheet.create({
   },
 
   locationButtonText: {
-    color:
-      theme.colors.brand,
+    color: theme.colors.brand,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -2548,11 +2664,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 104,
     borderRadius: 18,
-    backgroundColor:
-      theme.colors.background,
+    backgroundColor: theme.colors.background,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.08)",
+    borderColor: "rgba(31, 92, 77, 0.08)",
     alignItems: "center",
     justifyContent: "center",
     padding: 10,
@@ -2560,38 +2674,32 @@ const styles = StyleSheet.create({
   },
 
   careButtonActive: {
-    backgroundColor:
-      "rgba(31, 92, 77, 0.07)",
-    borderColor:
-      theme.colors.brand,
+    backgroundColor: "rgba(31, 92, 77, 0.07)",
+    borderColor: theme.colors.brand,
   },
 
   careIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
   },
 
   careIconActive: {
-    backgroundColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
   },
 
   careButtonText: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 14,
     fontWeight: "800",
   },
 
   careButtonTextActive: {
-    color:
-      theme.colors.brand,
+    color: theme.colors.brand,
   },
 
   careCheck: {
@@ -2601,26 +2709,19 @@ const styles = StyleSheet.create({
     width: 21,
     height: 21,
     borderRadius: 11,
-    backgroundColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
     alignItems: "center",
     justifyContent: "center",
   },
 
   caregiverCard: {
     marginTop: 13,
-    backgroundColor:
-      theme.colors.background,
+    backgroundColor: theme.colors.background,
     borderRadius: 17,
     padding: 14,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.06)",
+    borderColor: "rgba(31, 92, 77, 0.06)",
   },
-
-
-
-
 
   careInfoRow: {
     flexDirection: "row",
@@ -2629,8 +2730,7 @@ const styles = StyleSheet.create({
 
   careInfo: {
     flex: 1,
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 10,
     minHeight: 65,
@@ -2644,15 +2744,13 @@ const styles = StyleSheet.create({
   },
 
   careInfoLabel: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 10,
     fontWeight: "700",
   },
 
   careInfoValue: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -2666,8 +2764,7 @@ const styles = StyleSheet.create({
 
   careHintText: {
     flex: 1,
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 11,
     lineHeight: 15,
   },
@@ -2677,10 +2774,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor:
-      "rgba(31, 92, 77, 0.22)",
-    backgroundColor:
-      "rgba(31, 92, 77, 0.035)",
+    borderColor: "rgba(31, 92, 77, 0.22)",
+    backgroundColor: "rgba(31, 92, 77, 0.035)",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -2688,31 +2783,27 @@ const styles = StyleSheet.create({
 
   photoAreaFilled: {
     borderStyle: "solid",
-    borderColor:
-      "rgba(31, 92, 77, 0.12)",
+    borderColor: "rgba(31, 92, 77, 0.12)",
   },
 
   photoIcon: {
     width: 58,
     height: 58,
     borderRadius: 20,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.09)",
+    backgroundColor: "rgba(31, 92, 77, 0.09)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 11,
   },
 
   photoTitle: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 15,
     fontWeight: "800",
   },
 
   photoDescription: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 12,
     marginTop: 4,
   },
@@ -2728,8 +2819,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     padding: 12,
-    backgroundColor:
-      "rgba(0,0,0,0.32)",
+    backgroundColor: "rgba(0,0,0,0.32)",
     alignItems: "center",
   },
 
@@ -2740,8 +2830,7 @@ const styles = StyleSheet.create({
   },
 
   photoOverlayText: {
-    color:
-      theme.colors.surface,
+    color: theme.colors.surface,
     fontSize: 13,
     fontWeight: "800",
   },
@@ -2754,18 +2843,15 @@ const styles = StyleSheet.create({
     minHeight: 50,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.08)",
-    backgroundColor:
-      theme.colors.background,
+    borderColor: "rgba(31, 92, 77, 0.08)",
+    backgroundColor: theme.colors.background,
     paddingHorizontal: 13,
     flexDirection: "row",
     alignItems: "center",
   },
 
   urgencyItemActive: {
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
   },
 
   urgencyDot: {
@@ -2773,40 +2859,30 @@ const styles = StyleSheet.create({
     height: 9,
     borderRadius: 5,
     marginRight: 10,
-    backgroundColor:
-      theme.colors.semantic
-        .success.text,
+    backgroundColor: theme.colors.semantic.success.text,
   },
 
   urgencyDotDanger: {
-    backgroundColor:
-      theme.colors.semantic
-        .danger.text,
+    backgroundColor: theme.colors.semantic.danger.text,
   },
 
   urgencyDotWarning: {
-    backgroundColor:
-      theme.colors.semantic
-        .warning.text,
+    backgroundColor: theme.colors.semantic.warning.text,
   },
 
   urgencyDotSuccess: {
-    backgroundColor:
-      theme.colors.semantic
-        .success.text,
+    backgroundColor: theme.colors.semantic.success.text,
   },
 
   urgencyText: {
     flex: 1,
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 14,
     fontWeight: "700",
   },
 
   urgencyTextActive: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
   },
 
   dateChoiceRow: {
@@ -2932,14 +3008,12 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 12,
     borderRadius: 13,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.06)",
+    backgroundColor: "rgba(31, 92, 77, 0.06)",
   },
 
   infoNoteText: {
     flex: 1,
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 11,
     lineHeight: 16,
   },
@@ -2955,20 +3029,17 @@ const styles = StyleSheet.create({
   },
 
   characterCount: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 10,
     textAlign: "right",
     marginTop: -5,
   },
 
   reviewCard: {
-    backgroundColor:
-      theme.colors.background,
+    backgroundColor: theme.colors.background,
     borderRadius: 17,
     borderWidth: 1,
-    borderColor:
-      "rgba(31, 92, 77, 0.08)",
+    borderColor: "rgba(31, 92, 77, 0.08)",
     overflow: "hidden",
   },
 
@@ -2982,8 +3053,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.08)",
+    backgroundColor: "rgba(31, 92, 77, 0.08)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 11,
@@ -2994,15 +3064,13 @@ const styles = StyleSheet.create({
   },
 
   reviewHeaderTitle: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 14,
     fontWeight: "800",
   },
 
   reviewHeaderText: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 11,
     lineHeight: 15,
     marginTop: 2,
@@ -3010,29 +3078,25 @@ const styles = StyleSheet.create({
 
   reviewDivider: {
     height: 1,
-    backgroundColor:
-      "rgba(31, 92, 77, 0.08)",
+    backgroundColor: "rgba(31, 92, 77, 0.08)",
   },
 
   reviewItem: {
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor:
-      "rgba(31, 92, 77, 0.06)",
+    borderBottomColor: "rgba(31, 92, 77, 0.06)",
   },
 
   reviewLabel: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 10,
     fontWeight: "700",
     marginBottom: 3,
   },
 
   reviewValue: {
-    color:
-      theme.colors.textTitle,
+    color: theme.colors.textTitle,
     fontSize: 13,
     fontWeight: "700",
     lineHeight: 18,
@@ -3048,8 +3112,7 @@ const styles = StyleSheet.create({
 
   footerNoteText: {
     flex: 1,
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 12,
     lineHeight: 17,
   },
@@ -3057,8 +3120,7 @@ const styles = StyleSheet.create({
   submitButton: {
     minHeight: 66,
     borderRadius: 22,
-    backgroundColor:
-      theme.colors.brand,
+    backgroundColor: theme.colors.brand,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 13,
@@ -3066,9 +3128,7 @@ const styles = StyleSheet.create({
   },
 
   submitButtonPressed: {
-    transform: [
-      { scale: 0.985 },
-    ],
+    transform: [{ scale: 0.985 }],
   },
 
   submitButtonDisabled: {
@@ -3079,8 +3139,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor:
-      theme.colors.surface,
+    backgroundColor: theme.colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 11,
@@ -3091,15 +3150,13 @@ const styles = StyleSheet.create({
   },
 
   submitTitle: {
-    color:
-      theme.colors.surface,
+    color: theme.colors.surface,
     fontSize: 15,
     fontWeight: "800",
   },
 
   submitSubtitle: {
-    color:
-      "rgba(255,255,255,0.70)",
+    color: "rgba(255,255,255,0.70)",
     fontSize: 11,
     marginTop: 2,
   },
@@ -3112,8 +3169,7 @@ const styles = StyleSheet.create({
   },
 
   cancelButtonText: {
-    color:
-      theme.colors.textBody,
+    color: theme.colors.textBody,
     fontSize: 13,
     fontWeight: "700",
   },

@@ -25,6 +25,7 @@ from app.modules.ocorrencias.schemas import (
 from datetime import datetime
 from sqlalchemy import cast, func
 from geoalchemy2 import Geography
+from app.modules.pets.models import Pet
 
 router = APIRouter()
 
@@ -66,7 +67,8 @@ async def criar_ocorrencia(
     tipo_animal: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    foto: UploadFile = File(...),
+    foto: UploadFile | None = File(None),
+    id_pet: int | None = Form(None),
     raca: str | None = Form(None),
     sexo: str | None = Form(None),
     cor: str | None = Form(None),
@@ -85,9 +87,56 @@ async def criar_ocorrencia(
     db: AsyncSession = Depends(get_db)
 ):
     if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
-        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+        raise HTTPException(
+            status_code=422,
+            detail="Coordenadas inválidas."
+        )
 
-    url_foto = await upload_foto_pet(foto, pasta="ocorrencias")
+    # =========================================================
+    # FOTO DA OCORRÊNCIA
+    # =========================================================
+
+    url_foto: str | None = None
+
+    # Foto nova enviada pelo usuário
+    if foto is not None:
+        url_foto = await upload_foto_pet(
+            foto,
+            pasta="ocorrencias"
+        )
+
+    # Reutilizar foto de um pet já cadastrado
+    elif id_pet is not None:
+        query_pet = (
+            select(Pet)
+            .join(
+                UsuarioFisico,
+                UsuarioFisico.id_usuario == Pet.id_usuario
+            )
+            .where(
+                Pet.id_pet == id_pet,
+                UsuarioFisico.id_conta == conta_atual.id_conta,
+            )
+        )
+
+        pet_resultado = await db.execute(query_pet)
+
+        pet = pet_resultado.scalar_one_or_none()
+
+        if pet is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Pet não encontrado para esta conta.",
+            )
+
+        url_foto = pet.foto
+
+    if not url_foto:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Informe uma foto para registrar a ocorrência.",
+        )
+
     ponto_wkt = f"POINT({longitude} {latitude})"
 
     nova_ocorrencia = Ocorrencia(
@@ -116,7 +165,19 @@ async def criar_ocorrencia(
     db.add(nova_ocorrencia)
     await db.commit()
     await db.refresh(nova_ocorrencia)
-    return nova_ocorrencia
+    return {
+        "id_ocorrencia": nova_ocorrencia.id_ocorrencia,
+        "id_conta": nova_ocorrencia.id_conta,
+        "tipo_ocorrencia": nova_ocorrencia.tipo_ocorrencia,
+        "status_badge": nova_ocorrencia.status_badge,
+        "tipo_animal": nova_ocorrencia.tipo_animal,
+        "foto": nova_ocorrencia.foto,
+        "nivel_urgencia": nova_ocorrencia.nivel_urgencia,
+        "data_ocorrencia": nova_ocorrencia.data_ocorrencia,
+        "endereco_localizacao": nova_ocorrencia.endereco_localizacao,
+        "latitude": latitude,
+        "longitude": longitude,
+    }
 
 from geoalchemy2.functions import (
     ST_GeomFromText,

@@ -3,8 +3,19 @@ from pydantic import BaseModel
 class PetBase(BaseModel):
     nome: str
     especie: str
+
     raca: str | None = None
+
+    
+    sexo: str | None = None
+
+    
+    cor: str | None = None
+
     porte: str | None = None
+
+    
+    idade: str | None = None
 
 class PetCriar(PetBase):
     pass

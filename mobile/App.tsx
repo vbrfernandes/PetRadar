@@ -30,13 +30,31 @@ export type AuthStackParamList = {
   EsqueceuSenha: undefined;
 };
 
+export interface PetOcorrenciaPrefill {
+  id_pet: number;
+
+  nome: string;
+  especie: string;
+
+  raca: string | null;
+  sexo: string | null;
+  cor: string | null;
+  porte: string | null;
+  idade: string | null;
+
+  foto: string | null;
+}
 
 // Tipagem das Rotas da Aplicação Principal
 export type AppTabParamList = {
   Mapa: undefined;
   SOS: undefined;
   Perfil: undefined;
-  CadastroOcorrencia: undefined;
+  CadastroOcorrencia:
+    | {
+        pet?: PetOcorrenciaPrefill;
+      }
+    | undefined;
 };
 
 

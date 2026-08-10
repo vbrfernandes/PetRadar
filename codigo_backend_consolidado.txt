@@ -36,6 +36,7 @@ ARQUITETURA DO PROJETO - BACKEND
 ├── versions
 │   ├── 28a9a8d94dc2_add_cpf_usuario.py
 │   ├── 6ec9a90cf3ac_completar_modelos_der.py
+│   ├── 9dbaf88e4938_add_pet_profile_fields.py
 │   ├── a4b7c9d2e5f1_create_occurrence_care_history.py
 │   ├── be3d516310b6_add_auth_verification_fields.py
 │   ├── d3a8b6c4e1f2_add_occurrence_spatial_index.py
@@ -60,32 +61,33 @@ ROTAS E SEQUÊNCIA DOS ARQUIVOS INCLUÍDOS (ORDENADOS DE CIMA PARA BAIXO)
 04. backend\alembic\script.py.mako
 05. backend\alembic\versions\28a9a8d94dc2_add_cpf_usuario.py
 06. backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
-07. backend\alembic\versions\a4b7c9d2e5f1_create_occurrence_care_history.py
-08. backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
-09. backend\alembic\versions\d3a8b6c4e1f2_add_occurrence_spatial_index.py
-10. backend\alembic\versions\f7c1e4d2a9b0_secure_password_reset_codes.py
-11. backend\app\core\cloudinary.py
-12. backend\app\core\config.py
-13. backend\app\core\database.py
-14. backend\app\core\deps.py
-15. backend\app\core\security.py
-16. backend\app\main.py
-17. backend\app\modules\auth\models.py
-18. backend\app\modules\auth\router.py
-19. backend\app\modules\auth\schemas.py
-20. backend\app\modules\auth\service.py
-21. backend\app\modules\chat\models.py
-22. backend\app\modules\engajamento\models.py
-23. backend\app\modules\ocorrencias\avistamento_router.py
-24. backend\app\modules\ocorrencias\models.py
-25. backend\app\modules\ocorrencias\router.py
-26. backend\app\modules\ocorrencias\schemas.py
-27. backend\app\modules\ong\models.py
-28. backend\app\modules\pets\models.py
-29. backend\app\modules\pets\router.py
-30. backend\app\modules\pets\schemas.py
-31. backend\docker-compose.yml
-32. backend\requirements.txt
+07. backend\alembic\versions\9dbaf88e4938_add_pet_profile_fields.py
+08. backend\alembic\versions\a4b7c9d2e5f1_create_occurrence_care_history.py
+09. backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
+10. backend\alembic\versions\d3a8b6c4e1f2_add_occurrence_spatial_index.py
+11. backend\alembic\versions\f7c1e4d2a9b0_secure_password_reset_codes.py
+12. backend\app\core\cloudinary.py
+13. backend\app\core\config.py
+14. backend\app\core\database.py
+15. backend\app\core\deps.py
+16. backend\app\core\security.py
+17. backend\app\main.py
+18. backend\app\modules\auth\models.py
+19. backend\app\modules\auth\router.py
+20. backend\app\modules\auth\schemas.py
+21. backend\app\modules\auth\service.py
+22. backend\app\modules\chat\models.py
+23. backend\app\modules\engajamento\models.py
+24. backend\app\modules\ocorrencias\avistamento_router.py
+25. backend\app\modules\ocorrencias\models.py
+26. backend\app\modules\ocorrencias\router.py
+27. backend\app\modules\ocorrencias\schemas.py
+28. backend\app\modules\ong\models.py
+29. backend\app\modules\pets\models.py
+30. backend\app\modules\pets\router.py
+31. backend\app\modules\pets\schemas.py
+32. backend\docker-compose.yml
+33. backend\requirements.txt
 
 ================================================================================
 CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
@@ -563,6 +565,64 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_contas_email'), table_name='contas')
     op.drop_table('contas')
     # ### end Alembic commands ###
+
+================================================================================
+CAMINHO: backend\alembic\versions\9dbaf88e4938_add_pet_profile_fields.py
+================================================================================
+
+"""add pet profile fields
+
+Revision ID: 9dbaf88e4938
+Revises: 'a4b7c9d2e5f1'
+Create Date: 2026-08-10 16:21:14.265860
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+import geoalchemy2
+
+
+# revision identifiers, used by Alembic.
+revision: str = '9dbaf88e4938'
+down_revision: Union[str, None] = 'a4b7c9d2e5f1'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    op.add_column(
+        "pets",
+        sa.Column(
+            "sexo",
+            sa.String(length=20),
+            nullable=True,
+        ),
+    )
+
+    op.add_column(
+        "pets",
+        sa.Column(
+            "cor",
+            sa.String(length=50),
+            nullable=True,
+        ),
+    )
+
+    op.add_column(
+        "pets",
+        sa.Column(
+            "idade",
+            sa.String(length=20),
+            nullable=True,
+        ),
+    )
+    
+def downgrade() -> None:
+    op.drop_column("pets", "idade")
+    op.drop_column("pets", "cor")
+    op.drop_column("pets", "sexo")
 
 ================================================================================
 CAMINHO: backend\alembic\versions\a4b7c9d2e5f1_create_occurrence_care_history.py
@@ -1709,6 +1769,7 @@ from app.modules.ocorrencias.schemas import (
 from datetime import datetime
 from sqlalchemy import cast, func
 from geoalchemy2 import Geography
+from app.modules.pets.models import Pet
 
 router = APIRouter()
 
@@ -1750,7 +1811,8 @@ async def criar_ocorrencia(
     tipo_animal: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    foto: UploadFile = File(...),
+    foto: UploadFile | None = File(None),
+    id_pet: int | None = Form(None),
     raca: str | None = Form(None),
     sexo: str | None = Form(None),
     cor: str | None = Form(None),
@@ -1769,9 +1831,56 @@ async def criar_ocorrencia(
     db: AsyncSession = Depends(get_db)
 ):
     if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
-        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+        raise HTTPException(
+            status_code=422,
+            detail="Coordenadas inválidas."
+        )
 
-    url_foto = await upload_foto_pet(foto, pasta="ocorrencias")
+    # =========================================================
+    # FOTO DA OCORRÊNCIA
+    # =========================================================
+
+    url_foto: str | None = None
+
+    # Foto nova enviada pelo usuário
+    if foto is not None:
+        url_foto = await upload_foto_pet(
+            foto,
+            pasta="ocorrencias"
+        )
+
+    # Reutilizar foto de um pet já cadastrado
+    elif id_pet is not None:
+        query_pet = (
+            select(Pet)
+            .join(
+                UsuarioFisico,
+                UsuarioFisico.id_usuario == Pet.id_usuario
+            )
+            .where(
+                Pet.id_pet == id_pet,
+                UsuarioFisico.id_conta == conta_atual.id_conta,
+            )
+        )
+
+        pet_resultado = await db.execute(query_pet)
+
+        pet = pet_resultado.scalar_one_or_none()
+
+        if pet is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Pet não encontrado para esta conta.",
+            )
+
+        url_foto = pet.foto
+
+    if not url_foto:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Informe uma foto para registrar a ocorrência.",
+        )
+
     ponto_wkt = f"POINT({longitude} {latitude})"
 
     nova_ocorrencia = Ocorrencia(
@@ -1800,7 +1909,19 @@ async def criar_ocorrencia(
     db.add(nova_ocorrencia)
     await db.commit()
     await db.refresh(nova_ocorrencia)
-    return nova_ocorrencia
+    return {
+        "id_ocorrencia": nova_ocorrencia.id_ocorrencia,
+        "id_conta": nova_ocorrencia.id_conta,
+        "tipo_ocorrencia": nova_ocorrencia.tipo_ocorrencia,
+        "status_badge": nova_ocorrencia.status_badge,
+        "tipo_animal": nova_ocorrencia.tipo_animal,
+        "foto": nova_ocorrencia.foto,
+        "nivel_urgencia": nova_ocorrencia.nivel_urgencia,
+        "data_ocorrencia": nova_ocorrencia.data_ocorrencia,
+        "endereco_localizacao": nova_ocorrencia.endereco_localizacao,
+        "latitude": latitude,
+        "longitude": longitude,
+    }
 
 from geoalchemy2.functions import (
     ST_GeomFromText,
@@ -2263,6 +2384,29 @@ class Pet(Base):
     raca: Mapped[str | None] = mapped_column(String(100))
     porte: Mapped[str | None] = mapped_column(String(20))
     foto: Mapped[str | None] = mapped_column(String(500))
+ 
+    sexo: Mapped[str | None] = mapped_column(
+        String(20)
+    )
+
+   
+    cor: Mapped[str | None] = mapped_column(
+        String(50)
+    )
+
+    porte: Mapped[str | None] = mapped_column(
+        String(20)
+    )
+
+   
+    idade: Mapped[str | None] = mapped_column(
+        String(20)
+    )
+
+    foto: Mapped[str | None] = mapped_column(
+        String(500)
+    )
+
 
     usuario: Mapped["UsuarioFisico"] = relationship("UsuarioFisico", back_populates="pets")
 
@@ -2286,9 +2430,22 @@ router = APIRouter()
 async def cadastrar_pet(
     nome: str = Form(...),
     especie: str = Form(...),
+
     raca: str | None = Form(None),
+
+    
+    sexo: str | None = Form(None),
+
+    
+    cor: str | None = Form(None),
+
     porte: str | None = Form(None),
+
+    
+    idade: str | None = Form(None),
+
     foto: UploadFile | None = File(None),
+
     conta_atual: Conta = Depends(obter_conta_atual),
     db: AsyncSession = Depends(get_db)
 ):
@@ -2315,6 +2472,9 @@ async def cadastrar_pet(
         especie=especie,
         raca=raca,
         porte=porte,
+        sexo=sexo,
+        cor=cor,
+        idade=idade,
         foto=url_foto
     )
     
@@ -2352,8 +2512,19 @@ from pydantic import BaseModel
 class PetBase(BaseModel):
     nome: str
     especie: str
+
     raca: str | None = None
+
+    
+    sexo: str | None = None
+
+    
+    cor: str | None = None
+
     porte: str | None = None
+
+    
+    idade: str | None = None
 
 class PetCriar(PetBase):
     pass

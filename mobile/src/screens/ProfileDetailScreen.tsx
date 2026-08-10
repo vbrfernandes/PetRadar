@@ -4,7 +4,7 @@ import React, {
   useRef,
   useCallback,
   useMemo,
-} from 'react';
+} from "react";
 
 import {
   View,
@@ -25,20 +25,21 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
+} from "react-native";
 
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-} from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from "expo-image-picker";
 
-import { theme } from '../theme/colors';
-import api from '../services/api';
-import { useAuthStore } from '../store/useAuthStore';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { theme } from "../theme/colors";
+import api from "../services/api";
+import { useAuthStore } from "../store/useAuthStore";
+
+import RegistrarPet from "./RegistrarPet";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.88;
 
@@ -60,9 +61,9 @@ const COLORS = {
   danger: theme.colors.semantic.danger.text,
   dangerBg: theme.colors.semantic.danger.bg,
 
-  white: '#FFFFFF',
-  muted: '#94A3B8',
-  soft: '#F8FAFC',
+  white: "#FFFFFF",
+  muted: "#94A3B8",
+  soft: "#F8FAFC",
 };
 
 const MAX_PROFILE_RADIUS = 100;
@@ -80,7 +81,7 @@ interface ProfileDetailProps {
 interface UserProfile {
   id_conta: number;
   email: string;
-  tipo_conta: 'PESSOA_FISICA' | 'ONG';
+  tipo_conta: "PESSOA_FISICA" | "ONG";
 
   telefone: string | null;
   foto_perfil: string | null;
@@ -127,187 +128,178 @@ interface AvatarProps {
   onPress: () => void;
 }
 
-const Avatar = React.memo(
-  ({ photoUri, loading, onPress }: AvatarProps) => {
-    const hasPhoto = Boolean(photoUri);
+const Avatar = React.memo(({ photoUri, loading, onPress }: AvatarProps) => {
+  const hasPhoto = Boolean(photoUri);
 
-    return (
-      <Pressable
-        style={styles.avatarWrapper}
-        onPress={onPress}
-        disabled={loading}
-        accessibilityRole="button"
-        accessibilityLabel={
-          hasPhoto
-            ? 'Alterar foto de perfil'
-            : 'Adicionar foto de perfil'
-        }
-        accessibilityHint={
-          hasPhoto
-            ? 'Toque para escolher uma nova foto'
-            : 'Toque para adicionar uma foto de perfil'
-        }
-      >
-        <View style={styles.avatarRing}>
-          {photoUri ? (
-            <Image
-              source={{ uri: photoUri }}
-              style={styles.avatarImage}
-              accessibilityLabel="Foto de perfil"
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons
-                name="person"
-                size={46}
-                color={COLORS.primary}
-              />
-            </View>
-          )}
+  return (
+    <Pressable
+      style={styles.avatarWrapper}
+      onPress={onPress}
+      disabled={loading}
+      accessibilityRole="button"
+      accessibilityLabel={
+        hasPhoto ? "Alterar foto de perfil" : "Adicionar foto de perfil"
+      }
+      accessibilityHint={
+        hasPhoto
+          ? "Toque para escolher uma nova foto"
+          : "Toque para adicionar uma foto de perfil"
+      }
+    >
+      <View style={styles.avatarRing}>
+        {photoUri ? (
+          <Image
+            source={{ uri: photoUri }}
+            style={styles.avatarImage}
+            accessibilityLabel="Foto de perfil"
+          />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Ionicons name="person" size={46} color={COLORS.primary} />
+          </View>
+        )}
+      </View>
+
+      {loading && (
+        <View style={styles.uploadingOverlay}>
+          <ActivityIndicator size="small" color={COLORS.white} />
+
+          <Text style={styles.uploadingText}>Enviando...</Text>
         </View>
+      )}
 
-        {loading && (
-          <View style={styles.uploadingOverlay}>
-            <ActivityIndicator
-              size="small"
-              color={COLORS.white}
-            />
-
-            <Text style={styles.uploadingText}>
-              Enviando...
-            </Text>
-          </View>
-        )}
-
-        {!loading && (
-          <View
-            style={[
-              styles.photoActionBadge,
-              hasPhoto
-                ? styles.photoEditBadge
-                : styles.photoAddBadge,
-            ]}
-          >
-            <Ionicons
-              name={hasPhoto ? 'create-outline' : 'add'}
-              size={hasPhoto ? 17 : 23}
-              color={COLORS.white}
-            />
-          </View>
-        )}
-      </Pressable>
-    );
-  }
-);
+      {!loading && (
+        <View
+          style={[
+            styles.photoActionBadge,
+            hasPhoto ? styles.photoEditBadge : styles.photoAddBadge,
+          ]}
+        >
+          <Ionicons
+            name={hasPhoto ? "create-outline" : "add"}
+            size={hasPhoto ? 17 : 23}
+            color={COLORS.white}
+          />
+        </View>
+      )}
+    </Pressable>
+  );
+});
 
 // ============================================================
 // TAB BAR
 // ============================================================
+type ProfileTab = "perfil" | "ocorrencias" | "pets";
 
 interface TabBarProps {
-  activeTab: 'perfil' | 'ocorrencias';
-  onTabChange: (tab: 'perfil' | 'ocorrencias') => void;
-  ocorrenciasCount: number;
+  activeTab: ProfileTab;
+  onTabChange: (tab: ProfileTab) => void;
 }
 
-const TabBar = React.memo(
-  ({
-    activeTab,
-    onTabChange,
-    ocorrenciasCount,
-  }: TabBarProps) => (
-    <View style={styles.tabContainer}>
-      <Pressable
+const TabBar = React.memo(({ activeTab, onTabChange }: TabBarProps) => (
+  <View style={styles.tabContainer}>
+    <Pressable
+      style={[
+        styles.tabButton,
+        activeTab === "perfil" && styles.tabButtonActive,
+      ]}
+      onPress={() => onTabChange("perfil")}
+      accessibilityRole="tab"
+      accessibilityState={{
+        selected: activeTab === "perfil",
+      }}
+    >
+      <View
         style={[
-          styles.tabButton,
-          activeTab === 'perfil' && styles.tabButtonActive,
+          styles.tabIconContainer,
+          activeTab === "perfil" && styles.tabIconContainerActive,
         ]}
-        onPress={() => onTabChange('perfil')}
-        accessibilityRole="tab"
-        accessibilityState={{
-          selected: activeTab === 'perfil',
-        }}
       >
-        <View
-          style={[
-            styles.tabIconContainer,
-            activeTab === 'perfil' &&
-            styles.tabIconContainerActive,
-          ]}
-        >
-          <Ionicons
-            name="person-outline"
-            size={18}
-            color={
-              activeTab === 'perfil'
-                ? COLORS.primary
-                : COLORS.textBody
-            }
-          />
-        </View>
+        <Ionicons
+          name="person-outline"
+          size={18}
+          color={activeTab === "perfil" ? COLORS.primary : COLORS.textBody}
+        />
+      </View>
 
-        <Text
-          style={[
-            styles.tabText,
-            activeTab === 'perfil' &&
-            styles.tabTextActive,
-          ]}
-        >
-          Perfil
-        </Text>
-      </Pressable>
+      <Text
+        style={[styles.tabText, activeTab === "perfil" && styles.tabTextActive]}
+      >
+        Perfil
+      </Text>
+    </Pressable>
 
-      <Pressable
+    <Pressable
+      style={[
+        styles.tabButton,
+        activeTab === "ocorrencias" && styles.tabButtonActive,
+      ]}
+      onPress={() => onTabChange("ocorrencias")}
+      accessibilityRole="tab"
+      accessibilityState={{
+        selected: activeTab === "ocorrencias",
+      }}
+    >
+      <View
         style={[
-          styles.tabButton,
-          activeTab === 'ocorrencias' &&
-          styles.tabButtonActive,
+          styles.tabIconContainer,
+          activeTab === "ocorrencias" && styles.tabIconContainerActive,
         ]}
-        onPress={() => onTabChange('ocorrencias')}
-        accessibilityRole="tab"
-        accessibilityState={{
-          selected: activeTab === 'ocorrencias',
-        }}
       >
-        <View
-          style={[
-            styles.tabIconContainer,
-            activeTab === 'ocorrencias' &&
-            styles.tabIconContainerActive,
-          ]}
-        >
-          <MaterialCommunityIcons
-            name="paw-outline"
-            size={19}
-            color={
-              activeTab === 'ocorrencias'
-                ? COLORS.primary
-                : COLORS.textBody
-            }
-          />
-        </View>
+        <MaterialCommunityIcons
+          name="paw-outline"
+          size={19}
+          color={activeTab === "ocorrencias" ? COLORS.primary : COLORS.textBody}
+        />
+      </View>
 
-        <Text
-          style={[
-            styles.tabText,
-            activeTab === 'ocorrencias' &&
-            styles.tabTextActive,
-          ]}
-        >
-          Ocorrências
-        </Text>
+      <Text
+        style={[
+          styles.tabText,
+          activeTab === "ocorrencias" && styles.tabTextActive,
+        ]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.85}
+      >
+        Ocorrências
+      </Text>
+    </Pressable>
 
-        {ocorrenciasCount > 0 && (
-          <View style={styles.tabCount}>
-            <Text style={styles.tabCountText}>
-              {ocorrenciasCount}
-            </Text>
-          </View>
-        )}
-      </Pressable>
-    </View>
-  )
-);
+    {/* ===================================================== */}
+    {/* PETS */}
+    {/* ===================================================== */}
+
+    <Pressable
+      style={[styles.tabButton, activeTab === "pets" && styles.tabButtonActive]}
+      onPress={() => onTabChange("pets")}
+      accessibilityRole="tab"
+      accessibilityState={{
+        selected: activeTab === "pets",
+      }}
+      accessibilityLabel="Meus pets"
+    >
+      <View
+        style={[
+          styles.tabIconContainer,
+          activeTab === "pets" && styles.tabIconContainerActive,
+        ]}
+      >
+        <MaterialCommunityIcons
+          name="dog-side"
+          size={19}
+          color={activeTab === "pets" ? COLORS.primary : COLORS.textBody}
+        />
+      </View>
+
+      <Text
+        style={[styles.tabText, activeTab === "pets" && styles.tabTextActive]}
+      >
+        Pets
+      </Text>
+    </Pressable>
+  </View>
+));
 
 // ============================================================
 // INFO ROW
@@ -321,40 +313,21 @@ interface InfoRowProps {
 }
 
 const InfoRow = React.memo(
-  ({
-    icon,
-    label,
-    value,
-    iconBackground = COLORS.successBg,
-  }: InfoRowProps) => (
+  ({ icon, label, value, iconBackground = COLORS.successBg }: InfoRowProps) => (
     <View style={styles.infoRow}>
-      <View
-        style={[
-          styles.infoIcon,
-          { backgroundColor: iconBackground },
-        ]}
-      >
-        <Ionicons
-          name={icon}
-          size={18}
-          color={COLORS.primary}
-        />
+      <View style={[styles.infoIcon, { backgroundColor: iconBackground }]}>
+        <Ionicons name={icon} size={18} color={COLORS.primary} />
       </View>
 
       <View style={styles.infoContent}>
-        <Text style={styles.infoLabel}>
-          {label}
-        </Text>
+        <Text style={styles.infoLabel}>{label}</Text>
 
-        <Text
-          style={styles.infoValue}
-          numberOfLines={3}
-        >
-          {value || 'Não informado'}
+        <Text style={styles.infoValue} numberOfLines={3}>
+          {value || "Não informado"}
         </Text>
       </View>
     </View>
-  )
+  ),
 );
 
 // ============================================================
@@ -366,145 +339,103 @@ interface PetSwitchProps {
   onChange: () => void;
 }
 
-const PetSwitch = React.memo(
-  ({ value, onChange }: PetSwitchProps) => {
-    const translateX = useRef(
-      new Animated.Value(value ? 20 : 0)
-    ).current;
+const PetSwitch = React.memo(({ value, onChange }: PetSwitchProps) => {
+  const translateX = useRef(new Animated.Value(value ? 20 : 0)).current;
 
-    useEffect(() => {
-      Animated.spring(translateX, {
-        toValue: value ? 20 : 0,
-        useNativeDriver: true,
-        friction: 8,
-        tension: 70,
-      }).start();
-    }, [value, translateX]);
+  useEffect(() => {
+    Animated.spring(translateX, {
+      toValue: value ? 20 : 0,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 70,
+    }).start();
+  }, [value, translateX]);
 
-    return (
-      <Pressable
-        onPress={onChange}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: value }}
-        accessibilityLabel="Possui pet"
+  return (
+    <Pressable
+      onPress={onChange}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel="Possui pet"
+      style={[styles.switchTrack, value && styles.switchTrackActive]}
+    >
+      <Animated.View
         style={[
-          styles.switchTrack,
-          value && styles.switchTrackActive,
+          styles.switchThumb,
+          {
+            transform: [{ translateX }],
+          },
         ]}
-      >
-        <Animated.View
-          style={[
-            styles.switchThumb,
-            {
-              transform: [{ translateX }],
-            },
-          ]}
-        />
-      </Pressable>
-    );
-  }
-);
+      />
+    </Pressable>
+  );
+});
 
 // ============================================================
 // OCORRÊNCIA
 // ============================================================
 
-const OcorrenciaCard = React.memo(
-  ({ item }: { item: Ocorrencia }) => {
-    const isPerdido =
-      item.status_badge?.toUpperCase() === 'PERDIDO';
+const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
+  const isPerdido = item.status_badge?.toUpperCase() === "PERDIDO";
 
-    const statusColor = isPerdido
-      ? COLORS.danger
-      : COLORS.warning;
+  const statusColor = isPerdido ? COLORS.danger : COLORS.warning;
 
-    const statusBackground = isPerdido
-      ? COLORS.dangerBg
-      : COLORS.warningBg;
+  const statusBackground = isPerdido ? COLORS.dangerBg : COLORS.warningBg;
 
-    return (
-      <View style={styles.occurrenceCard}>
-        <View style={styles.occurrenceImageWrapper}>
-          {item.foto ? (
-            <Image
-              source={{ uri: item.foto }}
-              style={styles.occurrenceImage}
-            />
-          ) : (
-            <View style={styles.occurrenceImagePlaceholder}>
-              <MaterialCommunityIcons
-                name="paw"
-                size={28}
-                color={COLORS.muted}
-              />
-            </View>
-          )}
-        </View>
+  return (
+    <View style={styles.occurrenceCard}>
+      <View style={styles.occurrenceImageWrapper}>
+        {item.foto ? (
+          <Image source={{ uri: item.foto }} style={styles.occurrenceImage} />
+        ) : (
+          <View style={styles.occurrenceImagePlaceholder}>
+            <MaterialCommunityIcons name="paw" size={28} color={COLORS.muted} />
+          </View>
+        )}
+      </View>
 
-        <View style={styles.occurrenceInfo}>
-          <View style={styles.occurrenceTopRow}>
+      <View style={styles.occurrenceInfo}>
+        <View style={styles.occurrenceTopRow}>
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor: statusBackground,
+              },
+            ]}
+          >
             <View
               style={[
-                styles.statusBadge,
+                styles.statusDot,
                 {
-                  backgroundColor: statusBackground,
+                  backgroundColor: statusColor,
                 },
               ]}
-            >
-              <View
-                style={[
-                  styles.statusDot,
-                  {
-                    backgroundColor: statusColor,
-                  },
-                ]}
-              />
-
-              <Text
-                style={[
-                  styles.statusBadgeText,
-                  { color: statusColor },
-                ]}
-              >
-                {item.status_badge}
-              </Text>
-            </View>
-
-            <Text style={styles.urgencyText}>
-              {item.nivel_urgencia}
-            </Text>
-          </View>
-
-          <Text style={styles.animalName}>
-            {item.tipo_animal || 'Animal'}
-          </Text>
-
-          <View style={styles.locationRow}>
-            <Ionicons
-              name="location-outline"
-              size={14}
-              color={COLORS.textBody}
             />
 
-            <Text
-              style={styles.locationText}
-              numberOfLines={1}
-            >
-              {item.endereco_localizacao ||
-                'Localização não informada'}
+            <Text style={[styles.statusBadgeText, { color: statusColor }]}>
+              {item.status_badge}
             </Text>
           </View>
+
+          <Text style={styles.urgencyText}>{item.nivel_urgencia}</Text>
         </View>
 
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color={COLORS.muted}
-        />
+        <Text style={styles.animalName}>{item.tipo_animal || "Animal"}</Text>
+
+        <View style={styles.locationRow}>
+          <Ionicons name="location-outline" size={14} color={COLORS.textBody} />
+
+          <Text style={styles.locationText} numberOfLines={1}>
+            {item.endereco_localizacao || "Localização não informada"}
+          </Text>
+        </View>
       </View>
-    );
-  }
-);
+
+      <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+    </View>
+  );
+});
 
 // ============================================================
 // COMPONENTE PRINCIPAL
@@ -516,65 +447,47 @@ export default function ProfileDetailScreen({
 }: ProfileDetailProps) {
   const { logout } = useAuthStore();
 
+  const insets = useSafeAreaInsets();
+
   // ----------------------------------------------------------
   // ESTADOS
   // ----------------------------------------------------------
 
-  const [activeTab, setActiveTab] = useState<
-    'perfil' | 'ocorrencias'
-  >('perfil');
+  const [activeTab, setActiveTab] = useState<ProfileTab>("perfil");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] =
-    useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [profile, setProfile] =
-    useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  const [nome, setNome] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [raio, setRaio] = useState('10');
-  const [endereco, setEndereco] = useState('');
+  const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [raio, setRaio] = useState("10");
+  const [endereco, setEndereco] = useState("");
   const [temPet, setTemPet] = useState(false);
 
-  const [minhasOcorrencias, setMinhasOcorrencias] =
-    useState<Ocorrencia[]>([]);
+  const [minhasOcorrencias, setMinhasOcorrencias] = useState<Ocorrencia[]>([]);
 
-  const translateX = useRef(
-    new Animated.Value(DRAWER_WIDTH)
-  ).current;
+  const translateX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
 
   // ----------------------------------------------------------
   // PREENCHER CAMPOS
   // ----------------------------------------------------------
 
-  const preencherCampos = useCallback(
-    (data: UserProfile) => {
-      setNome(
-        data.nome_completo ||
-        data.nome_fantasia ||
-        ''
-      );
+  const preencherCampos = useCallback((data: UserProfile) => {
+    setNome(data.nome_completo || data.nome_fantasia || "");
 
-      setTelefone(data.telefone || '');
+    setTelefone(data.telefone || "");
 
-      setRaio(
-        data.raio_pesquisa_km
-          ? String(data.raio_pesquisa_km)
-          : '10'
-      );
+    setRaio(data.raio_pesquisa_km ? String(data.raio_pesquisa_km) : "10");
 
-      setEndereco(
-        data.endereco_completo || ''
-      );
+    setEndereco(data.endereco_completo || "");
 
-      setTemPet(Boolean(data.tem_pet));
-    },
-    []
-  );
+    setTemPet(Boolean(data.tem_pet));
+  }, []);
 
   // ----------------------------------------------------------
   // CARREGAR DADOS
@@ -591,7 +504,7 @@ export default function ProfileDetailScreen({
       // Se /ocorrencias/minhas falhar, o perfil continua carregando.
 
       try {
-        const resPerfil = await api.get('/auth/me');
+        const resPerfil = await api.get("/auth/me");
 
         const data = resPerfil.data as UserProfile;
 
@@ -599,15 +512,15 @@ export default function ProfileDetailScreen({
         preencherCampos(data);
       } catch (error: any) {
         console.error(
-          '[ProfileDetailScreen] Erro ao carregar perfil:',
+          "[ProfileDetailScreen] Erro ao carregar perfil:",
           error?.response?.status,
-          error?.response?.data || error?.message
+          error?.response?.data || error?.message,
         );
 
         Alert.alert(
-          'Não foi possível carregar seu perfil',
+          "Não foi possível carregar seu perfil",
           error?.response?.data?.detail ||
-          'Não foi possível obter seus dados. Verifique sua conexão e tente novamente.'
+            "Não foi possível obter seus dados. Verifique sua conexão e tente novamente.",
         );
 
         return;
@@ -619,19 +532,16 @@ export default function ProfileDetailScreen({
       // Essa requisição não pode impedir o carregamento do perfil.
 
       try {
-        const resOcorrencias =
-          await api.get('/ocorrencias/minhas');
+        const resOcorrencias = await api.get("/ocorrencias/minhas");
 
         setMinhasOcorrencias(
-          Array.isArray(resOcorrencias.data)
-            ? resOcorrencias.data
-            : []
+          Array.isArray(resOcorrencias.data) ? resOcorrencias.data : [],
         );
       } catch (error: any) {
         console.error(
-          '[ProfileDetailScreen] Erro ao carregar ocorrências:',
+          "[ProfileDetailScreen] Erro ao carregar ocorrências:",
           error?.response?.status,
-          error?.response?.data || error?.message
+          error?.response?.data || error?.message,
         );
 
         // O perfil já foi carregado.
@@ -649,242 +559,187 @@ export default function ProfileDetailScreen({
   // SALVAR PERFIL
   // ----------------------------------------------------------
 
-  const handleSalvarPerfil =
-    useCallback(async () => {
-      const nomeNormalizado = nome.trim();
+  const handleSalvarPerfil = useCallback(async () => {
+    const nomeNormalizado = nome.trim();
 
-      if (!nomeNormalizado) {
-        Alert.alert(
-          'Nome obrigatório',
-          'Informe seu nome para continuar.'
-        );
-        return;
+    if (!nomeNormalizado) {
+      Alert.alert("Nome obrigatório", "Informe seu nome para continuar.");
+      return;
+    }
+
+    const raioNumerico = Number(raio);
+
+    if (
+      profile?.tipo_conta === "PESSOA_FISICA" &&
+      (!Number.isFinite(raioNumerico) ||
+        raioNumerico < MIN_PROFILE_RADIUS ||
+        raioNumerico > MAX_PROFILE_RADIUS)
+    ) {
+      Alert.alert(
+        "Raio inválido",
+        `Informe um raio entre ${MIN_PROFILE_RADIUS} e ${MAX_PROFILE_RADIUS} km.`,
+      );
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const payload: ProfileUpdatePayload = {
+        nome: nomeNormalizado,
+        telefone: telefone.trim() || undefined,
+      };
+
+      if (profile?.tipo_conta === "PESSOA_FISICA") {
+        payload.raio_pesquisa_km = Math.round(raioNumerico);
+
+        payload.tem_pet = temPet;
       }
 
-      const raioNumerico = Number(raio);
-
-      if (
-        profile?.tipo_conta === 'PESSOA_FISICA' &&
-        (
-          !Number.isFinite(raioNumerico) ||
-          raioNumerico < MIN_PROFILE_RADIUS ||
-          raioNumerico > MAX_PROFILE_RADIUS
-        )
-      ) {
-        Alert.alert(
-          'Raio inválido',
-          `Informe um raio entre ${MIN_PROFILE_RADIUS} e ${MAX_PROFILE_RADIUS} km.`
-        );
-        return;
+      if (profile?.tipo_conta === "ONG") {
+        payload.endereco_completo = endereco.trim();
       }
 
-      setSaving(true);
+      const response = await api.put("/auth/me", payload);
 
-      try {
-        const payload: ProfileUpdatePayload = {
-          nome: nomeNormalizado,
-          telefone:
-            telefone.trim() || undefined,
-        };
+      const updatedProfile = response.data as UserProfile;
 
-        if (
-          profile?.tipo_conta ===
-          'PESSOA_FISICA'
-        ) {
-          payload.raio_pesquisa_km =
-            Math.round(raioNumerico);
+      setProfile(updatedProfile);
+      preencherCampos(updatedProfile);
 
-          payload.tem_pet = temPet;
-        }
+      setIsEditing(false);
 
-        if (
-          profile?.tipo_conta === 'ONG'
-        ) {
-          payload.endereco_completo =
-            endereco.trim();
-        }
-
-        const response = await api.put(
-          '/auth/me',
-          payload
-        );
-
-        const updatedProfile =
-          response.data as UserProfile;
-
-        setProfile(updatedProfile);
-        preencherCampos(updatedProfile);
-
-        setIsEditing(false);
-
-        Alert.alert(
-          'Perfil atualizado',
-          'Suas informações foram salvas com sucesso.'
-        );
-      } catch (error: any) {
-        Alert.alert(
-          'Erro ao salvar',
-          error.response?.data?.detail ||
-          'Não foi possível atualizar seu perfil.'
-        );
-      } finally {
-        setSaving(false);
-      }
-    }, [
-      nome,
-      telefone,
-      raio,
-      endereco,
-      temPet,
-      profile,
-      preencherCampos,
-    ]);
+      Alert.alert(
+        "Perfil atualizado",
+        "Suas informações foram salvas com sucesso.",
+      );
+    } catch (error: any) {
+      Alert.alert(
+        "Erro ao salvar",
+        error.response?.data?.detail ||
+          "Não foi possível atualizar seu perfil.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [nome, telefone, raio, endereco, temPet, profile, preencherCampos]);
 
   // ----------------------------------------------------------
   // ADICIONAR / ALTERAR FOTO
   // ----------------------------------------------------------
 
-  const handleAlterarFoto =
-    useCallback(async () => {
-      if (uploadingImage) {
+  const handleAlterarFoto = useCallback(async () => {
+    if (uploadingImage) {
+      return;
+    }
+
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "Conceda acesso à galeria para adicionar uma foto de perfil.",
+        );
         return;
       }
 
-      try {
-        const permission =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-        if (!permission.granted) {
-          Alert.alert(
-            'Permissão necessária',
-            'Conceda acesso à galeria para adicionar uma foto de perfil.'
-          );
-          return;
-        }
+      if (result.canceled || !result.assets?.[0]?.uri) {
+        return;
+      }
 
-        const result =
-          await ImagePicker.launchImageLibraryAsync({
-            mediaTypes:
-              ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          });
+      setUploadingImage(true);
 
-        if (
-          result.canceled ||
-          !result.assets?.[0]?.uri
-        ) {
-          return;
-        }
+      const asset = result.assets[0];
 
-        setUploadingImage(true);
+      const formData = new FormData();
 
-        const asset = result.assets[0];
+      const filename =
+        asset.fileName || asset.uri.split("/").pop() || "foto_perfil.jpg";
 
-        const formData = new FormData();
+      const match = /\.(\w+)$/.exec(filename);
 
-        const filename =
-          asset.fileName ||
-          asset.uri.split('/').pop() ||
-          'foto_perfil.jpg';
+      const type = match ? `image/${match[1]}` : "image/jpeg";
 
-        const match =
-          /\.(\w+)$/.exec(filename);
+      formData.append("foto", {
+        uri: asset.uri,
+        name: filename,
+        type,
+      } as any);
 
-        const type = match
-          ? `image/${match[1]}`
-          : 'image/jpeg';
+      const response = await api.post("/auth/me/foto", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-        formData.append(
-          'foto',
-          {
-            uri: asset.uri,
-            name: filename,
-            type,
-          } as any
-        );
+      const novaFoto = response.data?.foto_perfil;
 
-        const response = await api.post(
-          '/auth/me/foto',
-          formData,
-          {
-            headers: {
-              'Content-Type':
-                'multipart/form-data',
-            },
-          }
-        );
-
-        const novaFoto =
-          response.data?.foto_perfil;
-
-        if (novaFoto) {
-          setProfile((currentProfile) =>
-            currentProfile
-              ? {
+      if (novaFoto) {
+        setProfile((currentProfile) =>
+          currentProfile
+            ? {
                 ...currentProfile,
                 foto_perfil: novaFoto,
               }
-              : currentProfile
-          );
-        }
-
-        Alert.alert(
-          'Foto atualizada',
-          profile?.foto_perfil
-            ? 'Sua foto de perfil foi alterada com sucesso.'
-            : 'Sua foto de perfil foi adicionada com sucesso.'
+            : currentProfile,
         );
-      } catch (error: any) {
-        Alert.alert(
-          'Erro ao atualizar foto',
-          error.response?.data?.detail ||
-          'Não foi possível enviar a imagem. Tente novamente.'
-        );
-      } finally {
-        setUploadingImage(false);
       }
-    }, [
-      uploadingImage,
-      profile?.foto_perfil,
-    ]);
+
+      Alert.alert(
+        "Foto atualizada",
+        profile?.foto_perfil
+          ? "Sua foto de perfil foi alterada com sucesso."
+          : "Sua foto de perfil foi adicionada com sucesso.",
+      );
+    } catch (error: any) {
+      Alert.alert(
+        "Erro ao atualizar foto",
+        error.response?.data?.detail ||
+          "Não foi possível enviar a imagem. Tente novamente.",
+      );
+    } finally {
+      setUploadingImage(false);
+    }
+  }, [uploadingImage, profile?.foto_perfil]);
 
   // ----------------------------------------------------------
   // LOGOUT
   // ----------------------------------------------------------
 
-  const handleLogout =
-    useCallback(() => {
-      Alert.alert(
-        'Sair da conta',
-        'Tem certeza que deseja sair do PetRadar?',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-          },
-          {
-            text: 'Sair',
-            style: 'destructive',
-            onPress: logout,
-          },
-        ]
-      );
-    }, [logout]);
+  const handleLogout = useCallback(() => {
+    Alert.alert("Sair da conta", "Tem certeza que deseja sair do PetRadar?", [
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+      {
+        text: "Sair",
+        style: "destructive",
+        onPress: logout,
+      },
+    ]);
+  }, [logout]);
 
   // ----------------------------------------------------------
   // CANCELAR
   // ----------------------------------------------------------
 
-  const handleCancelarEdicao =
-    useCallback(() => {
-      if (profile) {
-        preencherCampos(profile);
-      }
+  const handleCancelarEdicao = useCallback(() => {
+    if (profile) {
+      preencherCampos(profile);
+    }
 
-      setIsEditing(false);
-    }, [profile, preencherCampos]);
+    setIsEditing(false);
+  }, [profile, preencherCampos]);
 
   // ----------------------------------------------------------
   // ANIMAÇÃO DO DRAWER
@@ -910,11 +765,7 @@ export default function ProfileDetailScreen({
         useNativeDriver: true,
       }).start();
     }
-  }, [
-    visible,
-    carregarDados,
-    translateX,
-  ]);
+  }, [visible, carregarDados, translateX]);
 
   // ----------------------------------------------------------
   // NOME DE EXIBIÇÃO
@@ -922,17 +773,14 @@ export default function ProfileDetailScreen({
 
   const nomeExibicao = useMemo(() => {
     return (
-      profile?.nome_completo ||
-      profile?.nome_fantasia ||
-      nome ||
-      'Usuário'
+      profile?.nome_completo || profile?.nome_fantasia || nome || "Usuário"
     );
   }, [profile, nome]);
 
   const tipoContaLabel = useMemo(() => {
-    return profile?.tipo_conta === 'ONG'
-      ? 'ONG / Instituição'
-      : 'Pessoa Física';
+    return profile?.tipo_conta === "ONG"
+      ? "ONG / Instituição"
+      : "Pessoa Física";
   }, [profile?.tipo_conta]);
 
   // ----------------------------------------------------------
@@ -943,14 +791,9 @@ export default function ProfileDetailScreen({
     if (loading) {
       return (
         <View style={styles.loadingContent}>
-          <ActivityIndicator
-            size="large"
-            color={COLORS.primary}
-          />
+          <ActivityIndicator size="large" color={COLORS.primary} />
 
-          <Text style={styles.loadingText}>
-            Carregando seu perfil...
-          </Text>
+          <Text style={styles.loadingText}>Carregando seu perfil...</Text>
         </View>
       );
     }
@@ -959,16 +802,12 @@ export default function ProfileDetailScreen({
       return (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={
-            styles.editScrollContent
-          }
+          contentContainerStyle={styles.editScrollContent}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.sectionHeader}>
             <View>
-              <Text style={styles.sectionTitle}>
-                Editar perfil
-              </Text>
+              <Text style={styles.sectionTitle}>Editar perfil</Text>
 
               <Text style={styles.sectionSubtitle}>
                 Atualize suas informações pessoais.
@@ -978,18 +817,16 @@ export default function ProfileDetailScreen({
             <View style={styles.editingIndicator}>
               <View style={styles.editingDot} />
 
-              <Text style={styles.editingText}>
-                Editando
-              </Text>
+              <Text style={styles.editingText}>Editando</Text>
             </View>
           </View>
 
           <View style={styles.formCard}>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>
-                {profile?.tipo_conta === 'ONG'
-                  ? 'Nome fantasia'
-                  : 'Nome completo'}
+                {profile?.tipo_conta === "ONG"
+                  ? "Nome fantasia"
+                  : "Nome completo"}
               </Text>
 
               <View style={styles.inputWrapper}>
@@ -1004,27 +841,23 @@ export default function ProfileDetailScreen({
                   value={nome}
                   onChangeText={setNome}
                   placeholder={
-                    profile?.tipo_conta === 'ONG'
-                      ? 'Nome da ONG'
-                      : 'Seu nome completo'
+                    profile?.tipo_conta === "ONG"
+                      ? "Nome da ONG"
+                      : "Seu nome completo"
                   }
-                  placeholderTextColor={
-                    COLORS.muted
-                  }
+                  placeholderTextColor={COLORS.muted}
                   autoCapitalize="words"
                   accessibilityLabel={
-                    profile?.tipo_conta === 'ONG'
-                      ? 'Nome fantasia'
-                      : 'Nome completo'
+                    profile?.tipo_conta === "ONG"
+                      ? "Nome fantasia"
+                      : "Nome completo"
                   }
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>
-                Telefone / WhatsApp
-              </Text>
+              <Text style={styles.inputLabel}>Telefone / WhatsApp</Text>
 
               <View style={styles.inputWrapper}>
                 <Ionicons
@@ -1038,135 +871,90 @@ export default function ProfileDetailScreen({
                   value={telefone}
                   onChangeText={setTelefone}
                   placeholder="(00) 00000-0000"
-                  placeholderTextColor={
-                    COLORS.muted
-                  }
+                  placeholderTextColor={COLORS.muted}
                   keyboardType="phone-pad"
                   accessibilityLabel="Telefone"
                 />
               </View>
             </View>
 
-            {profile?.tipo_conta ===
-              'PESSOA_FISICA' && (
-                <>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>
-                      Raio de pesquisa
-                    </Text>
+            {profile?.tipo_conta === "PESSOA_FISICA" && (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Raio de pesquisa</Text>
 
-                    <View style={styles.inputWrapper}>
-                      <Ionicons
-                        name="location-outline"
-                        size={19}
-                        color={COLORS.primary}
-                      />
+                  <View style={styles.inputWrapper}>
+                    <Ionicons
+                      name="location-outline"
+                      size={19}
+                      color={COLORS.primary}
+                    />
 
-                      <TextInput
-                        style={styles.input}
-                        value={raio}
-                        onChangeText={setRaio}
-                        placeholder="10"
-                        placeholderTextColor={
-                          COLORS.muted
-                        }
-                        keyboardType="number-pad"
-                        maxLength={3}
-                        accessibilityLabel="Raio de pesquisa em quilômetros"
-                      />
+                    <TextInput
+                      style={styles.input}
+                      value={raio}
+                      onChangeText={setRaio}
+                      placeholder="10"
+                      placeholderTextColor={COLORS.muted}
+                      keyboardType="number-pad"
+                      maxLength={3}
+                      accessibilityLabel="Raio de pesquisa em quilômetros"
+                    />
 
-                      <Text style={styles.inputSuffix}>
-                        km
-                      </Text>
-                    </View>
-
-                    <Text style={styles.helperText}>
-                      Defina uma área entre 1 e
-                      100 km para receber
-                      informações relevantes.
-                    </Text>
+                    <Text style={styles.inputSuffix}>km</Text>
                   </View>
 
-                  <View
-                    style={styles.preferenceRow}
-                  >
-                    <View
-                      style={styles.preferenceIcon}
-                    >
-                      <MaterialCommunityIcons
-                        name="paw-outline"
-                        size={21}
-                        color={COLORS.primary}
-                      />
-                    </View>
+                  <Text style={styles.helperText}>
+                    Defina uma área entre 1 e 100 km para receber informações
+                    relevantes.
+                  </Text>
+                </View>
 
-                    <View
-                      style={
-                        styles.preferenceContent
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.preferenceTitle
-                        }
-                      >
-                        Tenho um pet
-                      </Text>
-
-                      <Text
-                        style={
-                          styles.preferenceDescription
-                        }
-                      >
-                        Ajuda a personalizar sua
-                        experiência no PetRadar.
-                      </Text>
-                    </View>
-
-                    <PetSwitch
-                      value={temPet}
-                      onChange={() =>
-                        setTemPet(
-                          (current) => !current
-                        )
-                      }
+                <View style={styles.preferenceRow}>
+                  <View style={styles.preferenceIcon}>
+                    <MaterialCommunityIcons
+                      name="paw-outline"
+                      size={21}
+                      color={COLORS.primary}
                     />
                   </View>
-                </>
-              )}
 
-            {profile?.tipo_conta === 'ONG' && (
+                  <View style={styles.preferenceContent}>
+                    <Text style={styles.preferenceTitle}>Tenho um pet</Text>
+
+                    <Text style={styles.preferenceDescription}>
+                      Ajuda a personalizar sua experiência no PetRadar.
+                    </Text>
+                  </View>
+
+                  <PetSwitch
+                    value={temPet}
+                    onChange={() => setTemPet((current) => !current)}
+                  />
+                </View>
+              </>
+            )}
+
+            {profile?.tipo_conta === "ONG" && (
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  Endereço completo
-                </Text>
+                <Text style={styles.inputLabel}>Endereço completo</Text>
 
                 <View
-                  style={[
-                    styles.inputWrapper,
-                    styles.inputWrapperMultiline,
-                  ]}
+                  style={[styles.inputWrapper, styles.inputWrapperMultiline]}
                 >
                   <Ionicons
                     name="location-outline"
                     size={19}
                     color={COLORS.primary}
-                    style={
-                      styles.multilineIcon
-                    }
+                    style={styles.multilineIcon}
                   />
 
                   <TextInput
-                    style={[
-                      styles.input,
-                      styles.multilineInput,
-                    ]}
+                    style={[styles.input, styles.multilineInput]}
                     value={endereco}
                     onChangeText={setEndereco}
                     placeholder="Endereço da instituição"
-                    placeholderTextColor={
-                      COLORS.muted
-                    }
+                    placeholderTextColor={COLORS.muted}
                     multiline
                     numberOfLines={3}
                     textAlignVertical="top"
@@ -1181,8 +969,7 @@ export default function ProfileDetailScreen({
             <TouchableOpacity
               style={[
                 styles.primaryButton,
-                saving &&
-                styles.primaryButtonDisabled,
+                saving && styles.primaryButtonDisabled,
               ]}
               onPress={handleSalvarPerfil}
               disabled={saving}
@@ -1191,9 +978,7 @@ export default function ProfileDetailScreen({
               accessibilityLabel="Salvar alterações"
             >
               {saving ? (
-                <ActivityIndicator
-                  color={COLORS.white}
-                />
+                <ActivityIndicator color={COLORS.white} />
               ) : (
                 <>
                   <Ionicons
@@ -1202,11 +987,7 @@ export default function ProfileDetailScreen({
                     color={COLORS.white}
                   />
 
-                  <Text
-                    style={
-                      styles.primaryButtonText
-                    }
-                  >
+                  <Text style={styles.primaryButtonText}>
                     Salvar alterações
                   </Text>
                 </>
@@ -1221,13 +1002,7 @@ export default function ProfileDetailScreen({
               accessibilityRole="button"
               accessibilityLabel="Cancelar edição"
             >
-              <Text
-                style={
-                  styles.secondaryButtonText
-                }
-              >
-                Cancelar
-              </Text>
+              <Text style={styles.secondaryButtonText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -1237,15 +1012,11 @@ export default function ProfileDetailScreen({
     return (
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={
-          styles.profileScrollContent
-        }
+        contentContainerStyle={styles.profileScrollContent}
       >
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionTitle}>
-              Informações
-            </Text>
+            <Text style={styles.sectionTitle}>Informações</Text>
 
             <Text style={styles.sectionSubtitle}>
               Dados associados à sua conta.
@@ -1254,22 +1025,14 @@ export default function ProfileDetailScreen({
 
           <TouchableOpacity
             style={styles.editButton}
-            onPress={() =>
-              setIsEditing(true)
-            }
+            onPress={() => setIsEditing(true)}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Editar perfil"
           >
-            <Ionicons
-              name="create-outline"
-              size={18}
-              color={COLORS.primary}
-            />
+            <Ionicons name="create-outline" size={18} color={COLORS.primary} />
 
-            <Text style={styles.editButtonText}>
-              Editar
-            </Text>
+            <Text style={styles.editButtonText}>Editar</Text>
           </TouchableOpacity>
         </View>
 
@@ -1277,9 +1040,7 @@ export default function ProfileDetailScreen({
           <InfoRow
             icon="person-outline"
             label={
-              profile?.tipo_conta === 'ONG'
-                ? 'Nome fantasia'
-                : 'Nome completo'
+              profile?.tipo_conta === "ONG" ? "Nome fantasia" : "Nome completo"
             }
             value={nomeExibicao}
           />
@@ -1289,10 +1050,7 @@ export default function ProfileDetailScreen({
           <InfoRow
             icon="mail-outline"
             label="E-mail"
-            value={
-              profile?.email ||
-              'Não informado'
-            }
+            value={profile?.email || "Não informado"}
           />
 
           <View style={styles.infoDivider} />
@@ -1300,61 +1058,44 @@ export default function ProfileDetailScreen({
           <InfoRow
             icon="call-outline"
             label="Telefone"
-            value={
-              profile?.telefone ||
-              'Não informado'
-            }
+            value={profile?.telefone || "Não informado"}
           />
         </View>
 
-        {profile?.tipo_conta ===
-          'PESSOA_FISICA' && (
-            <>
-              <Text style={styles.cardSectionTitle}>
-                Preferências
-              </Text>
-
-              <View style={styles.infoCard}>
-                <InfoRow
-                  icon="location-outline"
-                  label="Raio de pesquisa"
-                  value={`${profile?.raio_pesquisa_km || 10} km`}
-                />
-
-                <View style={styles.infoDivider} />
-
-                <InfoRow
-                  icon="heart-outline"
-                  label="Possui pet"
-                  value={
-                    profile?.tem_pet
-                      ? 'Sim'
-                      : 'Não'
-                  }
-                  iconBackground={
-                    profile?.tem_pet
-                      ? COLORS.successBg
-                      : COLORS.warningBg
-                  }
-                />
-              </View>
-            </>
-          )}
-
-        {profile?.tipo_conta === 'ONG' && (
+        {profile?.tipo_conta === "PESSOA_FISICA" && (
           <>
-            <Text style={styles.cardSectionTitle}>
-              Instituição
-            </Text>
+            <Text style={styles.cardSectionTitle}>Preferências</Text>
+
+            <View style={styles.infoCard}>
+              <InfoRow
+                icon="location-outline"
+                label="Raio de pesquisa"
+                value={`${profile?.raio_pesquisa_km || 10} km`}
+              />
+
+              <View style={styles.infoDivider} />
+
+              <InfoRow
+                icon="heart-outline"
+                label="Possui pet"
+                value={profile?.tem_pet ? "Sim" : "Não"}
+                iconBackground={
+                  profile?.tem_pet ? COLORS.successBg : COLORS.warningBg
+                }
+              />
+            </View>
+          </>
+        )}
+
+        {profile?.tipo_conta === "ONG" && (
+          <>
+            <Text style={styles.cardSectionTitle}>Instituição</Text>
 
             <View style={styles.infoCard}>
               <InfoRow
                 icon="business-outline"
                 label="Razão social"
-                value={
-                  profile?.razao_social ||
-                  'Não informado'
-                }
+                value={profile?.razao_social || "Não informado"}
               />
 
               <View style={styles.infoDivider} />
@@ -1362,10 +1103,7 @@ export default function ProfileDetailScreen({
               <InfoRow
                 icon="document-text-outline"
                 label="CNPJ"
-                value={
-                  profile?.cnpj ||
-                  'Não informado'
-                }
+                value={profile?.cnpj || "Não informado"}
               />
 
               <View style={styles.infoDivider} />
@@ -1373,10 +1111,7 @@ export default function ProfileDetailScreen({
               <InfoRow
                 icon="location-outline"
                 label="Endereço"
-                value={
-                  profile?.endereco_completo ||
-                  'Não informado'
-                }
+                value={profile?.endereco_completo || "Não informado"}
               />
 
               <View style={styles.infoDivider} />
@@ -1384,10 +1119,7 @@ export default function ProfileDetailScreen({
               <InfoRow
                 icon="person-outline"
                 label="Responsável"
-                value={
-                  profile?.nome_gestor ||
-                  'Não informado'
-                }
+                value={profile?.nome_gestor || "Não informado"}
               />
             </View>
           </>
@@ -1403,16 +1135,11 @@ export default function ProfileDetailScreen({
           </View>
 
           <View style={styles.accountContent}>
-            <Text style={styles.accountTitle}>
-              Conta PetRadar
-            </Text>
+            <Text style={styles.accountTitle}>Conta PetRadar</Text>
 
-            <Text
-              style={styles.accountDescription}
-            >
-              Seus dados são utilizados para
-              conectar pessoas e organizações
-              às ações de proteção animal.
+            <Text style={styles.accountDescription}>
+              Seus dados são utilizados para conectar pessoas e organizações às
+              ações de proteção animal.
             </Text>
           </View>
         </View>
@@ -1469,7 +1196,14 @@ export default function ProfileDetailScreen({
         >
           {/* HEADER */}
 
-          <View style={styles.header}>
+          <View
+            style={[
+              styles.header,
+              {
+                paddingTop: insets.top + 8, // 
+              },
+            ]}
+          >
             <TouchableOpacity
               style={styles.headerButton}
               onPress={onClose}
@@ -1484,25 +1218,14 @@ export default function ProfileDetailScreen({
               />
             </TouchableOpacity>
 
-            <View
-              style={styles.headerTitleContainer}
-            >
-              <Text style={styles.headerTitle}>
-                Meu perfil
-              </Text>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Meu perfil</Text>
 
-              <Text
-                style={styles.headerSubtitle}
-              >
-                PetRadar
-              </Text>
+              <Text style={styles.headerSubtitle}>PetRadar</Text>
             </View>
 
             <TouchableOpacity
-              style={[
-                styles.headerButton,
-                styles.logoutHeaderButton,
-              ]}
+              style={[styles.headerButton, styles.logoutHeaderButton]}
               onPress={handleLogout}
               activeOpacity={0.7}
               accessibilityRole="button"
@@ -1526,14 +1249,9 @@ export default function ProfileDetailScreen({
                 />
               </View>
 
-              <ActivityIndicator
-                size="small"
-                color={COLORS.primary}
-              />
+              <ActivityIndicator size="small" color={COLORS.primary} />
 
-              <Text style={styles.loadingText}>
-                Carregando seu perfil...
-              </Text>
+              <Text style={styles.loadingText}>Carregando seu perfil...</Text>
             </View>
           ) : (
             <>
@@ -1543,208 +1261,117 @@ export default function ProfileDetailScreen({
                 <View style={styles.heroGlow} />
 
                 <Avatar
-                  photoUri={
-                    profile?.foto_perfil ||
-                    null
-                  }
+                  photoUri={profile?.foto_perfil || null}
                   loading={uploadingImage}
                   onPress={handleAlterarFoto}
                 />
 
-                <Text
-                  style={styles.profileName}
-                  numberOfLines={1}
-                >
+                <Text style={styles.profileName} numberOfLines={1}>
                   {nomeExibicao}
                 </Text>
 
-                <Text
-                  style={styles.profileEmail}
-                  numberOfLines={1}
-                >
+                <Text style={styles.profileEmail} numberOfLines={1}>
                   {profile?.email}
                 </Text>
 
                 <View style={styles.profileMeta}>
-                  <View
-                    style={styles.accountBadge}
-                  >
-                    <View
-                      style={
-                        styles.accountBadgeDot
-                      }
-                    />
+                  <View style={styles.accountBadge}>
+                    <View style={styles.accountBadgeDot} />
 
-                    <Text
-                      style={
-                        styles.accountBadgeText
-                      }
-                    >
+                    <Text style={styles.accountBadgeText}>
                       {tipoContaLabel}
                     </Text>
                   </View>
                 </View>
 
-                <View
-                  style={styles.photoActionHint}
-                >
+                <View style={styles.photoActionHint}>
                   <Ionicons
                     name={
                       profile?.foto_perfil
-                        ? 'create-outline'
-                        : 'add-circle-outline'
+                        ? "create-outline"
+                        : "add-circle-outline"
                     }
                     size={13}
                     color={COLORS.textBody}
                   />
 
-                  <Text
-                    style={styles.photoHint}
-                  >
+                  <Text style={styles.photoHint}>
                     {profile?.foto_perfil
-                      ? 'Toque no lápis para trocar sua foto'
-                      : 'Toque no + para adicionar sua foto'}
+                      ? "Toque no lápis para trocar sua foto"
+                      : "Toque no + para adicionar sua foto"}
                   </Text>
                 </View>
               </View>
 
               {/* TABS */}
 
-              <TabBar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                ocorrenciasCount={
-                  minhasOcorrencias.length
-                }
-              />
+              <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
               {/* CONTENT */}
 
               <KeyboardAvoidingView
-                behavior={
-                  Platform.OS === 'ios'
-                    ? 'padding'
-                    : undefined
-                }
-                style={
-                  styles.contentContainer
-                }
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
+                style={styles.contentContainer}
                 keyboardVerticalOffset={20}
               >
-                {activeTab === 'perfil' ? (
+                {activeTab === "perfil" ? (
                   perfilContent
+                ) : activeTab === "pets" ? (
+                  <RegistrarPet /> //
                 ) : (
                   <FlatList
                     data={minhasOcorrencias}
-                    keyExtractor={(item) =>
-                      String(
-                        item.id_ocorrencia
-                      )
-                    }
-                    contentContainerStyle={
-                      styles.listContent
-                    }
+                    keyExtractor={(item) => String(item.id_ocorrencia)}
+                    contentContainerStyle={styles.listContent}
                     refreshControl={
                       <RefreshControl
                         refreshing={refreshing}
                         onRefresh={carregarDados}
-                        tintColor={
-                          COLORS.primary
-                        }
-                        colors={[
-                          COLORS.primary,
-                        ]}
+                        tintColor={COLORS.primary}
+                        colors={[COLORS.primary]}
                       />
                     }
                     ListHeaderComponent={
-                      <View
-                        style={
-                          styles.occurrencesHeader
-                        }
-                      >
+                      <View style={styles.occurrencesHeader}>
                         <View>
-                          <Text
-                            style={
-                              styles.sectionTitle
-                            }
-                          >
+                          <Text style={styles.sectionTitle}>
                             Minhas ocorrências
                           </Text>
 
-                          <Text
-                            style={
-                              styles.sectionSubtitle
-                            }
-                          >
-                            Registros relacionados
-                            à sua conta.
+                          <Text style={styles.sectionSubtitle}>
+                            Registros relacionados à sua conta.
                           </Text>
                         </View>
 
-                        <View
-                          style={
-                            styles.occurrenceCountBadge
-                          }
-                        >
-                          <Text
-                            style={
-                              styles.occurrenceCountText
-                            }
-                          >
-                            {
-                              minhasOcorrencias.length
-                            }
+                        <View style={styles.occurrenceCountBadge}>
+                          <Text style={styles.occurrenceCountText}>
+                            {minhasOcorrencias.length}
                           </Text>
                         </View>
                       </View>
                     }
                     ListEmptyComponent={
-                      <View
-                        style={
-                          styles.emptyContainer
-                        }
-                      >
-                        <View
-                          style={
-                            styles.emptyIcon
-                          }
-                        >
+                      <View style={styles.emptyContainer}>
+                        <View style={styles.emptyIcon}>
                           <MaterialCommunityIcons
                             name="paw-outline"
                             size={34}
-                            color={
-                              COLORS.primary
-                            }
+                            color={COLORS.primary}
                           />
                         </View>
 
-                        <Text
-                          style={
-                            styles.emptyTitle
-                          }
-                        >
+                        <Text style={styles.emptyTitle}>
                           Nenhuma ocorrência
                         </Text>
 
-                        <Text
-                          style={
-                            styles.emptyText
-                          }
-                        >
-                          Você ainda não
-                          registrou nenhuma
-                          ocorrência no PetRadar.
+                        <Text style={styles.emptyText}>
+                          Você ainda não registrou nenhuma ocorrência no
+                          PetRadar.
                         </Text>
                       </View>
                     }
-                    renderItem={({ item }) => (
-                      <OcorrenciaCard
-                        item={item}
-                      />
-                    )}
-                    showsVerticalScrollIndicator={
-                      false
-                    }
+                    renderItem={({ item }) => <OcorrenciaCard item={item} />}
+                    showsVerticalScrollIndicator={false}
                   />
                 )}
               </KeyboardAvoidingView>
@@ -1763,9 +1390,8 @@ export default function ProfileDetailScreen({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    flexDirection: 'row',
-    backgroundColor:
-      'rgba(15, 23, 42, 0.52)',
+    flexDirection: "row",
+    backgroundColor: "rgba(15, 23, 42, 0.52)",
   },
 
   backdrop: {
@@ -1774,13 +1400,13 @@ const styles = StyleSheet.create({
 
   drawerContainer: {
     width: DRAWER_WIDTH,
-    height: '100%',
+    height: "100%",
     backgroundColor: COLORS.background,
 
     borderTopLeftRadius: 28,
     borderBottomLeftRadius: 28,
 
-    overflow: 'hidden',
+    overflow: "hidden",
 
     ...theme.shadows.elevation1,
   },
@@ -1790,31 +1416,29 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   header: {
-    height: Platform.OS === 'ios' ? 92 : 74,
+  minHeight: 74, // 
 
-    paddingTop:
-      Platform.OS === 'ios' ? 28 : 8,
+  paddingBottom: 10, // 
+  paddingHorizontal: 16,
 
-    paddingHorizontal: 16,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
 
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  backgroundColor: COLORS.surface,
 
-    backgroundColor: COLORS.surface,
-
-    borderBottomWidth: 1,
-    borderBottomColor:
-      'rgba(15, 23, 42, 0.06)',
-  },
+  borderBottomWidth: 1,
+  borderBottomColor:
+    'rgba(15, 23, 42, 0.06)',
+},
 
   headerButton: {
     width: 42,
     height: 42,
     borderRadius: 21,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     backgroundColor: COLORS.soft,
   },
@@ -1825,12 +1449,12 @@ const styles = StyleSheet.create({
 
   headerTitleContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   headerTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: "800",
     color: COLORS.textTitle,
     letterSpacing: -0.2,
   },
@@ -1838,7 +1462,7 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     marginTop: 1,
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.textBody,
   },
 
@@ -1847,7 +1471,7 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   profileHero: {
-    alignItems: 'center',
+    alignItems: "center",
 
     paddingTop: 24,
     paddingBottom: 20,
@@ -1855,14 +1479,14 @@ const styles = StyleSheet.create({
 
     backgroundColor: COLORS.surface,
 
-    overflow: 'hidden',
+    overflow: "hidden",
 
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
 
   heroGlow: {
-    position: 'absolute',
+    position: "absolute",
 
     width: 180,
     height: 180,
@@ -1871,12 +1495,11 @@ const styles = StyleSheet.create({
 
     top: -100,
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   avatarWrapper: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 12,
   },
 
@@ -1888,19 +1511,17 @@ const styles = StyleSheet.create({
 
     padding: 4,
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
 
     borderWidth: 1,
-    borderColor:
-      'rgba(31, 92, 77, 0.15)',
+    borderColor: "rgba(31, 92, 77, 0.15)",
 
     ...theme.shadows.elevation1,
   },
 
   avatarImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 48,
   },
 
@@ -1909,11 +1530,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 48,
 
-    backgroundColor:
-      COLORS.soft,
+    backgroundColor: COLORS.soft,
 
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   uploadingOverlay: {
@@ -1921,30 +1541,29 @@ const styles = StyleSheet.create({
 
     borderRadius: 52,
 
-    backgroundColor:
-      'rgba(15, 23, 42, 0.68)',
+    backgroundColor: "rgba(15, 23, 42, 0.68)",
 
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   uploadingText: {
     marginTop: 6,
 
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: "700",
 
     color: COLORS.white,
   },
 
   photoActionBadge: {
-    position: 'absolute',
+    position: "absolute",
 
     right: 0,
     bottom: 0,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     borderWidth: 3,
     borderColor: COLORS.surface,
@@ -1971,10 +1590,10 @@ const styles = StyleSheet.create({
   },
 
   profileName: {
-    maxWidth: '90%',
+    maxWidth: "90%",
 
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.textTitle,
 
@@ -1982,12 +1601,12 @@ const styles = StyleSheet.create({
   },
 
   profileEmail: {
-    maxWidth: '90%',
+    maxWidth: "90%",
 
     marginTop: 4,
 
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
 
     color: COLORS.textBody,
   },
@@ -1997,16 +1616,15 @@ const styles = StyleSheet.create({
   },
 
   accountBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     paddingHorizontal: 12,
     paddingVertical: 7,
 
     borderRadius: 100,
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   accountBadgeDot: {
@@ -2017,20 +1635,19 @@ const styles = StyleSheet.create({
 
     marginRight: 7,
 
-    backgroundColor:
-      COLORS.primary,
+    backgroundColor: COLORS.primary,
   },
 
   accountBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
 
     color: COLORS.primary,
   },
 
   photoActionHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     marginTop: 9,
   },
@@ -2039,7 +1656,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
 
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: "500",
 
     color: COLORS.textBody,
   },
@@ -2049,19 +1666,17 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   tabContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    marginHorizontal: 16,
+    marginHorizontal: 12, //
     marginTop: 14,
 
     padding: 4,
 
     borderRadius: 16,
 
-    backgroundColor:
-      'rgba(15, 23, 42, 0.045)',
+    backgroundColor: "rgba(15, 23, 42, 0.045)",
   },
-
   tabButton: {
     flex: 1,
 
@@ -2069,14 +1684,17 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
-    paddingHorizontal: 8,
+    paddingHorizontal: 3, // 
+
+    minWidth: 0,
+
+    position: "relative", // 
   },
-
   tabButtonActive: {
     backgroundColor: COLORS.surface,
 
@@ -2084,55 +1702,37 @@ const styles = StyleSheet.create({
   },
 
   tabIconContainer: {
-    width: 30,
-    height: 30,
+    width: 26, //
+    height: 26, //
 
-    borderRadius: 10,
+    borderRadius: 9,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+
+    flexShrink: 0, //
   },
 
   tabIconContainerActive: {
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   tabText: {
-    marginLeft: 7,
+    marginLeft: 4,
 
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 11, // 
+    fontWeight: "600",
 
     color: COLORS.textBody,
+
+    flexShrink: 1,
+
+    includeFontPadding: false, // 
   },
 
   tabTextActive: {
     color: COLORS.primary,
-    fontWeight: '800',
-  },
-
-  tabCount: {
-    minWidth: 20,
-    height: 20,
-
-    marginLeft: 6,
-    paddingHorizontal: 5,
-
-    borderRadius: 10,
-
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    backgroundColor:
-      COLORS.successBg,
-  },
-
-  tabCountText: {
-    fontSize: 10,
-    fontWeight: '800',
-
-    color: COLORS.primary,
+    fontWeight: "800",
   },
 
   // ==========================================================
@@ -2160,17 +1760,17 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   sectionHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    alignItems: "flex-start",
+    justifyContent: "space-between",
 
     marginBottom: 14,
   },
 
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.textTitle,
 
@@ -2191,7 +1791,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
 
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.textTitle,
   },
@@ -2201,23 +1801,22 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     paddingHorizontal: 12,
     paddingVertical: 8,
 
     borderRadius: 12,
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   editButtonText: {
     marginLeft: 5,
 
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.primary,
   },
@@ -2235,8 +1834,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
 
     borderWidth: 1,
-    borderColor:
-      'rgba(15, 23, 42, 0.055)',
+    borderColor: "rgba(15, 23, 42, 0.055)",
 
     ...theme.shadows.elevation1,
   },
@@ -2244,8 +1842,8 @@ const styles = StyleSheet.create({
   infoRow: {
     minHeight: 72,
 
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   infoIcon: {
@@ -2254,8 +1852,8 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     marginRight: 12,
   },
@@ -2266,7 +1864,7 @@ const styles = StyleSheet.create({
 
   infoLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: "600",
 
     color: COLORS.textBody,
 
@@ -2277,7 +1875,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 19,
 
-    fontWeight: '700',
+    fontWeight: "700",
 
     color: COLORS.textTitle,
   },
@@ -2287,8 +1885,7 @@ const styles = StyleSheet.create({
 
     marginLeft: 52,
 
-    backgroundColor:
-      'rgba(15, 23, 42, 0.06)',
+    backgroundColor: "rgba(15, 23, 42, 0.06)",
   },
 
   // ==========================================================
@@ -2296,19 +1893,17 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   accountCard: {
-    flexDirection: 'row',
+    flexDirection: "row",
 
     marginTop: 24,
     padding: 16,
 
     borderRadius: 18,
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
 
     borderWidth: 1,
-    borderColor:
-      'rgba(31, 92, 77, 0.08)',
+    borderColor: "rgba(31, 92, 77, 0.08)",
   },
 
   accountIcon: {
@@ -2317,8 +1912,8 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     backgroundColor: COLORS.surface,
   },
@@ -2330,7 +1925,7 @@ const styles = StyleSheet.create({
 
   accountTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.primary,
   },
@@ -2349,16 +1944,15 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   editingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     paddingHorizontal: 9,
     paddingVertical: 6,
 
     borderRadius: 100,
 
-    backgroundColor:
-      COLORS.warningBg,
+    backgroundColor: COLORS.warningBg,
   },
 
   editingDot: {
@@ -2369,13 +1963,12 @@ const styles = StyleSheet.create({
 
     marginRight: 5,
 
-    backgroundColor:
-      COLORS.warning,
+    backgroundColor: COLORS.warning,
   },
 
   editingText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.warning,
   },
@@ -2388,8 +1981,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
 
     borderWidth: 1,
-    borderColor:
-      'rgba(15, 23, 42, 0.055)',
+    borderColor: "rgba(15, 23, 42, 0.055)",
 
     ...theme.shadows.elevation1,
   },
@@ -2402,7 +1994,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
 
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.textTitle,
   },
@@ -2410,23 +2002,21 @@ const styles = StyleSheet.create({
   inputWrapper: {
     minHeight: 50,
 
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     paddingHorizontal: 14,
 
     borderRadius: 14,
 
     borderWidth: 1,
-    borderColor:
-      'rgba(15, 23, 42, 0.08)',
+    borderColor: "rgba(15, 23, 42, 0.08)",
 
-    backgroundColor:
-      COLORS.soft,
+    backgroundColor: COLORS.soft,
   },
 
   inputWrapperMultiline: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     paddingTop: 13,
   },
 
@@ -2442,7 +2032,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
 
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
 
     color: COLORS.textTitle,
   },
@@ -2459,7 +2049,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
 
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.primary,
   },
@@ -2474,8 +2064,8 @@ const styles = StyleSheet.create({
   },
 
   preferenceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     paddingTop: 4,
   },
@@ -2486,11 +2076,10 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   preferenceContent: {
@@ -2501,7 +2090,7 @@ const styles = StyleSheet.create({
 
   preferenceTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.textTitle,
   },
@@ -2527,14 +2116,13 @@ const styles = StyleSheet.create({
 
     borderRadius: 15,
 
-    justifyContent: 'center',
+    justifyContent: "center",
 
-    backgroundColor: '#CBD5E1',
+    backgroundColor: "#CBD5E1",
   },
 
   switchTrackActive: {
-    backgroundColor:
-      COLORS.primary,
+    backgroundColor: COLORS.primary,
   },
 
   switchThumb: {
@@ -2543,10 +2131,9 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
-    backgroundColor:
-      COLORS.white,
+    backgroundColor: COLORS.white,
 
-    shadowColor: '#000',
+    shadowColor: "#000",
 
     shadowOffset: {
       width: 0,
@@ -2571,15 +2158,14 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 52,
 
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     borderRadius: 15,
 
-    backgroundColor:
-      COLORS.primary,
+    backgroundColor: COLORS.primary,
 
     ...theme.shadows.buttonGlow,
   },
@@ -2592,7 +2178,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
 
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.white,
   },
@@ -2600,22 +2186,20 @@ const styles = StyleSheet.create({
   secondaryButton: {
     minHeight: 48,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     borderRadius: 15,
 
-    backgroundColor:
-      COLORS.soft,
+    backgroundColor: COLORS.soft,
 
     borderWidth: 1,
-    borderColor:
-      'rgba(15, 23, 42, 0.06)',
+    borderColor: "rgba(15, 23, 42, 0.06)",
   },
 
   secondaryButtonText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
 
     color: COLORS.textBody,
   },
@@ -2627,8 +2211,8 @@ const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     paddingBottom: 60,
   },
@@ -2636,8 +2220,8 @@ const styles = StyleSheet.create({
   loadingContent: {
     flex: 1,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     paddingVertical: 50,
   },
@@ -2648,20 +2232,19 @@ const styles = StyleSheet.create({
 
     borderRadius: 31,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
     marginBottom: 16,
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   loadingText: {
     marginTop: 12,
 
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
 
     color: COLORS.textBody,
   },
@@ -2677,10 +2260,10 @@ const styles = StyleSheet.create({
   },
 
   occurrencesHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
 
     marginBottom: 14,
   },
@@ -2693,23 +2276,22 @@ const styles = StyleSheet.create({
 
     borderRadius: 17,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   occurrenceCountText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.primary,
   },
 
   occurrenceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     marginBottom: 12,
     padding: 12,
@@ -2719,8 +2301,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
 
     borderWidth: 1,
-    borderColor:
-      'rgba(15, 23, 42, 0.055)',
+    borderColor: "rgba(15, 23, 42, 0.055)",
 
     ...theme.shadows.elevation1,
   },
@@ -2731,22 +2312,21 @@ const styles = StyleSheet.create({
 
     borderRadius: 15,
 
-    overflow: 'hidden',
+    overflow: "hidden",
 
-    backgroundColor:
-      COLORS.soft,
+    backgroundColor: COLORS.soft,
   },
 
   occurrenceImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
 
   occurrenceImagePlaceholder: {
     flex: 1,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   occurrenceInfo: {
@@ -2757,15 +2337,15 @@ const styles = StyleSheet.create({
   },
 
   occurrenceTopRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
 
     paddingHorizontal: 8,
     paddingVertical: 5,
@@ -2784,14 +2364,14 @@ const styles = StyleSheet.create({
 
   statusBadgeText: {
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: "900",
   },
 
   urgencyText: {
     maxWidth: 80,
 
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: "600",
 
     color: COLORS.textBody,
   },
@@ -2800,15 +2380,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
 
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.textTitle,
   },
 
   locationRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
 
-    alignItems: 'center',
+    alignItems: "center",
 
     marginTop: 4,
   },
@@ -2828,7 +2408,7 @@ const styles = StyleSheet.create({
   // ==========================================================
 
   emptyContainer: {
-    alignItems: 'center',
+    alignItems: "center",
 
     paddingHorizontal: 30,
     paddingTop: 60,
@@ -2840,18 +2420,17 @@ const styles = StyleSheet.create({
 
     borderRadius: 38,
 
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
 
-    backgroundColor:
-      COLORS.successBg,
+    backgroundColor: COLORS.successBg,
   },
 
   emptyTitle: {
     marginTop: 18,
 
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: "800",
 
     color: COLORS.textTitle,
   },
@@ -2864,7 +2443,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
 
-    textAlign: 'center',
+    textAlign: "center",
 
     color: COLORS.textBody,
   },

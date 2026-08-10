@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   View,
@@ -28,7 +34,7 @@ import ProfileDetailScreen from "./ProfileDetailScreen";
 import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
 import api from "../services/api";
 
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { AppTabParamList } from "../../App";
 
@@ -186,17 +192,27 @@ export default function MapScreen() {
   const ocorrenciasVisiveis = useMemo(() => {
     const termo = search.trim().toLocaleLowerCase();
     return ocorrencias.filter((ocorrencia) => {
-      const correspondeBusca = !termo || [
-        ocorrencia.tipo_animal,
-        ocorrencia.tipo_ocorrencia,
-        ocorrencia.status_badge,
-        ocorrencia.endereco_localizacao || "",
-      ].some((valor) => valor.toLocaleLowerCase().includes(termo));
-      const correspondeTipo = tipoFiltro === "Todas" ||
-        (tipoFiltro === "Perdidos" && ocorrencia.status_badge.toLocaleLowerCase().includes("perdid")) ||
-        (tipoFiltro === "Avistados" && ocorrencia.status_badge.toLocaleLowerCase().includes("avist"));
-      const correspondeUrgencia = urgenciaFiltro === "Todas" ||
-        ocorrencia.nivel_urgencia.toLocaleLowerCase().startsWith(urgenciaFiltro.toLocaleLowerCase().replace("moderada", "moderad"));
+      const correspondeBusca =
+        !termo ||
+        [
+          ocorrencia.tipo_animal,
+          ocorrencia.tipo_ocorrencia,
+          ocorrencia.status_badge,
+          ocorrencia.endereco_localizacao || "",
+        ].some((valor) => valor.toLocaleLowerCase().includes(termo));
+      const correspondeTipo =
+        tipoFiltro === "Todas" ||
+        (tipoFiltro === "Perdidos" &&
+          ocorrencia.status_badge.toLocaleLowerCase().includes("perdid")) ||
+        (tipoFiltro === "Avistados" &&
+          ocorrencia.status_badge.toLocaleLowerCase().includes("avist"));
+      const correspondeUrgencia =
+        urgenciaFiltro === "Todas" ||
+        ocorrencia.nivel_urgencia
+          .toLocaleLowerCase()
+          .startsWith(
+            urgenciaFiltro.toLocaleLowerCase().replace("moderada", "moderad"),
+          );
       return correspondeBusca && correspondeTipo && correspondeUrgencia;
     });
   }, [ocorrencias, search, tipoFiltro, urgenciaFiltro]);
@@ -208,7 +224,6 @@ export default function MapScreen() {
    */
 
   useEffect(() => {
-    obterLocalizacaoInicial();
     carregarFotoPerfil();
 
     const timer = setTimeout(() => {
@@ -364,17 +379,12 @@ export default function MapScreen() {
         params: {
           lat: latitude,
           lng: longitude,
-          raio_km: 10,
+          raio_km: 100,
         },
       });
 
       const dados = Array.isArray(response.data) ? response.data : [];
 
-      /**
-       * Garantimos que somente ocorrências
-       * com coordenadas válidas sejam colocadas
-       * no Mapbox.
-       */
       const ocorrenciasValidas = dados.filter(
         (ocorrencia: OcorrenciaMapa) =>
           Number.isFinite(Number(ocorrencia.latitude)) &&
@@ -391,6 +401,30 @@ export default function MapScreen() {
     }
   };
 
+  /**
+   * ==========================================================
+   * ATUALIZAÇÃO AO VOLTAR PARA O MAPA
+   * ==========================================================
+   */
+
+  useFocusEffect(
+    useCallback(() => {
+      const atualizarMapa = async () => {
+        if (userLocation) {
+          await carregarOcorrenciasProximas(
+            userLocation.coords.latitude,
+            userLocation.coords.longitude,
+          );
+
+          return;
+        }
+
+        await obterLocalizacaoInicial();
+      };
+
+      void atualizarMapa();
+    }, [userLocation]),
+  );
   /**
    * ==========================================================
    * ZOOM
@@ -467,8 +501,7 @@ export default function MapScreen() {
 
     Alert.alert(
       "Sair da conta",
-      `Olá, ${
-        user?.name || "Usuário"
+      `Olá, ${user?.name || "Usuário"
       }. Tem certeza de que deseja encerrar a sessão?`,
       [
         {
@@ -556,79 +589,78 @@ export default function MapScreen() {
             MARCADORES DAS OCORRÊNCIAS
         =================================================== */}
 
-{ocorrenciasVisiveis.map((ocorrencia) => {
-  const latitude = Number(ocorrencia.latitude);
-  const longitude = Number(ocorrencia.longitude);
+        {ocorrenciasVisiveis.map((ocorrencia) => {
+          const latitude = Number(ocorrencia.latitude);
+          const longitude = Number(ocorrencia.longitude);
 
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return null;
-  }
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            return null;
+          }
 
-  const animalEhGato = ocorrencia.tipo_animal
-    ?.toLowerCase()
-    .includes("gato");
+          const animalEhGato = ocorrencia.tipo_animal
+            ?.toLowerCase()
+            .includes("gato");
 
-  return (
-    <Mapbox.MarkerView
-      key={ocorrencia.id_ocorrencia}
-      coordinate={[longitude, latitude]}
-      anchor={{
-        x: 0.5,
-        y: 1,
-      }}
-      allowOverlap={true}
-      allowOverlapWithPuck={true}
-    >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Ocorrência de ${
-          ocorrencia.tipo_animal || "animal"
-        }`}
-        accessibilityHint="Mostra os detalhes desta ocorrência"
-        onPress={() => {
-          setSelectedOccurrenceId(ocorrencia.id_ocorrencia);
-        }}
-        style={({ pressed }) => [
-          styles.markerPressable,
-          pressed && styles.markerPressed,
-        ]}
-      >
-        <View collapsable={false} style={styles.occurrenceMarker}>
-          <View style={styles.markerPin}>
-            <View style={styles.markerPhotoWrapper}>
-              {ocorrencia.foto ? (
-                <Image
-                  source={{
-                    uri: ocorrencia.foto,
-                  }}
-                  style={styles.markerPhoto}
-                />
-              ) : (
-                <View style={styles.markerPhotoPlaceholder}>
-                  <MaterialCommunityIcons
-                    name={animalEhGato ? "cat" : "dog"}
-                    size={24}
-                    color={theme.colors.textBody}
-                  />
+          return (
+            <Mapbox.MarkerView
+              key={ocorrencia.id_ocorrencia}
+              coordinate={[longitude, latitude]}
+              anchor={{
+                x: 0.5,
+                y: 1,
+              }}
+              allowOverlap={true}
+              allowOverlapWithPuck={true}
+            >
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Ocorrência de ${ocorrencia.tipo_animal || "animal"
+                  }`}
+                accessibilityHint="Mostra os detalhes desta ocorrência"
+                onPress={() => {
+                  setSelectedOccurrenceId(ocorrencia.id_ocorrencia);
+                }}
+                style={({ pressed }) => [
+                  styles.markerPressable,
+                  pressed && styles.markerPressed,
+                ]}
+              >
+                <View collapsable={false} style={styles.occurrenceMarker}>
+                  <View style={styles.markerPin}>
+                    <View style={styles.markerPhotoWrapper}>
+                      {ocorrencia.foto ? (
+                        <Image
+                          source={{
+                            uri: ocorrencia.foto,
+                          }}
+                          style={styles.markerPhoto}
+                        />
+                      ) : (
+                        <View style={styles.markerPhotoPlaceholder}>
+                          <MaterialCommunityIcons
+                            name={animalEhGato ? "cat" : "dog"}
+                            size={24}
+                            color={theme.colors.textBody}
+                          />
+                        </View>
+                      )}
+
+                      <View style={styles.markerAnimalBadge}>
+                        <MaterialCommunityIcons
+                          name={animalEhGato ? "cat" : "dog"}
+                          size={11}
+                          color={theme.colors.surface}
+                        />
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.markerPointer} />
                 </View>
-              )}
-
-              <View style={styles.markerAnimalBadge}>
-                <MaterialCommunityIcons
-                  name={animalEhGato ? "cat" : "dog"}
-                  size={11}
-                  color={theme.colors.surface}
-                />
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.markerPointer} />
-        </View>
-      </Pressable>
-    </Mapbox.MarkerView>
-  );
-})}
+              </Pressable>
+            </Mapbox.MarkerView>
+          );
+        })}
       </Mapbox.MapView>
 
       {/* ======================================================
@@ -1094,9 +1126,9 @@ export default function MapScreen() {
                   key={label}
                   style={[
                     styles.filterChip,
-                      label === tipoFiltro && styles.filterChipSelected,
-                    ]}
-                    onPress={() => setTipoFiltro(label)}
+                    label === tipoFiltro && styles.filterChipSelected,
+                  ]}
+                  onPress={() => setTipoFiltro(label)}
                 >
                   <Text
                     style={[
@@ -1122,9 +1154,9 @@ export default function MapScreen() {
                   key={label}
                   style={[
                     styles.filterChip,
-                      label === urgenciaFiltro && styles.filterChipSelected,
-                    ]}
-                    onPress={() => setUrgenciaFiltro(label)}
+                    label === urgenciaFiltro && styles.filterChipSelected,
+                  ]}
+                  onPress={() => setUrgenciaFiltro(label)}
                 >
                   <Text
                     style={[
@@ -1333,11 +1365,8 @@ export default function MapScreen() {
       <OccurrenceDetailDrawer
         visible={selectedOccurrenceId !== null}
         occurrenceId={selectedOccurrenceId}
-        onClose={() =>
-          setSelectedOccurrenceId(null)
-        }
+        onClose={() => setSelectedOccurrenceId(null)}
       />
-
     </SafeAreaView>
   );
 }
