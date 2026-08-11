@@ -73,9 +73,16 @@ const MIN_PROFILE_RADIUS = 1;
 // TIPAGEM
 // ============================================================
 
+export interface ProfileUpdateResult {
+  raio_pesquisa_km?: number;
+  tem_pet?: boolean;
+  foto_perfil?: string | null;
+}
+
 interface ProfileDetailProps {
   visible: boolean;
   onClose: () => void;
+  onProfileUpdated?: (profile: ProfileUpdateResult) => void;
 }
 
 interface UserProfile {
@@ -194,9 +201,10 @@ type ProfileTab = "perfil" | "ocorrencias" | "pets";
 interface TabBarProps {
   activeTab: ProfileTab;
   onTabChange: (tab: ProfileTab) => void;
+  mostrarPets: boolean;
 }
 
-const TabBar = React.memo(({ activeTab, onTabChange }: TabBarProps) => (
+const TabBar = React.memo(({ activeTab, onTabChange, mostrarPets }: TabBarProps) => (
   <View style={styles.tabContainer}>
     <Pressable
       style={[
@@ -270,34 +278,39 @@ const TabBar = React.memo(({ activeTab, onTabChange }: TabBarProps) => (
     {/* PETS */}
     {/* ===================================================== */}
 
-    <Pressable
-      style={[styles.tabButton, activeTab === "pets" && styles.tabButtonActive]}
-      onPress={() => onTabChange("pets")}
-      accessibilityRole="tab"
-      accessibilityState={{
-        selected: activeTab === "pets",
-      }}
-      accessibilityLabel="Meus pets"
-    >
-      <View
+    {mostrarPets && (
+      <Pressable
         style={[
-          styles.tabIconContainer,
-          activeTab === "pets" && styles.tabIconContainerActive,
+          styles.tabButton,
+          activeTab === "pets" && styles.tabButtonActive,
         ]}
+        onPress={() => onTabChange("pets")}
+        accessibilityRole="tab"
+        accessibilityState={{
+          selected: activeTab === "pets",
+        }}
+        accessibilityLabel="Meus pets"
       >
-        <MaterialCommunityIcons
-          name="dog-side"
-          size={19}
-          color={activeTab === "pets" ? COLORS.primary : COLORS.textBody}
-        />
-      </View>
+        <View
+          style={[
+            styles.tabIconContainer,
+            activeTab === "pets" && styles.tabIconContainerActive,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="dog-side"
+            size={19}
+            color={activeTab === "pets" ? COLORS.primary : COLORS.textBody}
+          />
+        </View>
 
-      <Text
-        style={[styles.tabText, activeTab === "pets" && styles.tabTextActive]}
-      >
-        Pets
-      </Text>
-    </Pressable>
+        <Text
+          style={[styles.tabText, activeTab === "pets" && styles.tabTextActive]}
+        >
+          Pets
+        </Text>
+      </Pressable>
+    )}
   </View>
 ));
 
@@ -444,6 +457,7 @@ const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
 export default function ProfileDetailScreen({
   visible,
   onClose,
+  onProfileUpdated,
 }: ProfileDetailProps) {
   const { logout } = useAuthStore();
 
@@ -472,6 +486,15 @@ export default function ProfileDetailScreen({
   const [minhasOcorrencias, setMinhasOcorrencias] = useState<Ocorrencia[]>([]);
 
   const translateX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
+
+  const mostrarAbaPets =
+    profile?.tipo_conta === "PESSOA_FISICA" && profile?.tem_pet === true;
+
+  useEffect(() => {
+    if (activeTab === "pets" && !mostrarAbaPets) {
+      setActiveTab("perfil");
+    }
+  }, [activeTab, mostrarAbaPets]);
 
   // ----------------------------------------------------------
   // PREENCHER CAMPOS
@@ -606,6 +629,7 @@ export default function ProfileDetailScreen({
 
       setProfile(updatedProfile);
       preencherCampos(updatedProfile);
+      onProfileUpdated?.(updatedProfile);
 
       setIsEditing(false);
 
@@ -622,7 +646,16 @@ export default function ProfileDetailScreen({
     } finally {
       setSaving(false);
     }
-  }, [nome, telefone, raio, endereco, temPet, profile, preencherCampos]);
+  }, [
+    nome,
+    telefone,
+    raio,
+    endereco,
+    temPet,
+    profile,
+    preencherCampos,
+    onProfileUpdated,
+  ]);
 
   // ----------------------------------------------------------
   // ADICIONAR / ALTERAR FOTO
@@ -1070,7 +1103,7 @@ export default function ProfileDetailScreen({
               <InfoRow
                 icon="location-outline"
                 label="Raio de pesquisa"
-                value={`${profile?.raio_pesquisa_km || 10} km`}
+                value={`${profile?.raio_pesquisa_km ?? 10} km`}
               />
 
               <View style={styles.infoDivider} />
@@ -1305,7 +1338,11 @@ export default function ProfileDetailScreen({
 
               {/* TABS */}
 
-              <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+              <TabBar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                mostrarPets={mostrarAbaPets}
+              />
 
               {/* CONTENT */}
 
@@ -1316,7 +1353,7 @@ export default function ProfileDetailScreen({
               >
                 {activeTab === "perfil" ? (
                   perfilContent
-                ) : activeTab === "pets" ? (
+                ) : activeTab === "pets" && mostrarAbaPets ? (
                   <RegistrarPet /> //
                 ) : (
                   <FlatList

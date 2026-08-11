@@ -30,7 +30,9 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { theme } from "../theme/colors";
 import { useAuthStore } from "../store/useAuthStore";
-import ProfileDetailScreen from "./ProfileDetailScreen";
+import ProfileDetailScreen, {
+  type ProfileUpdateResult,
+} from "./ProfileDetailScreen";
 import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
 import api from "../services/api";
 
@@ -78,6 +80,25 @@ const DRAWER_WIDTH = Math.min(width * 0.84, 340);
 const INITIAL_COORDINATE: [number, number] = [-43.9345, -19.9167];
 
 const INITIAL_ZOOM = 14;
+
+const MIN_SEARCH_RADIUS_KM = 1;
+const MAX_SEARCH_RADIUS_KM = 100;
+const DEFAULT_SEARCH_RADIUS_KM = 10;
+
+const normalizarRaioPesquisaKm = (valor: unknown): number => {
+  if (valor === null || valor === undefined || valor === "") {
+    return DEFAULT_SEARCH_RADIUS_KM;
+  }
+
+  const raioRecebido = Number(valor);
+
+  return Number.isFinite(raioRecebido)
+    ? Math.min(
+        MAX_SEARCH_RADIUS_KM,
+        Math.max(MIN_SEARCH_RADIUS_KM, raioRecebido),
+      )
+    : DEFAULT_SEARCH_RADIUS_KM;
+};
 
 /**
  * ============================================================
@@ -138,6 +159,8 @@ export default function MapScreen() {
 
   const cameraRef = useRef<Mapbox.Camera | null>(null);
 
+  const raioPesquisaKmRef = useRef(DEFAULT_SEARCH_RADIUS_KM);
+
   /**
    * ==========================================================
    * ANIMAÇÕES
@@ -175,6 +198,12 @@ export default function MapScreen() {
 
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
+  const [raioPesquisaKm, setRaioPesquisaKm] = useState<number>(
+    DEFAULT_SEARCH_RADIUS_KM,
+  );
+
+  const [perfilMapaCarregado, setPerfilMapaCarregado] = useState(false);
+
   const [search, setSearch] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState("Todas");
   const [urgenciaFiltro, setUrgenciaFiltro] = useState("Todas");
@@ -188,6 +217,10 @@ export default function MapScreen() {
   const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<
     number | null
   >(null);
+
+  useEffect(() => {
+    raioPesquisaKmRef.current = raioPesquisaKm;
+  }, [raioPesquisaKm]);
 
   const ocorrenciasVisiveis = useMemo(() => {
     const termo = search.trim().toLocaleLowerCase();
@@ -224,7 +257,9 @@ export default function MapScreen() {
    */
 
   useEffect(() => {
-    carregarFotoPerfil();
+    void carregarPerfilMapa().finally(() => {
+      setPerfilMapaCarregado(true);
+    });
 
     const timer = setTimeout(() => {
       Animated.timing(discoveryAnim, {
@@ -274,15 +309,16 @@ export default function MapScreen() {
    * ==========================================================
    */
 
-  const carregarFotoPerfil = async () => {
+  const carregarPerfilMapa = async () => {
     try {
       const response = await api.get("/auth/me");
 
-      if (response.data?.foto_perfil) {
-        setProfilePhoto(response.data.foto_perfil);
-      }
+      setProfilePhoto(response.data?.foto_perfil ?? null);
+      setRaioPesquisaKm(
+        normalizarRaioPesquisaKm(response.data?.raio_pesquisa_km),
+      );
     } catch (error) {
-      console.warn("Erro ao carregar foto do perfil:", error);
+      console.warn("Erro ao carregar perfil do mapa:", error);
     }
   };
 
@@ -292,7 +328,7 @@ export default function MapScreen() {
    * ==========================================================
    */
 
-  const obterLocalizacaoInicial = async () => {
+  const obterLocalizacaoInicial = useCallback(async () => {
     try {
       setLoadingLocation(true);
 
@@ -312,17 +348,12 @@ export default function MapScreen() {
       });
 
       setUserLocation(currentLocation);
-
-      await carregarOcorrenciasProximas(
-        currentLocation.coords.latitude,
-        currentLocation.coords.longitude,
-      );
     } catch (error) {
       console.warn("Erro ao obter localização:", error);
     } finally {
       setLoadingLocation(false);
     }
-  };
+  }, []);
 
   /**
    * ==========================================================
@@ -368,38 +399,38 @@ export default function MapScreen() {
    * ==========================================================
    */
 
-  const carregarOcorrenciasProximas = async (
-    latitude: number,
-    longitude: number,
-  ) => {
-    try {
-      setLoadingOcorrencias(true);
+  const carregarOcorrenciasProximas = useCallback(
+    async (latitude: number, longitude: number, raioKm: number) => {
+      try {
+        setLoadingOcorrencias(true);
 
-      const response = await api.get("/ocorrencias/proximas", {
-        params: {
-          lat: latitude,
-          lng: longitude,
-          raio_km: 100,
-        },
-      });
+        const response = await api.get("/ocorrencias/proximas", {
+          params: {
+            lat: latitude,
+            lng: longitude,
+            raio_km: raioKm,
+          },
+        });
 
-      const dados = Array.isArray(response.data) ? response.data : [];
+        const dados = Array.isArray(response.data) ? response.data : [];
 
-      const ocorrenciasValidas = dados.filter(
-        (ocorrencia: OcorrenciaMapa) =>
-          Number.isFinite(Number(ocorrencia.latitude)) &&
-          Number.isFinite(Number(ocorrencia.longitude)),
-      );
+        const ocorrenciasValidas = dados.filter(
+          (ocorrencia: OcorrenciaMapa) =>
+            Number.isFinite(Number(ocorrencia.latitude)) &&
+            Number.isFinite(Number(ocorrencia.longitude)),
+        );
 
-      setOcorrencias(ocorrenciasValidas);
-    } catch (error) {
-      console.warn("Erro ao carregar ocorrências próximas:", error);
+        setOcorrencias(ocorrenciasValidas);
+      } catch (error) {
+        console.warn("Erro ao carregar ocorrências próximas:", error);
 
-      setOcorrencias([]);
-    } finally {
-      setLoadingOcorrencias(false);
-    }
-  };
+        setOcorrencias([]);
+      } finally {
+        setLoadingOcorrencias(false);
+      }
+    },
+    [],
+  );
 
   /**
    * ==========================================================
@@ -409,11 +440,16 @@ export default function MapScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (!perfilMapaCarregado) {
+        return;
+      }
+
       const atualizarMapa = async () => {
         if (userLocation) {
           await carregarOcorrenciasProximas(
             userLocation.coords.latitude,
             userLocation.coords.longitude,
+            raioPesquisaKmRef.current,
           );
 
           return;
@@ -423,7 +459,32 @@ export default function MapScreen() {
       };
 
       void atualizarMapa();
-    }, [userLocation]),
+    }, [
+      perfilMapaCarregado,
+      userLocation,
+      carregarOcorrenciasProximas,
+      obterLocalizacaoInicial,
+    ]),
+  );
+
+  const handleProfileUpdated = useCallback(
+    (updatedProfile: ProfileUpdateResult) => {
+      const novoRaio = normalizarRaioPesquisaKm(
+        updatedProfile.raio_pesquisa_km,
+      );
+
+      setRaioPesquisaKm(novoRaio);
+      setProfilePhoto(updatedProfile.foto_perfil ?? null);
+
+      if (userLocation) {
+        void carregarOcorrenciasProximas(
+          userLocation.coords.latitude,
+          userLocation.coords.longitude,
+          novoRaio,
+        );
+      }
+    },
+    [carregarOcorrenciasProximas, userLocation],
   );
   /**
    * ==========================================================
@@ -756,6 +817,22 @@ export default function MapScreen() {
 
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Abrir filtros"
+          onPress={() => setFiltersVisible(true)}
+          style={({ pressed }) => [
+            styles.headerFilterButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Ionicons
+            name="options-outline"
+            size={20}
+            color={theme.colors.textTitle}
+          />
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Abrir perfil"
           onPress={() => setProfileMenuVisible(true)}
           style={({ pressed }) => [
@@ -825,7 +902,7 @@ export default function MapScreen() {
           CONTROLES DO MAPA
       ======================================================= */}
 
-      <View style={styles.leftControls}>
+      <View style={styles.mapZoomControls}>
         <View style={styles.controlGroup}>
           <Pressable
             accessibilityRole="button"
@@ -836,7 +913,11 @@ export default function MapScreen() {
               pressed && styles.controlPressed,
             ]}
           >
-            <Ionicons name="add" size={22} color={theme.colors.textTitle} />
+            <Ionicons
+              name="add"
+              size={22}
+              color={theme.colors.textTitle}
+            />
           </Pressable>
 
           <View style={styles.controlDivider} />
@@ -850,27 +931,13 @@ export default function MapScreen() {
               pressed && styles.controlPressed,
             ]}
           >
-            <Ionicons name="remove" size={22} color={theme.colors.textTitle} />
+            <Ionicons
+              name="remove"
+              size={22}
+              color={theme.colors.textTitle}
+            />
           </Pressable>
         </View>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Abrir filtros"
-          onPress={() => setFiltersVisible(true)}
-          style={({ pressed }) => [
-            styles.filterButton,
-            pressed && styles.controlPressed,
-          ]}
-        >
-          <Ionicons
-            name="options-outline"
-            size={18}
-            color={theme.colors.textTitle}
-          />
-
-          <Text style={styles.filterButtonText}>Filtros</Text>
-        </Pressable>
       </View>
 
       {/* ======================================================
@@ -900,30 +967,29 @@ export default function MapScreen() {
       ======================================================= */}
 
       <View style={styles.bottomArea}>
-        <View style={styles.discoveryCard}>
-          <View style={styles.discoveryIcon}>
-            <MaterialCommunityIcons
-              name="paw-outline"
-              size={23}
+        {/* [ALTERE AQUI] — Banner provisório de anúncio */}
+        <View style={styles.adBanner}>
+          <View style={styles.adBadge}>
+            <Text style={styles.adBadgeText}>ANÚNCIO</Text>
+          </View>
+
+          <View style={styles.adContent}>
+            <Text style={styles.adTitle}>
+              Espaço publicitário
+            </Text>
+
+            <Text style={styles.adDescription}>
+              Banner provisório para futura integração de anúncios
+            </Text>
+          </View>
+
+          <View style={styles.adIcon}>
+            <Ionicons
+              name="megaphone-outline"
+              size={20}
               color={theme.colors.brand}
             />
           </View>
-
-          <View style={styles.discoveryContent}>
-            <Text style={styles.discoveryTitle}>
-              Ajude um animal a voltar para casa
-            </Text>
-
-            <Text style={styles.discoveryDescription} numberOfLines={2}>
-              Registre uma ocorrência e ajude a comunidade a localizar animais.
-            </Text>
-          </View>
-
-          <Ionicons
-            name="chevron-forward"
-            size={20}
-            color={theme.colors.textBody}
-          />
         </View>
 
         <Pressable
@@ -1356,6 +1422,7 @@ export default function MapScreen() {
       <ProfileDetailScreen
         visible={profileDetailVisible}
         onClose={() => setProfileDetailVisible(false)}
+        onProfileUpdated={handleProfileUpdated}
       />
 
       {/* ======================================================
@@ -1471,6 +1538,16 @@ const styles = StyleSheet.create({
     color: theme.colors.textTitle,
     fontSize: 12,
     fontWeight: "600",
+  },
+
+  headerFilterButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.97)",
+    ...theme.shadows.elevation1,
   },
 
   /**
@@ -1663,12 +1740,11 @@ const styles = StyleSheet.create({
    * ========================================================
    */
 
-  leftControls: {
+  mapZoomControls: {
     position: "absolute",
-    left: 16,
-    top: Platform.OS === "ios" ? 190 : 194,
-    alignItems: "flex-start",
-    gap: 10,
+    right: 20,
+    bottom: Platform.OS === "ios" ? 330 : 318,
+    alignItems: "center",
     zIndex: 8,
   },
 
@@ -1721,7 +1797,7 @@ const styles = StyleSheet.create({
   locationButton: {
     position: "absolute",
     right: 16,
-    bottom: Platform.OS === "ios" ? 250 : 238,
+    bottom: Platform.OS === "ios" ? 260 : 250,
     width: 54,
     height: 54,
     borderRadius: 27,
@@ -1759,7 +1835,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 16,
     right: 16,
-    bottom: Platform.OS === "ios" ? 42 : 43,
+    bottom: Platform.OS === "ios" ? 60 : 62,
     zIndex: 10,
     gap: 10,
   },
@@ -1833,6 +1909,8 @@ const styles = StyleSheet.create({
 
   primaryButtonContent: {
     flex: 1,
+
+     
   },
 
   primaryButtonLabel: {
@@ -1858,6 +1936,64 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.14)",
   },
 
+  // ========================================================
+  // BANNER DE ANÚNCIO PROVISÓRIO
+  // ========================================================
+
+  adBanner: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.97)",
+    borderWidth: 1,
+    borderColor: theme.colors.inputBg,
+    ...theme.shadows.elevation1,
+  },
+
+  adBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 7,
+    backgroundColor: theme.colors.inputBg,
+    marginRight: 10,
+  },
+
+  adBadgeText: {
+    fontSize: 7,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    color: theme.colors.textBody,
+  },
+
+  adContent: {
+    flex: 1,
+    paddingRight: 8,
+  },
+
+  adTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: theme.colors.textTitle,
+    marginBottom: 2,
+  },
+
+  adDescription: {
+    fontSize: 9.5,
+    lineHeight: 13,
+    color: theme.colors.textBody,
+  },
+
+  adIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.semantic.success.bg,
+  },
   /**
    * ========================================================
    * MARCADOR PREMIUM
