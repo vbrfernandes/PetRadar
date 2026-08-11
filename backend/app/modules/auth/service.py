@@ -1,9 +1,19 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import delete, or_
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from app.modules.auth.models import Conta, UsuarioFisico, ONG
 from app.modules.auth.schemas import UsuarioFisicoCriar, ONGCriar, LoginSchema, RedefinirSenha, PerfilAtualizacao
+from app.modules.chat.models import MensagemChat
+from app.modules.engajamento.models import Interacao, Comentario, Denuncia
+from app.modules.ocorrencias.models import (
+    Ocorrencia,
+    Avistamento,
+    HistoricoCuidadoOcorrencia,
+)
+from app.modules.pets.models import Pet
+from app.modules.ong.models import ProjetoAdocao, VoluntariadoSeguidor
 from app.core.security import gerar_hash_senha, verificar_senha, criar_token_acesso
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -225,3 +235,91 @@ async def atualizar_perfil(db: AsyncSession, conta: Conta, dados: PerfilAtualiza
     await db.commit()
     await db.refresh(conta)
     return await obter_perfil_completo(db, conta)
+
+async def excluir_conta(
+    db: AsyncSession,
+    conta: Conta,
+    senha_atual: str,
+) -> None:
+    if not verificar_senha(senha_atual, conta.senha):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Senha atual incorreta.",
+        )
+
+    id_conta = conta.id_conta
+    ocorrencias_da_conta = select(Ocorrencia.id_ocorrencia).where(
+        Ocorrencia.id_conta == id_conta
+    )
+
+    try:
+        for modelo in (
+            Interacao,
+            Comentario,
+            Denuncia,
+            HistoricoCuidadoOcorrencia,
+            Avistamento,
+        ):
+            await db.execute(
+                delete(modelo).where(
+                    or_(
+                        modelo.id_conta == id_conta,
+                        modelo.id_ocorrencia.in_(ocorrencias_da_conta),
+                    )
+                )
+            )
+
+        await db.execute(
+            delete(Ocorrencia).where(Ocorrencia.id_conta == id_conta)
+        )
+
+        await db.execute(
+            delete(MensagemChat).where(
+                or_(
+                    MensagemChat.id_remetente_conta == id_conta,
+                    MensagemChat.id_destinatario_conta == id_conta,
+                )
+            )
+        )
+
+        if conta.tipo_conta == "PESSOA_FISICA":
+            id_usuario = await db.scalar(
+                select(UsuarioFisico.id_usuario).where(
+                    UsuarioFisico.id_conta == id_conta
+                )
+            )
+
+            if id_usuario is not None:
+                await db.execute(
+                    delete(VoluntariadoSeguidor).where(
+                        VoluntariadoSeguidor.id_usuario == id_usuario
+                    )
+                )
+                await db.execute(delete(Pet).where(Pet.id_usuario == id_usuario))
+                await db.execute(
+                    delete(UsuarioFisico).where(
+                        UsuarioFisico.id_usuario == id_usuario
+                    )
+                )
+
+        elif conta.tipo_conta == "ONG":
+            id_ong = await db.scalar(
+                select(ONG.id_ong).where(ONG.id_conta == id_conta)
+            )
+
+            if id_ong is not None:
+                await db.execute(
+                    delete(VoluntariadoSeguidor).where(
+                        VoluntariadoSeguidor.id_ong == id_ong
+                    )
+                )
+                await db.execute(
+                    delete(ProjetoAdocao).where(ProjetoAdocao.id_ong == id_ong)
+                )
+                await db.execute(delete(ONG).where(ONG.id_ong == id_ong))
+
+        await db.execute(delete(Conta).where(Conta.id_conta == id_conta))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise

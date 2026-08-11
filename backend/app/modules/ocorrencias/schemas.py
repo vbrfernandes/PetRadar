@@ -36,6 +36,7 @@ class OcorrenciaResposta(BaseModel):
     endereco_localizacao: str | None = None
     latitude: float
     longitude: float
+    distancia_km: float | None = None
 
     class Config:
         from_attributes = True

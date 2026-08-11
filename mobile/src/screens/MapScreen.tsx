@@ -12,10 +12,8 @@ import {
   StyleSheet,
   TextInput,
   Image,
-  Dimensions,
   Platform,
   Animated,
-  ScrollView,
   ActivityIndicator,
   Alert,
   Modal,
@@ -34,6 +32,8 @@ import ProfileDetailScreen, {
   type ProfileUpdateResult,
 } from "./ProfileDetailScreen";
 import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
+import AppNavigationDrawer from "../components/AppNavigationDrawer";
+import ProfileQuickMenu from "../components/ProfileQuickMenu";
 import api from "../services/api";
 
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -55,16 +55,6 @@ if (!MAPBOX_ACCESS_TOKEN) {
 } else {
   Mapbox.setAccessToken(MAPBOX_ACCESS_TOKEN);
 }
-
-/**
- * ============================================================
- * DIMENSÕES
- * ============================================================
- */
-
-const { width } = Dimensions.get("window");
-
-const DRAWER_WIDTH = Math.min(width * 0.84, 340);
 
 /**
  * ============================================================
@@ -147,8 +137,6 @@ export default function MapScreen() {
    * ==========================================================
    */
 
-  const logout = useAuthStore((state) => state.logout);
-
   const user = useAuthStore((state) => state.user);
 
   /**
@@ -168,10 +156,6 @@ export default function MapScreen() {
    * ANIMAÇÕES
    * ==========================================================
    */
-
-  const drawerAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
-
-  const overlayAnim = useRef(new Animated.Value(0)).current;
 
   const searchFocusAnim = useRef(new Animated.Value(0)).current;
 
@@ -225,10 +209,7 @@ export default function MapScreen() {
   );
 
   const abrirDetalheOcorrencia = useCallback(
-    (
-      occurrenceId: number,
-      recarregarLista?: RecarregarListaOcorrencias,
-    ) => {
+    (occurrenceId: number, recarregarLista?: RecarregarListaOcorrencias) => {
       recarregarListaOrigemRef.current = recarregarLista ?? null;
       setSelectedOccurrenceId(occurrenceId);
     },
@@ -473,9 +454,7 @@ export default function MapScreen() {
       const recarregarListaOrigem = recarregarListaOrigemRef.current;
       recarregarListaOrigemRef.current = null;
 
-      const atualizacoes: Promise<unknown>[] = [
-        recarregarOcorrenciasNoMapa(),
-      ];
+      const atualizacoes: Promise<unknown>[] = [recarregarOcorrenciasNoMapa()];
       if (recarregarListaOrigem) {
         atualizacoes.push(Promise.resolve().then(recarregarListaOrigem));
       }
@@ -515,10 +494,7 @@ export default function MapScreen() {
       };
 
       void atualizarMapa();
-    }, [
-      perfilMapaCarregado,
-      recarregarOcorrenciasNoMapa,
-    ]),
+    }, [perfilMapaCarregado, recarregarOcorrenciasNoMapa]),
   );
 
   const handleProfileUpdated = useCallback(
@@ -570,66 +546,10 @@ export default function MapScreen() {
 
   const abrirMenu = () => {
     setMenuVisible(true);
-
-    Animated.parallel([
-      Animated.spring(drawerAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 180,
-      }),
-
-      Animated.timing(overlayAnim, {
-        toValue: 1,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-    ]).start();
   };
 
   const fecharMenu = () => {
-    Animated.parallel([
-      Animated.timing(drawerAnim, {
-        toValue: -DRAWER_WIDTH,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-
-      Animated.timing(overlayAnim, {
-        toValue: 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setMenuVisible(false);
-    });
-  };
-
-  /**
-   * ==========================================================
-   * LOGOUT
-   * ==========================================================
-   */
-
-  const handleLogout = () => {
-    setProfileMenuVisible(false);
-
-    Alert.alert(
-      "Sair da conta",
-      `Olá, ${user?.name || "Usuário"
-      }. Tem certeza de que deseja encerrar a sessão?`,
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: "Sair",
-          style: "destructive",
-          onPress: () => logout(),
-        },
-      ],
-    );
+    setMenuVisible(false);
   };
 
   /**
@@ -729,8 +649,9 @@ export default function MapScreen() {
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Ocorrência de ${ocorrencia.tipo_animal || "animal"
-                  }`}
+                accessibilityLabel={`Ocorrência de ${
+                  ocorrencia.tipo_animal || "animal"
+                }`}
                 accessibilityHint="Mostra os detalhes desta ocorrência"
                 onPress={() => {
                   abrirDetalheOcorrencia(ocorrencia.id_ocorrencia);
@@ -967,11 +888,7 @@ export default function MapScreen() {
               pressed && styles.controlPressed,
             ]}
           >
-            <Ionicons
-              name="add"
-              size={22}
-              color={theme.colors.textTitle}
-            />
+            <Ionicons name="add" size={22} color={theme.colors.textTitle} />
           </Pressable>
 
           <View style={styles.controlDivider} />
@@ -985,11 +902,7 @@ export default function MapScreen() {
               pressed && styles.controlPressed,
             ]}
           >
-            <Ionicons
-              name="remove"
-              size={22}
-              color={theme.colors.textTitle}
-            />
+            <Ionicons name="remove" size={22} color={theme.colors.textTitle} />
           </Pressable>
         </View>
       </View>
@@ -1021,16 +934,14 @@ export default function MapScreen() {
       ======================================================= */}
 
       <View style={styles.bottomArea}>
-        {/* [ALTERE AQUI] — Banner provisório de anúncio */}
+        {/*  — Banner provisório de anúncio */}
         <View style={styles.adBanner}>
           <View style={styles.adBadge}>
             <Text style={styles.adBadgeText}>ANÚNCIO</Text>
           </View>
 
           <View style={styles.adContent}>
-            <Text style={styles.adTitle}>
-              Espaço publicitário
-            </Text>
+            <Text style={styles.adTitle}>Espaço publicitário</Text>
 
             <Text style={styles.adDescription}>
               Banner provisório para futura integração de anúncios
@@ -1078,125 +989,23 @@ export default function MapScreen() {
           </View>
         </Pressable>
       </View>
-
       {/* ======================================================
-          MENU DO PERFIL
-      ======================================================= */}
+    MENU RÁPIDO DO PERFIL
 
-      <Modal
+======================================================= */}
+
+      <ProfileQuickMenu
         visible={profileMenuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setProfileMenuVisible(false)}
-      >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setProfileMenuVisible(false)}
-        >
-          <Pressable
-            style={styles.profileMenu}
-            onPress={(event) => event.stopPropagation()}
-          >
-            <View style={styles.profileMenuHeader}>
-              <Image
-                source={{
-                  uri: profilePhoto || "https://i.pravatar.cc/150?img=11",
-                }}
-                style={styles.profileMenuAvatar}
-              />
-
-              <View style={styles.profileMenuIdentity}>
-                <Text style={styles.profileMenuName} numberOfLines={1}>
-                  {user?.name || "Usuário"}
-                </Text>
-
-                <Text style={styles.profileMenuEmail} numberOfLines={1}>
-                  {user?.email || "email não informado"}
-                </Text>
-              </View>
-
-              <View style={styles.verifiedBadge}>
-                <Ionicons
-                  name="checkmark"
-                  size={13}
-                  color={theme.colors.surface}
-                />
-              </View>
-            </View>
-
-            <View style={styles.menuDivider} />
-
-            <Pressable
-              style={styles.profileMenuItem}
-              onPress={() => {
-                setProfileMenuVisible(false);
-
-                setProfileDetailVisible(true);
-              }}
-            >
-              <View style={styles.menuItemIcon}>
-                <Ionicons
-                  name="person-outline"
-                  size={19}
-                  color={theme.colors.brand}
-                />
-              </View>
-
-              <View>
-                <Text style={styles.menuItemTitle}>Meu perfil</Text>
-
-                <Text style={styles.menuItemDescription}>
-                  Dados e preferências
-                </Text>
-              </View>
-
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={theme.colors.textBody}
-                style={styles.menuItemArrow}
-              />
-            </Pressable>
-
-            <Pressable
-              style={styles.profileMenuItem}
-              onPress={() => setProfileMenuVisible(false)}
-            >
-              <View style={styles.menuItemIcon}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={19}
-                  color={theme.colors.brand}
-                />
-              </View>
-
-              <View>
-                <Text style={styles.menuItemTitle}>Notificações</Text>
-
-                <Text style={styles.menuItemDescription}>
-                  Alertas e atualizações
-                </Text>
-              </View>
-
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>1</Text>
-              </View>
-            </Pressable>
-
-            <View style={styles.menuDivider} />
-
-            <Pressable style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color={theme.colors.semantic.danger.text}
-              />
-
-              <Text style={styles.logoutText}>Sair da conta</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+        profilePhoto={profilePhoto}
+        userName={user?.name || null}
+        userEmail={user?.email || null}
+        onClose={() => {
+          setProfileMenuVisible(false);
+        }}
+        onOpenProfile={() => {
+          setProfileDetailVisible(true);
+        }}
+      />
 
       {/* ======================================================
           FILTROS
@@ -1319,155 +1128,27 @@ export default function MapScreen() {
       </Modal>
 
       {/* ======================================================
-          DRAWER LATERAL
-          
-          "Meu perfil" NÃO aparece aqui.
-      ======================================================= */}
+    DRAWER LATERAL
 
-      {menuVisible && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-          }}
-        >
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.drawerOverlay,
-              {
-                opacity: overlayAnim,
-              },
-            ]}
-          />
+  
 
-          <Pressable style={styles.drawerTouchableArea} onPress={fecharMenu} />
+    Componente compartilhado entre Mapa e Feed.
+======================================================= */}
 
-          <Animated.View
-            style={[
-              styles.drawer,
-              {
-                width: DRAWER_WIDTH,
-                transform: [
-                  {
-                    translateX: drawerAnim,
-                  },
-                ],
-              },
-            ]}
-          >
-            <SafeAreaView
-              edges={["top", "bottom"]}
-              style={styles.drawerSafeArea}
-            >
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.drawerContent}
-              >
-                {/* HEADER */}
-
-                <View style={styles.drawerHeader}>
-                  <View style={styles.drawerBrandIcon}>
-                    <MaterialCommunityIcons
-                      name="paw"
-                      size={23}
-                      color={theme.colors.surface}
-                    />
-                  </View>
-
-                  <View style={styles.drawerBrandContent}>
-                    <Text style={styles.drawerBrandTitle}>PetRadar</Text>
-
-                    <Text style={styles.drawerBrandSubtitle}>
-                      Comunidade que cuida
-                    </Text>
-                  </View>
-
-                  <Pressable onPress={fecharMenu} style={styles.drawerClose}>
-                    <Ionicons
-                      name="close"
-                      size={21}
-                      color={theme.colors.textTitle}
-                    />
-                  </Pressable>
-                </View>
-
-                {/* USUÁRIO */}
-
-                <View style={styles.drawerUserCard}>
-                  <Image
-                    source={{
-                      uri: profilePhoto || "https://i.pravatar.cc/150?img=11",
-                    }}
-                    style={styles.drawerAvatar}
-                  />
-
-                  <View style={styles.drawerUserInfo}>
-                    <Text style={styles.drawerUserName} numberOfLines={1}>
-                      {user?.name || "Usuário"}
-                    </Text>
-
-                    <Text style={styles.drawerUserEmail} numberOfLines={1}>
-                      {user?.email || "Bem-vindo ao PetRadar"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.drawerUserStatus} />
-                </View>
-
-                {/* EXPLORAR */}
-
-                <Text style={styles.drawerSectionTitle}>EXPLORAR</Text>
-
-                <DrawerItem icon="map-outline" label="Mapa" active />
-
-                <DrawerItem icon="newspaper-outline" label="Feed" />
-
-                <DrawerItem icon="people-outline" label="ONGs" />
-
-                <DrawerItem icon="search-outline" label="Procura-se" />
-
-                <View style={styles.drawerDivider} />
-
-                {/* CONTA E OPÇÕES */}
-
-                <Text style={styles.drawerSectionTitle}>CONTA E OPÇÕES</Text>
-
-                <DrawerItem icon="notifications-outline" label="Notificações" />
-
-                <DrawerItem icon="settings-outline" label="Configurações" />
-
-                {/* SOS */}
-
-                <View style={styles.sosCard}>
-                  <View style={styles.sosIcon}>
-                    <MaterialCommunityIcons
-                      name="alarm-light-outline"
-                      size={21}
-                      color={theme.colors.semantic.danger.text}
-                    />
-                  </View>
-
-                  <View style={styles.sosContent}>
-                    <Text style={styles.sosTitle}>Emergência</Text>
-
-                    <Text style={styles.sosDescription}>Precisa de ajuda?</Text>
-                  </View>
-
-                  <Ionicons
-                    name="chevron-forward"
-                    size={18}
-                    color={theme.colors.semantic.danger.text}
-                  />
-                </View>
-              </ScrollView>
-            </SafeAreaView>
-          </Animated.View>
-        </View>
-      )}
+      <AppNavigationDrawer
+        visible={menuVisible}
+        activeScreen="Mapa"
+        profilePhoto={profilePhoto}
+        userName={user?.name || null}
+        userEmail={user?.email || null}
+        onClose={fecharMenu}
+        onNavigateMap={() => {
+          navigation.navigate("Mapa");
+        }}
+        onNavigateFeed={() => {
+          navigation.navigate("Feed");
+        }}
+      />
 
       {/* ======================================================
           PERFIL COMPLETO
@@ -1492,52 +1173,6 @@ export default function MapScreen() {
         onDeleted={handleOccurrenceDeleted}
       />
     </SafeAreaView>
-  );
-}
-
-/**
- * ============================================================
- * DRAWER ITEM
- * ============================================================
- */
-
-interface DrawerItemProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-}
-
-function DrawerItem({ icon, label, active = false, onPress }: DrawerItemProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.drawerItem,
-        active && styles.drawerItemActive,
-        pressed && styles.drawerItemPressed,
-      ]}
-    >
-      <View
-        style={[styles.drawerItemIcon, active && styles.drawerItemIconActive]}
-      >
-        <Ionicons
-          name={icon}
-          size={21}
-          color={active ? theme.colors.brand : theme.colors.textBody}
-        />
-      </View>
-
-      <Text
-        style={[styles.drawerItemText, active && styles.drawerItemTextActive]}
-      >
-        {label}
-      </Text>
-
-      {active && <View style={styles.drawerActiveIndicator} />}
-    </Pressable>
   );
 }
 
@@ -1966,8 +1601,6 @@ const styles = StyleSheet.create({
 
   primaryButtonContent: {
     flex: 1,
-
-     
   },
 
   primaryButtonLabel: {
@@ -2143,136 +1776,6 @@ const styles = StyleSheet.create({
 
   /**
    * ========================================================
-   * PERFIL
-   * ========================================================
-   */
-
-  modalBackdrop: {
-    flex: 1,
-    alignItems: "flex-end",
-    paddingTop: Platform.OS === "ios" ? 96 : 100,
-    paddingHorizontal: 16,
-    backgroundColor: "rgba(0,0,0,0.16)",
-  },
-
-  profileMenu: {
-    width: Math.min(width - 32, 340),
-    padding: 14,
-    borderRadius: 22,
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.elevation1,
-  },
-
-  profileMenuHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  profileMenuAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 17,
-    marginRight: 11,
-  },
-
-  profileMenuIdentity: {
-    flex: 1,
-  },
-
-  profileMenuName: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: theme.colors.textTitle,
-    marginBottom: 3,
-  },
-
-  profileMenuEmail: {
-    fontSize: 11,
-    color: theme.colors.textBody,
-  },
-
-  verifiedBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.semantic.success.text,
-  },
-
-  menuDivider: {
-    height: 1,
-    backgroundColor: theme.colors.inputBg,
-    marginVertical: 11,
-  },
-
-  profileMenuItem: {
-    minHeight: 54,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 15,
-    paddingHorizontal: 6,
-  },
-
-  menuItemIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.semantic.success.bg,
-    marginRight: 10,
-  },
-
-  menuItemTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: theme.colors.textTitle,
-  },
-
-  menuItemDescription: {
-    marginTop: 2,
-    fontSize: 10,
-    color: theme.colors.textBody,
-  },
-
-  menuItemArrow: {
-    marginLeft: "auto",
-  },
-
-  notificationBadge: {
-    marginLeft: "auto",
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.semantic.danger.text,
-  },
-
-  notificationBadgeText: {
-    color: theme.colors.surface,
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  logoutButton: {
-    height: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    borderRadius: 13,
-  },
-
-  logoutText: {
-    marginLeft: 10,
-    fontSize: 12,
-    fontWeight: "700",
-    color: theme.colors.semantic.danger.text,
-  },
-
-  /**
-   * ========================================================
    * FILTROS
    * ========================================================
    */
@@ -2419,201 +1922,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     color: theme.colors.surface,
-  },
-
-  /**
-   * ========================================================
-   * DRAWER
-   * ========================================================
-   */
-
-  drawerOverlay: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: "rgba(10,24,20,0.48)",
-    zIndex: 90,
-  },
-
-  drawerTouchableArea: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    zIndex: 91,
-  },
-
-  drawer: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: theme.colors.background,
-    borderTopRightRadius: 30,
-    borderBottomRightRadius: 30,
-    overflow: "hidden",
-    zIndex: 100,
-    ...theme.shadows.elevation1,
-  },
-
-  drawerSafeArea: {
-    flex: 1,
-  },
-
-  drawerContent: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 28,
-  },
-
-  drawerHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    marginBottom: 18,
-  },
-
-  drawerBrandIcon: {
-    width: 43,
-    height: 43,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.brand,
-  },
-
-  drawerBrandContent: {
-    marginLeft: 11,
-    flex: 1,
-  },
-
-  drawerBrandTitle: {
-    fontSize: 17,
-    fontWeight: "900",
-    color: theme.colors.textTitle,
-  },
-
-  drawerBrandSubtitle: {
-    marginTop: 1,
-    fontSize: 10,
-    color: theme.colors.textBody,
-  },
-
-  drawerClose: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.surface,
-  },
-
-  drawerUserCard: {
-    minHeight: 70,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 18,
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.elevation1,
-  },
-
-  drawerAvatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-  },
-
-  drawerUserInfo: {
-    flex: 1,
-    marginLeft: 10,
-  },
-
-  drawerUserName: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: theme.colors.textTitle,
-  },
-
-  drawerUserEmail: {
-    marginTop: 3,
-    fontSize: 10,
-    color: theme.colors.textBody,
-  },
-
-  drawerUserStatus: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: theme.colors.semantic.success.text,
-  },
-
-  drawerSectionTitle: {
-    marginTop: 25,
-    marginBottom: 9,
-    paddingHorizontal: 10,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1,
-    color: theme.colors.textBody,
-  },
-
-  drawerItem: {
-    minHeight: 49,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 7,
-    borderRadius: 15,
-    marginBottom: 3,
-  },
-
-  drawerItemActive: {
-    backgroundColor: theme.colors.semantic.success.bg,
-  },
-
-  drawerItemPressed: {
-    backgroundColor: theme.colors.inputBg,
-  },
-
-  drawerItemIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  drawerItemIconActive: {
-    backgroundColor: theme.colors.surface,
-  },
-
-  drawerItemText: {
-    marginLeft: 8,
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.colors.textTitle,
-  },
-
-  drawerItemTextActive: {
-    fontWeight: "800",
-    color: theme.colors.brand,
-  },
-
-  drawerActiveIndicator: {
-    width: 4,
-    height: 20,
-    borderRadius: 2,
-    marginLeft: "auto",
-    backgroundColor: theme.colors.brand,
-  },
-
-  drawerDivider: {
-    height: 1,
-    marginVertical: 12,
-    backgroundColor: theme.colors.inputBg,
   },
 
   /**

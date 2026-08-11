@@ -6,12 +6,15 @@ ARQUITETURA DO PROJETO - FRONTEND / MOBILE
 ├── src
 │   ├── components
 │   │   ├── AnimatedCTA.tsx
-│   │   └── OccurrenceDetailDrawer.tsx
+│   │   ├── AppNavigationDrawer.tsx
+│   │   ├── OccurrenceDetailDrawer.tsx
+│   │   └── ProfileQuickMenu.tsx
 │   ├── screens
 │   │   ├── CadastroOcorrenciaScreen.tsx
 │   │   ├── CadastroONGScreen.tsx
 │   │   ├── CadastroUserScreen.tsx
 │   │   ├── EsqueceuSenhaScreen.tsx
+│   │   ├── FeedNoticias.tsx
 │   │   ├── LoginScreen.tsx
 │   │   ├── MapScreen.tsx
 │   │   ├── ProfileDetailScreen.tsx
@@ -50,20 +53,23 @@ ROTAS E SEQUÊNCIA DOS ARQUIVOS INCLUÍDOS (ORDENADOS DE CIMA PARA BAIXO)
 06. mobile\index.ts
 07. mobile\package.json
 08. mobile\src\components\AnimatedCTA.tsx
-09. mobile\src\components\OccurrenceDetailDrawer.tsx
-10. mobile\src\screens\CadastroOcorrenciaScreen.tsx
-11. mobile\src\screens\CadastroONGScreen.tsx
-12. mobile\src\screens\CadastroUserScreen.tsx
-13. mobile\src\screens\EsqueceuSenhaScreen.tsx
-14. mobile\src\screens\LoginScreen.tsx
-15. mobile\src\screens\MapScreen.tsx
-16. mobile\src\screens\ProfileDetailScreen.tsx
-17. mobile\src\screens\RegistrarPet.tsx
-18. mobile\src\screens\TipoCadastroScreen.tsx
-19. mobile\src\services\api.ts
-20. mobile\src\store\useAuthStore.ts
-21. mobile\src\theme\colors.ts
-22. mobile\tsconfig.json
+09. mobile\src\components\AppNavigationDrawer.tsx
+10. mobile\src\components\OccurrenceDetailDrawer.tsx
+11. mobile\src\components\ProfileQuickMenu.tsx
+12. mobile\src\screens\CadastroOcorrenciaScreen.tsx
+13. mobile\src\screens\CadastroONGScreen.tsx
+14. mobile\src\screens\CadastroUserScreen.tsx
+15. mobile\src\screens\EsqueceuSenhaScreen.tsx
+16. mobile\src\screens\FeedNoticias.tsx
+17. mobile\src\screens\LoginScreen.tsx
+18. mobile\src\screens\MapScreen.tsx
+19. mobile\src\screens\ProfileDetailScreen.tsx
+20. mobile\src\screens\RegistrarPet.tsx
+21. mobile\src\screens\TipoCadastroScreen.tsx
+22. mobile\src\services\api.ts
+23. mobile\src\store\useAuthStore.ts
+24. mobile\src\theme\colors.ts
+25. mobile\tsconfig.json
 
 ================================================================================
 CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
@@ -144,11 +150,12 @@ import ProfileDetailScreen from './src/screens/ProfileDetailScreen';
 
 
 // Store do Zustand (Caminho corrigido para 'store' no singular)
-import { useAuthStore } from './src/store/useAuthStore'; 
+import { useAuthStore } from './src/store/useAuthStore';
 
 // Telas Reais
 import LoginScreen from './src/screens/LoginScreen';
 import MapScreen from './src/screens/MapScreen';
+import FeedNoticias from './src/screens/FeedNoticias';
 import CadastroUserScreen from './src/screens/CadastroUserScreen';
 import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
 import CadastroONGScreen from './src/screens/CadastroONGScreen';
@@ -181,14 +188,15 @@ export interface PetOcorrenciaPrefill {
 // Tipagem das Rotas da Aplicação Principal
 export type AppTabParamList = {
   Mapa: undefined;
+  Feed: undefined;
   SOS: undefined;
   Perfil: undefined;
   CadastroOcorrencia:
-    | {
-        pet?: PetOcorrenciaPrefill;
-        ocorrenciaId?: number;
-      }
-    | undefined;
+  | {
+    pet?: PetOcorrenciaPrefill;
+    ocorrenciaId?: number;
+  }
+  | undefined;
 };
 
 
@@ -224,14 +232,19 @@ function AuthNavigator() {
 
 function AppNavigator() {
   return (
-    <AppTabs.Navigator 
-      tabBar={() => null} 
-      screenOptions={{ 
-        headerShown: false, 
-        tabBarHideOnKeyboard: true 
+    <AppTabs.Navigator
+      tabBar={() => null}
+      screenOptions={{
+        headerShown: false,
+        tabBarHideOnKeyboard: true
       }}
     >
       <AppTabs.Screen name="Mapa" component={MapScreen} />
+      <AppTabs.Screen
+        name="Feed"
+        component={FeedNoticias}
+      />
+
       <AppTabs.Screen name="SOS" component={SOSScreen} />
       <AppTabs.Screen name="Perfil" component={ProfileScreen} />
       <AppTabs.Screen
@@ -299,12 +312,12 @@ CAMINHO: mobile\package.json
     "@react-navigation/native-stack": "^7.18.6",
     "@rnmapbox/maps": "^10.3.5",
     "axios": "^1.19.0",
-    "expo": "^57.0.11",
+    "expo": "~57.0.12",
     "expo-blur": "~57.0.2",
     "expo-font": "~57.0.1",
     "expo-haptics": "~57.0.1",
-    "expo-image-picker": "~57.0.8",
-    "expo-location": "~57.0.8",
+    "expo-image-picker": "~57.0.9",
+    "expo-location": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.2",
@@ -392,6 +405,1060 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+});
+
+================================================================================
+CAMINHO: mobile\src\components\AppNavigationDrawer.tsx
+================================================================================
+
+// ============================================================
+// AppNavigationDrawer.tsx
+//
+// Menu principal compartilhado do PetRadar.
+//
+// Utilizado por:
+// - MapScreen
+// - FeedNoticias
+//
+// Objetivo:
+// evitar duplicação do drawer de navegação.
+// ============================================================
+
+import React, {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+
+import {
+    Animated,
+    Dimensions,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+
+import {
+    Ionicons,
+    MaterialCommunityIcons,
+} from "@expo/vector-icons";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { theme } from "../theme/colors";
+
+// ============================================================
+// DIMENSÕES
+// ============================================================
+
+const { width } = Dimensions.get("window");
+
+const DRAWER_WIDTH = Math.min(
+    width * 0.84,
+    340,
+);
+
+// ============================================================
+// TIPAGEM
+// ============================================================
+
+export type AppNavigationScreen =
+    | "Mapa"
+    | "Feed";
+
+interface AppNavigationDrawerProps {
+    visible: boolean;
+
+    activeScreen: AppNavigationScreen;
+
+    profilePhoto: string | null;
+
+    userName?: string | null;
+    userEmail?: string | null;
+
+    onClose: () => void;
+
+    onNavigateMap: () => void;
+    onNavigateFeed: () => void;
+}
+
+interface DrawerItemProps {
+    icon: keyof typeof Ionicons.glyphMap;
+
+    label: string;
+
+    active?: boolean;
+
+    onPress?: () => void;
+}
+
+// ============================================================
+// ITEM DO DRAWER
+// ============================================================
+
+function DrawerItem({
+    icon,
+    label,
+    active = false,
+    onPress,
+}: DrawerItemProps) {
+    return (
+        <Pressable
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{
+                selected: active,
+            }}
+            style={({ pressed }) => [
+                styles.drawerItem,
+
+                active &&
+                    styles.drawerItemActive,
+
+                pressed &&
+                    styles.drawerItemPressed,
+            ]}
+        >
+            <View
+                style={[
+                    styles.drawerItemIcon,
+
+                    active &&
+                        styles.drawerItemIconActive,
+                ]}
+            >
+                <Ionicons
+                    name={icon}
+                    size={21}
+                    color={
+                        active
+                            ? theme.colors.brand
+                            : theme.colors.textBody
+                    }
+                />
+            </View>
+
+            <Text
+                style={[
+                    styles.drawerItemText,
+
+                    active &&
+                        styles.drawerItemTextActive,
+                ]}
+            >
+                {label}
+            </Text>
+
+            {active ? (
+                <View
+                    style={
+                        styles.drawerActiveIndicator
+                    }
+                />
+            ) : null}
+        </Pressable>
+    );
+}
+
+// ============================================================
+// COMPONENTE
+// ============================================================
+
+export default function AppNavigationDrawer({
+    visible,
+
+    activeScreen,
+
+    profilePhoto,
+
+    userName,
+    userEmail,
+
+    onClose,
+
+    onNavigateMap,
+    onNavigateFeed,
+}: AppNavigationDrawerProps) {
+    const translateX = useRef(
+        new Animated.Value(
+            -DRAWER_WIDTH,
+        ),
+    ).current;
+
+    const overlayOpacity = useRef(
+        new Animated.Value(0),
+    ).current;
+
+    const [mounted, setMounted] =
+        useState(visible);
+
+    // ========================================================
+    // ABERTURA / FECHAMENTO
+    // ========================================================
+
+    useEffect(() => {
+        if (visible) {
+            setMounted(true);
+
+            translateX.setValue(
+                -DRAWER_WIDTH,
+            );
+
+            overlayOpacity.setValue(0);
+
+            Animated.parallel([
+                Animated.spring(
+                    translateX,
+                    {
+                        toValue: 0,
+
+                        useNativeDriver: true,
+
+                        damping: 22,
+                        stiffness: 180,
+                    },
+                ),
+
+                Animated.timing(
+                    overlayOpacity,
+                    {
+                        toValue: 1,
+
+                        duration: 220,
+
+                        useNativeDriver: true,
+                    },
+                ),
+            ]).start();
+
+            return;
+        }
+
+        if (!mounted) {
+            return;
+        }
+
+        Animated.parallel([
+            Animated.timing(
+                translateX,
+                {
+                    toValue:
+                        -DRAWER_WIDTH,
+
+                    duration: 220,
+
+                    useNativeDriver: true,
+                },
+            ),
+
+            Animated.timing(
+                overlayOpacity,
+                {
+                    toValue: 0,
+
+                    duration: 180,
+
+                    useNativeDriver: true,
+                },
+            ),
+        ]).start(() => {
+            setMounted(false);
+        });
+    }, [
+        visible,
+        mounted,
+        translateX,
+        overlayOpacity,
+    ]);
+
+    // ========================================================
+    // FECHAR + EXECUTAR AÇÃO
+    // ========================================================
+
+    const fecharComAcao = (
+        action: () => void,
+    ) => {
+        Animated.parallel([
+            Animated.timing(
+                translateX,
+                {
+                    toValue:
+                        -DRAWER_WIDTH,
+
+                    duration: 220,
+
+                    useNativeDriver: true,
+                },
+            ),
+
+            Animated.timing(
+                overlayOpacity,
+                {
+                    toValue: 0,
+
+                    duration: 180,
+
+                    useNativeDriver: true,
+                },
+            ),
+        ]).start(() => {
+            setMounted(false);
+
+            onClose();
+
+            action();
+        });
+    };
+
+    // ========================================================
+    // NAVEGAÇÃO
+    // ========================================================
+
+    const handleMapa = () => {
+        if (
+            activeScreen === "Mapa"
+        ) {
+            onClose();
+
+            return;
+        }
+
+        fecharComAcao(
+            onNavigateMap,
+        );
+    };
+
+    const handleFeed = () => {
+        if (
+            activeScreen === "Feed"
+        ) {
+            onClose();
+
+            return;
+        }
+
+        fecharComAcao(
+            onNavigateFeed,
+        );
+    };
+
+    // ========================================================
+    // NÃO RENDERIZAR QUANDO FECHADO
+    // ========================================================
+
+    if (!mounted) {
+        return null;
+    }
+
+    // ========================================================
+    // RENDER
+    // ========================================================
+
+    return (
+        <View
+            style={
+                styles.drawerRoot
+            }
+        >
+            {/* ===============================================
+                OVERLAY
+            ================================================ */}
+
+            <Animated.View
+                pointerEvents="none"
+                style={[
+                    styles.drawerOverlay,
+                    {
+                        opacity:
+                            overlayOpacity,
+                    },
+                ]}
+            />
+
+            {/* ===============================================
+                ÁREA EXTERNA CLICÁVEL
+            ================================================ */}
+
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Fechar menu"
+                style={
+                    styles.drawerTouchableArea
+                }
+                onPress={onClose}
+            />
+
+            {/* ===============================================
+                DRAWER
+            ================================================ */}
+
+            <Animated.View
+                style={[
+                    styles.drawer,
+                    {
+                        width:
+                            DRAWER_WIDTH,
+
+                        transform: [
+                            {
+                                translateX,
+                            },
+                        ],
+                    },
+                ]}
+            >
+                <SafeAreaView
+                    edges={[
+                        "top",
+                        "bottom",
+                    ]}
+                    style={
+                        styles.drawerSafeArea
+                    }
+                >
+                    <ScrollView
+                        showsVerticalScrollIndicator={
+                            false
+                        }
+                        contentContainerStyle={
+                            styles.drawerContent
+                        }
+                    >
+                        {/* ===================================
+                            HEADER / MARCA
+                        ==================================== */}
+
+                        <View
+                            style={
+                                styles.drawerHeader
+                            }
+                        >
+                            <View
+                                style={
+                                    styles.drawerBrandIcon
+                                }
+                            >
+                                <MaterialCommunityIcons
+                                    name="paw"
+                                    size={23}
+                                    color={
+                                        theme
+                                            .colors
+                                            .surface
+                                    }
+                                />
+                            </View>
+
+                            <View
+                                style={
+                                    styles.drawerBrandContent
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.drawerBrandTitle
+                                    }
+                                >
+                                    PetRadar
+                                </Text>
+
+                                <Text
+                                    style={
+                                        styles.drawerBrandSubtitle
+                                    }
+                                >
+                                    Comunidade que cuida
+                                </Text>
+                            </View>
+
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel="Fechar menu"
+                                onPress={
+                                    onClose
+                                }
+                                style={
+                                    styles.drawerClose
+                                }
+                            >
+                                <Ionicons
+                                    name="close"
+                                    size={21}
+                                    color={
+                                        theme
+                                            .colors
+                                            .textTitle
+                                    }
+                                />
+                            </Pressable>
+                        </View>
+
+                        {/* ===================================
+                            USUÁRIO
+                        ==================================== */}
+
+                        <View
+                            style={
+                                styles.drawerUserCard
+                            }
+                        >
+                            <Image
+                                source={{
+                                    uri:
+                                        profilePhoto ||
+                                        "https://i.pravatar.cc/150?img=11",
+                                }}
+                                style={
+                                    styles.drawerAvatar
+                                }
+                            />
+
+                            <View
+                                style={
+                                    styles.drawerUserInfo
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.drawerUserName
+                                    }
+                                    numberOfLines={
+                                        1
+                                    }
+                                >
+                                    {userName ||
+                                        "Usuário"}
+                                </Text>
+
+                                <Text
+                                    style={
+                                        styles.drawerUserEmail
+                                    }
+                                    numberOfLines={
+                                        1
+                                    }
+                                >
+                                    {userEmail ||
+                                        "Bem-vindo ao PetRadar"}
+                                </Text>
+                            </View>
+
+                            <View
+                                style={
+                                    styles.drawerUserStatus
+                                }
+                            />
+                        </View>
+
+                        {/* ===================================
+                            EXPLORAR
+                        ==================================== */}
+
+                        <Text
+                            style={
+                                styles.drawerSectionTitle
+                            }
+                        >
+                            EXPLORAR
+                        </Text>
+
+                        <DrawerItem
+                            icon="map-outline"
+                            label="Mapa"
+                            active={
+                                activeScreen ===
+                                "Mapa"
+                            }
+                            onPress={
+                                handleMapa
+                            }
+                        />
+
+                        <DrawerItem
+                            icon="newspaper-outline"
+                            label="Feed"
+                            active={
+                                activeScreen ===
+                                "Feed"
+                            }
+                            onPress={
+                                handleFeed
+                            }
+                        />
+
+                        <DrawerItem
+                            icon="people-outline"
+                            label="ONGs"
+                        />
+
+                        <DrawerItem
+                            icon="search-outline"
+                            label="Procura-se"
+                        />
+
+                        <View
+                            style={
+                                styles.drawerDivider
+                            }
+                        />
+
+                        {/* ===================================
+                            CONTA E OPÇÕES
+                        ==================================== */}
+
+                        <Text
+                            style={
+                                styles.drawerSectionTitle
+                            }
+                        >
+                            CONTA E OPÇÕES
+                        </Text>
+
+                        <DrawerItem
+                            icon="notifications-outline"
+                            label="Notificações"
+                        />
+
+                        <DrawerItem
+                            icon="settings-outline"
+                            label="Configurações"
+                        />
+
+                        {/* ===================================
+                            SOS
+                        ==================================== */}
+
+                        <View
+                            style={
+                                styles.sosCard
+                            }
+                        >
+                            <View
+                                style={
+                                    styles.sosIcon
+                                }
+                            >
+                                <MaterialCommunityIcons
+                                    name="alarm-light-outline"
+                                    size={21}
+                                    color={
+                                        theme
+                                            .colors
+                                            .semantic
+                                            .danger
+                                            .text
+                                    }
+                                />
+                            </View>
+
+                            <View
+                                style={
+                                    styles.sosContent
+                                }
+                            >
+                                <Text
+                                    style={
+                                        styles.sosTitle
+                                    }
+                                >
+                                    Emergência
+                                </Text>
+
+                                <Text
+                                    style={
+                                        styles.sosDescription
+                                    }
+                                >
+                                    Precisa de ajuda?
+                                </Text>
+                            </View>
+
+                            <Ionicons
+                                name="chevron-forward"
+                                size={18}
+                                color={
+                                    theme
+                                        .colors
+                                        .semantic
+                                        .danger
+                                        .text
+                                }
+                            />
+                        </View>
+                    </ScrollView>
+                </SafeAreaView>
+            </Animated.View>
+        </View>
+    );
+}
+
+// ============================================================
+// ESTILOS
+// ============================================================
+
+const styles = StyleSheet.create({
+    drawerRoot: {
+        position: "absolute",
+
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+
+        zIndex: 90,
+    },
+
+    // ========================================================
+    // OVERLAY
+    // ========================================================
+
+    drawerOverlay: {
+        position: "absolute",
+
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+
+        backgroundColor:
+            "rgba(10,24,20,0.48)",
+
+        zIndex: 90,
+    },
+
+    drawerTouchableArea: {
+        position: "absolute",
+
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+
+        zIndex: 91,
+    },
+
+    // ========================================================
+    // DRAWER
+    // ========================================================
+
+    drawer: {
+        position: "absolute",
+
+        top: 0,
+        bottom: 0,
+        left: 0,
+
+        backgroundColor:
+            theme.colors.background,
+
+        borderTopRightRadius: 30,
+        borderBottomRightRadius: 30,
+
+        overflow: "hidden",
+
+        zIndex: 100,
+
+        ...theme.shadows.elevation1,
+    },
+
+    drawerSafeArea: {
+        flex: 1,
+    },
+
+    drawerContent: {
+        paddingHorizontal: 18,
+        paddingTop: 12,
+        paddingBottom: 28,
+    },
+
+    // ========================================================
+    // HEADER
+    // ========================================================
+
+    drawerHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+
+        paddingHorizontal: 4,
+
+        marginBottom: 18,
+    },
+
+    drawerBrandIcon: {
+        width: 43,
+        height: 43,
+
+        borderRadius: 14,
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        backgroundColor:
+            theme.colors.brand,
+    },
+
+    drawerBrandContent: {
+        marginLeft: 11,
+
+        flex: 1,
+    },
+
+    drawerBrandTitle: {
+        fontSize: 17,
+        fontWeight: "900",
+
+        color:
+            theme.colors.textTitle,
+    },
+
+    drawerBrandSubtitle: {
+        marginTop: 1,
+
+        fontSize: 10,
+
+        color:
+            theme.colors.textBody,
+    },
+
+    drawerClose: {
+        width: 38,
+        height: 38,
+
+        borderRadius: 13,
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        backgroundColor:
+            theme.colors.surface,
+    },
+
+    // ========================================================
+    // USUÁRIO
+    // ========================================================
+
+    drawerUserCard: {
+        minHeight: 70,
+
+        flexDirection: "row",
+        alignItems: "center",
+
+        padding: 10,
+
+        borderRadius: 18,
+
+        backgroundColor:
+            theme.colors.surface,
+
+        ...theme.shadows.elevation1,
+    },
+
+    drawerAvatar: {
+        width: 46,
+        height: 46,
+
+        borderRadius: 15,
+    },
+
+    drawerUserInfo: {
+        flex: 1,
+
+        marginLeft: 10,
+    },
+
+    drawerUserName: {
+        fontSize: 12,
+        fontWeight: "800",
+
+        color:
+            theme.colors.textTitle,
+    },
+
+    drawerUserEmail: {
+        marginTop: 3,
+
+        fontSize: 10,
+
+        color:
+            theme.colors.textBody,
+    },
+
+    drawerUserStatus: {
+        width: 9,
+        height: 9,
+
+        borderRadius: 5,
+
+        backgroundColor:
+            theme.colors.semantic.success
+                .text,
+    },
+
+    // ========================================================
+    // SEÇÕES
+    // ========================================================
+
+    drawerSectionTitle: {
+        marginTop: 25,
+        marginBottom: 9,
+
+        paddingHorizontal: 10,
+
+        fontSize: 9,
+        fontWeight: "900",
+
+        letterSpacing: 1,
+
+        color:
+            theme.colors.textBody,
+    },
+
+    drawerDivider: {
+        height: 1,
+
+        marginVertical: 12,
+
+        backgroundColor:
+            theme.colors.inputBg,
+    },
+
+    // ========================================================
+    // ITENS
+    // ========================================================
+
+    drawerItem: {
+        minHeight: 49,
+
+        flexDirection: "row",
+        alignItems: "center",
+
+        paddingHorizontal: 7,
+
+        borderRadius: 15,
+
+        marginBottom: 3,
+    },
+
+    drawerItemActive: {
+        backgroundColor:
+            theme.colors.semantic.success
+                .bg,
+    },
+
+    drawerItemPressed: {
+        backgroundColor:
+            theme.colors.inputBg,
+    },
+
+    drawerItemIcon: {
+        width: 38,
+        height: 38,
+
+        borderRadius: 12,
+
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    drawerItemIconActive: {
+        backgroundColor:
+            theme.colors.surface,
+    },
+
+    drawerItemText: {
+        marginLeft: 8,
+
+        fontSize: 13,
+        fontWeight: "600",
+
+        color:
+            theme.colors.textTitle,
+    },
+
+    drawerItemTextActive: {
+        fontWeight: "800",
+
+        color:
+            theme.colors.brand,
+    },
+
+    drawerActiveIndicator: {
+        width: 4,
+        height: 20,
+
+        borderRadius: 2,
+
+        marginLeft: "auto",
+
+        backgroundColor:
+            theme.colors.brand,
+    },
+
+    // ========================================================
+    // SOS
+    // ========================================================
+
+    sosCard: {
+        minHeight: 66,
+
+        flexDirection: "row",
+        alignItems: "center",
+
+        paddingHorizontal: 10,
+
+        marginTop: 24,
+
+        borderRadius: 18,
+
+        borderWidth: 1,
+
+        borderColor:
+            theme.colors.semantic.danger.bg,
+
+        backgroundColor:
+            theme.colors.semantic.danger.bg,
+    },
+
+    sosIcon: {
+        width: 39,
+        height: 39,
+
+        borderRadius: 13,
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        backgroundColor:
+            theme.colors.surface,
+    },
+
+    sosContent: {
+        flex: 1,
+
+        marginLeft: 10,
+    },
+
+    sosTitle: {
+        fontSize: 12,
+        fontWeight: "800",
+
+        color:
+            theme.colors.semantic.danger
+                .text,
+    },
+
+    sosDescription: {
+        marginTop: 2,
+
+        fontSize: 9,
+
+        color:
+            theme.colors.textBody,
+    },
 });
 
 ================================================================================
@@ -3101,6 +4168,624 @@ const styles = StyleSheet.create({
   },
 });
 
+
+================================================================================
+CAMINHO: mobile\src\components\ProfileQuickMenu.tsx
+================================================================================
+
+import React from "react";
+
+import {
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+
+import { Ionicons } from "@expo/vector-icons";
+
+import { theme } from "../theme/colors";
+import { useAuthStore } from "../store/useAuthStore";
+
+// ============================================================
+// DIMENSÕES
+// ============================================================
+
+const { width } = Dimensions.get("window");
+
+// ============================================================
+// TIPAGEM
+// ============================================================
+
+interface ProfileQuickMenuProps {
+    visible: boolean;
+
+    profilePhoto: string | null;
+
+    userName?: string | null;
+    userEmail?: string | null;
+
+    onClose: () => void;
+
+    onOpenProfile: () => void;
+
+    onOpenNotifications?: () => void;
+}
+
+// ============================================================
+// COMPONENTE
+// ============================================================
+
+export default function ProfileQuickMenu({
+    visible,
+
+    profilePhoto,
+
+    userName,
+    userEmail,
+
+    onClose,
+
+    onOpenProfile,
+    onOpenNotifications,
+}: ProfileQuickMenuProps) {
+    const logout = useAuthStore(
+        (state) => state.logout,
+    );
+
+    // ========================================================
+    // PERFIL COMPLETO
+    // ========================================================
+
+    const handleOpenProfile = () => {
+        onClose();
+
+        onOpenProfile();
+    };
+
+    // ========================================================
+    // NOTIFICAÇÕES
+    // ========================================================
+
+    const handleOpenNotifications = () => {
+        onClose();
+
+        onOpenNotifications?.();
+    };
+
+    // ========================================================
+    // LOGOUT
+    // ========================================================
+
+    const handleLogout = () => {
+        onClose();
+
+        Alert.alert(
+            "Sair da conta",
+            `Olá, ${
+                userName || "Usuário"
+            }. Tem certeza de que deseja encerrar a sessão?`,
+            [
+                {
+                    text: "Cancelar",
+                    style: "cancel",
+                },
+                {
+                    text: "Sair",
+                    style: "destructive",
+                    onPress: () => logout(),
+                },
+            ],
+        );
+    };
+
+    // ========================================================
+    // RENDER
+    // ========================================================
+
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            {/* ===============================================
+                FUNDO
+            ================================================ */}
+
+            <Pressable
+                style={styles.modalBackdrop}
+                onPress={onClose}
+            >
+                {/* ===========================================
+                    MENU
+                ============================================ */}
+
+                <Pressable
+                    style={styles.profileMenu}
+                    onPress={(event) =>
+                        event.stopPropagation()
+                    }
+                >
+                    {/* =======================================
+                        USUÁRIO
+                    ======================================== */}
+
+                    <View
+                        style={
+                            styles.profileMenuHeader
+                        }
+                    >
+                        <Image
+                            source={{
+                                uri:
+                                    profilePhoto ||
+                                    "https://i.pravatar.cc/150?img=11",
+                            }}
+                            style={
+                                styles.profileMenuAvatar
+                            }
+                        />
+
+                        <View
+                            style={
+                                styles.profileMenuIdentity
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.profileMenuName
+                                }
+                                numberOfLines={1}
+                            >
+                                {userName ||
+                                    "Usuário"}
+                            </Text>
+
+                            <Text
+                                style={
+                                    styles.profileMenuEmail
+                                }
+                                numberOfLines={1}
+                            >
+                                {userEmail ||
+                                    "email não informado"}
+                            </Text>
+                        </View>
+
+                        <View
+                            style={
+                                styles.verifiedBadge
+                            }
+                        >
+                            <Ionicons
+                                name="checkmark"
+                                size={13}
+                                color={
+                                    theme.colors
+                                        .surface
+                                }
+                            />
+                        </View>
+                    </View>
+
+                    <View
+                        style={
+                            styles.menuDivider
+                        }
+                    />
+
+                    {/* =======================================
+                        MEU PERFIL
+                    ======================================== */}
+
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Meu perfil"
+                        onPress={
+                            handleOpenProfile
+                        }
+                        style={({ pressed }) => [
+                            styles.profileMenuItem,
+
+                            pressed &&
+                                styles.profileMenuItemPressed,
+                        ]}
+                    >
+                        <View
+                            style={
+                                styles.menuItemIcon
+                            }
+                        >
+                            <Ionicons
+                                name="person-outline"
+                                size={19}
+                                color={
+                                    theme.colors
+                                        .brand
+                                }
+                            />
+                        </View>
+
+                        <View
+                            style={
+                                styles.menuItemContent
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.menuItemTitle
+                                }
+                            >
+                                Meu perfil
+                            </Text>
+
+                            <Text
+                                style={
+                                    styles.menuItemDescription
+                                }
+                            >
+                                Dados e preferências
+                            </Text>
+                        </View>
+
+                        <Ionicons
+                            name="chevron-forward"
+                            size={18}
+                            color={
+                                theme.colors
+                                    .textBody
+                            }
+                            style={
+                                styles.menuItemArrow
+                            }
+                        />
+                    </Pressable>
+
+                    {/* =======================================
+                        NOTIFICAÇÕES
+                    ======================================== */}
+
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Notificações"
+                        onPress={
+                            handleOpenNotifications
+                        }
+                        style={({ pressed }) => [
+                            styles.profileMenuItem,
+
+                            pressed &&
+                                styles.profileMenuItemPressed,
+                        ]}
+                    >
+                        <View
+                            style={
+                                styles.menuItemIcon
+                            }
+                        >
+                            <Ionicons
+                                name="notifications-outline"
+                                size={19}
+                                color={
+                                    theme.colors
+                                        .brand
+                                }
+                            />
+                        </View>
+
+                        <View
+                            style={
+                                styles.menuItemContent
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.menuItemTitle
+                                }
+                            >
+                                Notificações
+                            </Text>
+
+                            <Text
+                                style={
+                                    styles.menuItemDescription
+                                }
+                            >
+                                Alertas e atualizações
+                            </Text>
+                        </View>
+
+                        <View
+                            style={
+                                styles.notificationBadge
+                            }
+                        >
+                            <Text
+                                style={
+                                    styles.notificationBadgeText
+                                }
+                            >
+                                1
+                            </Text>
+                        </View>
+                    </Pressable>
+
+                    <View
+                        style={
+                            styles.menuDivider
+                        }
+                    />
+
+                    {/* =======================================
+                        LOGOUT
+                    ======================================== */}
+
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Sair da conta"
+                        onPress={
+                            handleLogout
+                        }
+                        style={({ pressed }) => [
+                            styles.logoutButton,
+
+                            pressed &&
+                                styles.profileMenuItemPressed,
+                        ]}
+                    >
+                        <Ionicons
+                            name="log-out-outline"
+                            size={20}
+                            color={
+                                theme.colors
+                                    .semantic
+                                    .danger
+                                    .text
+                            }
+                        />
+
+                        <Text
+                            style={
+                                styles.logoutText
+                            }
+                        >
+                            Sair da conta
+                        </Text>
+                    </Pressable>
+                </Pressable>
+            </Pressable>
+        </Modal>
+    );
+}
+
+// ============================================================
+// ESTILOS
+// ============================================================
+
+const styles = StyleSheet.create({
+    modalBackdrop: {
+        flex: 1,
+
+        alignItems: "flex-end",
+
+        paddingTop:
+            Platform.OS === "ios"
+                ? 96
+                : 100,
+
+        paddingHorizontal: 16,
+
+        backgroundColor:
+            "rgba(0,0,0,0.16)",
+    },
+
+    profileMenu: {
+        width: Math.min(
+            width - 32,
+            340,
+        ),
+
+        padding: 14,
+
+        borderRadius: 22,
+
+        backgroundColor:
+            theme.colors.surface,
+
+        ...theme.shadows.elevation1,
+    },
+
+    // ========================================================
+    // USUÁRIO
+    // ========================================================
+
+    profileMenuHeader: {
+        flexDirection: "row",
+
+        alignItems: "center",
+    },
+
+    profileMenuAvatar: {
+        width: 48,
+        height: 48,
+
+        borderRadius: 17,
+
+        marginRight: 11,
+    },
+
+    profileMenuIdentity: {
+        flex: 1,
+    },
+
+    profileMenuName: {
+        fontSize: 14,
+        fontWeight: "800",
+
+        color:
+            theme.colors.textTitle,
+
+        marginBottom: 3,
+    },
+
+    profileMenuEmail: {
+        fontSize: 11,
+
+        color:
+            theme.colors.textBody,
+    },
+
+    verifiedBadge: {
+        width: 22,
+        height: 22,
+
+        borderRadius: 11,
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        backgroundColor:
+            theme.colors.semantic
+                .success.text,
+    },
+
+    // ========================================================
+    // DIVISOR
+    // ========================================================
+
+    menuDivider: {
+        height: 1,
+
+        backgroundColor:
+            theme.colors.inputBg,
+
+        marginVertical: 11,
+    },
+
+    // ========================================================
+    // ITENS
+    // ========================================================
+
+    profileMenuItem: {
+        minHeight: 54,
+
+        flexDirection: "row",
+
+        alignItems: "center",
+
+        borderRadius: 15,
+
+        paddingHorizontal: 6,
+    },
+
+    profileMenuItemPressed: {
+        backgroundColor:
+            theme.colors.inputBg,
+    },
+
+    menuItemIcon: {
+        width: 38,
+        height: 38,
+
+        borderRadius: 12,
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        backgroundColor:
+            theme.colors.semantic
+                .success.bg,
+
+        marginRight: 10,
+    },
+
+    menuItemContent: {
+        flexShrink: 1,
+    },
+
+    menuItemTitle: {
+        fontSize: 12,
+        fontWeight: "700",
+
+        color:
+            theme.colors.textTitle,
+    },
+
+    menuItemDescription: {
+        marginTop: 2,
+
+        fontSize: 10,
+
+        color:
+            theme.colors.textBody,
+    },
+
+    menuItemArrow: {
+        marginLeft: "auto",
+    },
+
+    // ========================================================
+    // NOTIFICAÇÕES
+    // ========================================================
+
+    notificationBadge: {
+        marginLeft: "auto",
+
+        width: 22,
+        height: 22,
+
+        borderRadius: 11,
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        backgroundColor:
+            theme.colors.semantic
+                .danger.text,
+    },
+
+    notificationBadgeText: {
+        color:
+            theme.colors.surface,
+
+        fontSize: 10,
+        fontWeight: "800",
+    },
+
+    // ========================================================
+    // LOGOUT
+    // ========================================================
+
+    logoutButton: {
+        height: 44,
+
+        flexDirection: "row",
+
+        alignItems: "center",
+
+        paddingHorizontal: 8,
+
+        borderRadius: 13,
+    },
+
+    logoutText: {
+        marginLeft: 10,
+
+        fontSize: 12,
+        fontWeight: "700",
+
+        color:
+            theme.colors.semantic
+                .danger.text,
+    },
+});
 
 ================================================================================
 CAMINHO: mobile\src\screens\CadastroOcorrenciaScreen.tsx
@@ -7362,6 +9047,2200 @@ const styles = StyleSheet.create({
 });
 
 ================================================================================
+CAMINHO: mobile\src\screens\FeedNoticias.tsx
+================================================================================
+
+// ============================================================
+// D:\PetRadar\src\mobile\src\screens\FeedNoticias.tsx
+// ============================================================
+
+import React, { useCallback, useMemo, useRef, useState } from "react";
+
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+
+import * as Location from "expo-location";
+
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+
+import type { AppTabParamList } from "../../App";
+
+import api from "../services/api";
+
+import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
+
+import AppNavigationDrawer from "../components/AppNavigationDrawer";
+
+import ProfileQuickMenu from "../components/ProfileQuickMenu";
+
+import ProfileDetailScreen, {
+    type ProfileUpdateResult,
+} from "./ProfileDetailScreen";
+
+import { theme } from "../theme/colors";
+
+import { useAuthStore } from "../store/useAuthStore";
+
+// ============================================================
+// CONSTANTES
+// ============================================================
+
+const DEFAULT_SEARCH_RADIUS_KM = 10;
+const MIN_SEARCH_RADIUS_KM = 1;
+const MAX_SEARCH_RADIUS_KM = 100;
+
+// ============================================================
+// TIPAGEM
+// ============================================================
+
+interface OcorrenciaFeed {
+  id_ocorrencia: number;
+  id_conta: number;
+
+  tipo_ocorrencia: string;
+  status_badge: string;
+  tipo_animal: string;
+
+  foto: string;
+
+  nivel_urgencia: string;
+  data_ocorrencia: string;
+
+  endereco_localizacao?: string | null;
+
+  latitude: number;
+  longitude: number;
+
+  distancia_km?: number | null;
+
+}
+type RecarregarListaOcorrencias =
+    () => void | Promise<void>;
+
+type FiltroFeed = "TODAS" | "PERDIDOS" | "AVISTADOS" | "RUA" | "URGENTES";
+
+interface FiltroConfig {
+  id: FiltroFeed;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}
+
+interface StatusVisual {
+  label: string;
+  textColor: string;
+  backgroundColor: string;
+}
+
+interface OccurrenceCardProps {
+  occurrence: OcorrenciaFeed;
+  onPress: (occurrenceId: number) => void;
+}
+
+// ============================================================
+// FILTROS
+// ============================================================
+
+const FILTROS: FiltroConfig[] = [
+  {
+    id: "TODAS",
+    label: "Todas",
+    icon: "apps-outline",
+  },
+  {
+    id: "PERDIDOS",
+    label: "Perdidos",
+    icon: "paw-outline",
+  },
+  {
+    id: "AVISTADOS",
+    label: "Avistados",
+    icon: "eye-outline",
+  },
+  {
+    id: "RUA",
+    label: "Animal de rua",
+    icon: "home-outline",
+  },
+  {
+    id: "URGENTES",
+    label: "Urgentes",
+    icon: "warning-outline",
+  },
+];
+
+// ============================================================
+// UTILITÁRIOS
+// ============================================================
+
+function normalizarTexto(valor: string | null | undefined) {
+  return (valor ?? "")
+    .trim()
+    .toLocaleLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function capitalizar(valor: string) {
+  const texto = valor.trim().toLocaleLowerCase().replace(/_/g, " ");
+
+  if (!texto) {
+    return "Animal";
+  }
+
+  return texto.charAt(0).toLocaleUpperCase() + texto.slice(1);
+}
+
+function formatarDistancia(distanciaKm: number | null | undefined) {
+  const distancia = Number(distanciaKm);
+
+  if (!Number.isFinite(distancia) || distancia < 0) {
+    return "Distância indisponível";
+  }
+
+  if (distancia < 1) {
+    return `${Math.round(distancia * 1000)} m`;
+  }
+
+  return `${distancia.toLocaleString("pt-BR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })} km`;
+}
+
+function formatarTempoRelativo(data: string) {
+  const date = new Date(data);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Data não informada";
+  }
+
+  const diferencaMs = Date.now() - date.getTime();
+
+  if (diferencaMs <= 0) {
+    return "Agora";
+  }
+
+  const minutos = Math.floor(diferencaMs / (1000 * 60));
+
+  if (minutos < 1) {
+    return "Agora";
+  }
+
+  if (minutos < 60) {
+    return `há ${minutos} min`;
+  }
+
+  const horas = Math.floor(minutos / 60);
+
+  if (horas < 24) {
+    return horas === 1 ? "há 1 hora" : `há ${horas} horas`;
+  }
+
+  const dias = Math.floor(horas / 24);
+
+  if (dias < 7) {
+    return dias === 1 ? "há 1 dia" : `há ${dias} dias`;
+  }
+
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function obterStatusVisual(occurrence: OcorrenciaFeed): StatusVisual {
+  const status = normalizarTexto(occurrence.status_badge);
+
+  if (status.includes("perdid")) {
+    return {
+      label: "Perdido",
+      textColor: theme.colors.semantic.danger.text,
+      backgroundColor: theme.colors.semantic.danger.bg,
+    };
+  }
+
+  if (status.includes("avist")) {
+    return {
+      label: "Avistado",
+      textColor: theme.colors.semantic.warning.text,
+      backgroundColor: theme.colors.semantic.warning.bg,
+    };
+  }
+
+  return {
+    label: "Animal de rua",
+    textColor: theme.colors.semantic.success.text,
+    backgroundColor: theme.colors.semantic.success.bg,
+  };
+}
+
+function obterTituloOcorrencia(occurrence: OcorrenciaFeed) {
+  const animal = capitalizar(occurrence.tipo_animal);
+
+  const status = normalizarTexto(occurrence.status_badge);
+
+  if (status.includes("perdid")) {
+    return `${animal} perdido`;
+  }
+
+  if (status.includes("avist")) {
+    return `${animal} avistado`;
+  }
+
+  return `${animal} precisa de ajuda`;
+}
+
+function ehUrgente(nivelUrgencia: string) {
+  const urgencia = normalizarTexto(nivelUrgencia);
+
+  return urgencia.includes("alta") || urgencia.includes("crit");
+}
+
+function obterUrgenciaVisual(nivelUrgencia: string) {
+  const urgencia = normalizarTexto(nivelUrgencia);
+
+  if (urgencia.includes("crit") || urgencia.includes("alta")) {
+    return {
+      color: theme.colors.semantic.danger.text,
+      background: theme.colors.semantic.danger.bg,
+    };
+  }
+
+  if (urgencia.includes("moder")) {
+    return {
+      color: theme.colors.semantic.warning.text,
+      background: theme.colors.semantic.warning.bg,
+    };
+  }
+
+  return {
+    color: theme.colors.semantic.success.text,
+    background: theme.colors.semantic.success.bg,
+  };
+}
+
+// ============================================================
+// CARD DA OCORRÊNCIA
+// ============================================================
+
+function OccurrenceCard({ occurrence, onPress }: OccurrenceCardProps) {
+  const status = obterStatusVisual(occurrence);
+
+  const urgencia = obterUrgenciaVisual(occurrence.nivel_urgencia);
+
+  const fotoValida =
+    typeof occurrence.foto === "string" && occurrence.foto.trim().length > 0;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Abrir detalhes de ${obterTituloOcorrencia(
+        occurrence,
+      )}`}
+      accessibilityHint="Abre os detalhes completos da ocorrência"
+      onPress={() => onPress(occurrence.id_ocorrencia)}
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+    >
+      {/* FOTO */}
+
+      <View style={styles.imageContainer}>
+        {fotoValida ? (
+          <Image
+            source={{
+              uri: occurrence.foto,
+            }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.imageFallback}>
+            <MaterialCommunityIcons
+              name="paw"
+              size={42}
+              color={theme.colors.brand}
+            />
+
+            <Text style={styles.imageFallbackText}>Foto indisponível</Text>
+          </View>
+        )}
+
+        {/* STATUS */}
+
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor: status.backgroundColor,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.statusDot,
+              {
+                backgroundColor: status.textColor,
+              },
+            ]}
+          />
+
+          <Text
+            style={[
+              styles.statusText,
+              {
+                color: status.textColor,
+              },
+            ]}
+          >
+            {status.label}
+          </Text>
+        </View>
+
+        {/* DISTÂNCIA */}
+
+        <View style={styles.distanceBadge}>
+          <Ionicons name="location" size={13} color={theme.colors.brand} />
+
+          <Text style={styles.distanceText}>
+            {formatarDistancia(occurrence.distancia_km)}
+          </Text>
+        </View>
+      </View>
+
+      {/* CONTEÚDO */}
+
+      <View style={styles.cardContent}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardTitleContainer}>
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {obterTituloOcorrencia(occurrence)}
+            </Text>
+
+            <Text style={styles.timeText}>
+              {formatarTempoRelativo(occurrence.data_ocorrencia)}
+            </Text>
+          </View>
+
+          <View style={styles.animalIcon}>
+            <MaterialCommunityIcons
+              name={
+                normalizarTexto(occurrence.tipo_animal).includes("gato")
+                  ? "cat"
+                  : "dog"
+              }
+              size={22}
+              color={theme.colors.brand}
+            />
+          </View>
+        </View>
+
+        {/* LOCALIZAÇÃO */}
+
+        <View style={styles.locationRow}>
+          <View style={styles.locationIcon}>
+            <Ionicons
+              name="location-outline"
+              size={17}
+              color={theme.colors.brand}
+            />
+          </View>
+
+          <Text style={styles.locationText} numberOfLines={2}>
+            {occurrence.endereco_localizacao?.trim() ||
+              "Localização informada no mapa"}
+          </Text>
+        </View>
+
+        {/* DIVISOR */}
+
+        <View style={styles.divider} />
+
+        {/* FOOTER */}
+
+        <View style={styles.cardFooter}>
+          <View
+            style={[
+              styles.urgencyBadge,
+              {
+                backgroundColor: urgencia.background,
+              },
+            ]}
+          >
+            <Ionicons
+              name="alert-circle-outline"
+              size={14}
+              color={urgencia.color}
+            />
+
+            <Text
+              style={[
+                styles.urgencyText,
+                {
+                  color: urgencia.color,
+                },
+              ]}
+            >
+              {occurrence.nivel_urgencia || "Moderado"}
+            </Text>
+          </View>
+
+          <Text style={styles.registryText}>
+            Registro #{occurrence.id_ocorrencia}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+// ============================================================
+// TELA
+// ============================================================
+
+export default function FeedNoticias() {
+  const navigation = useNavigation<BottomTabNavigationProp<AppTabParamList>>();
+
+  const user = useAuthStore((state) => state.user);
+
+  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<
+    number | null
+  >(null);
+
+  const [ocorrencias, setOcorrencias] = useState<OcorrenciaFeed[]>([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [error, setError] = useState<string | null>(null);
+
+  const [localizacaoNegada, setLocalizacaoNegada] = useState(false);
+
+  const [raioPesquisaKm, setRaioPesquisaKm] = useState(
+    DEFAULT_SEARCH_RADIUS_KM,
+  );
+
+  const [search, setSearch] = useState("");
+
+  const [filtro, setFiltro] = useState<FiltroFeed>("TODAS");
+
+
+// ==========================================================
+// LISTA QUE ORIGINOU A ABERTURA DA OCORRÊNCIA
+// ==========================================================
+
+// [ALTERE AQUI]
+const recarregarListaOrigemRef =
+    useRef<
+        RecarregarListaOcorrencias | null
+    >(null);
+
+  // ==========================================================
+  // NAVEGAÇÃO / PERFIL
+  // ==========================================================
+
+  //
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  //
+  // Será utilizado no próximo passo para o menu rápido
+  // do avatar.
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+
+  //
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
+  const [
+    profileDetailVisible,
+    setProfileDetailVisible,
+] = useState(false);
+  // ==========================================================
+  // CARREGAR FEED
+  // ==========================================================
+
+  const carregarFeed = useCallback(
+    async (modo: "normal" | "refresh" = "normal") => {
+      if (modo === "refresh") {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      setError(null);
+
+      try {
+        // ------------------------------------------------------
+        // 1. RAIO DO PERFIL
+        // ------------------------------------------------------
+
+        let raioAtual = DEFAULT_SEARCH_RADIUS_KM;
+
+        try {
+          const profileResponse = await api.get("/auth/me");
+
+          setProfilePhoto(profileResponse.data?.foto_perfil ?? null);
+
+          const raioRecebido = Number(profileResponse.data?.raio_pesquisa_km);
+
+          if (Number.isFinite(raioRecebido)) {
+            raioAtual = Math.min(
+              MAX_SEARCH_RADIUS_KM,
+              Math.max(MIN_SEARCH_RADIUS_KM, raioRecebido),
+            );
+          }
+        } catch (profileError) {
+          console.warn(
+            "[FeedNoticias] Não foi possível carregar o raio do perfil:",
+            profileError,
+          );
+        }
+
+        setRaioPesquisaKm(raioAtual);
+
+        // ------------------------------------------------------
+        // 2. PERMISSÃO DE LOCALIZAÇÃO
+        // ------------------------------------------------------
+
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== "granted") {
+          setLocalizacaoNegada(true);
+          setOcorrencias([]);
+          return;
+        }
+
+        setLocalizacaoNegada(false);
+
+        // ------------------------------------------------------
+        // 3. LOCALIZAÇÃO ATUAL
+        // ------------------------------------------------------
+
+        const currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        // ------------------------------------------------------
+        // 4. OCORRÊNCIAS PRÓXIMAS
+        // ------------------------------------------------------
+
+        const response = await api.get<OcorrenciaFeed[]>(
+          "/ocorrencias/proximas",
+          {
+            params: {
+              lat: currentLocation.coords.latitude,
+
+              lng: currentLocation.coords.longitude,
+
+              raio_km: raioAtual,
+            },
+          },
+        );
+
+        const dados = Array.isArray(response.data) ? response.data : [];
+
+        const ocorrenciasValidas = dados.filter(
+          (occurrence) =>
+            Number.isFinite(Number(occurrence.latitude)) &&
+            Number.isFinite(Number(occurrence.longitude)),
+        );
+
+        // IMPORTANTE:
+        // não ordenamos novamente aqui.
+        //
+        // O backend já deve devolver:
+        //
+        // mais perto -> mais distante
+        //
+        // conforme implementado no PASSO 1.
+
+        setOcorrencias(ocorrenciasValidas);
+      } catch (err: unknown) {
+        console.warn("[FeedNoticias] Erro ao carregar feed:", err);
+
+        setOcorrencias([]);
+
+        setError("Não foi possível carregar as ocorrências próximas.");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [],
+  );
+
+  // ==========================================================
+  // ATUALIZAR AO ENTRAR NA TELA
+  // ==========================================================
+
+useFocusEffect(
+    useCallback(() => {
+        const atualizarFeed =
+            async () => {
+                // ==================================================
+                // 1. RECARREGA O FEED
+                // ==================================================
+
+                await carregarFeed();
+
+                // ==================================================
+                // 2. VERIFICA SE A OCORRÊNCIA VEIO DO PERFIL
+                // ==================================================
+
+                const recarregarListaOrigem =
+                    recarregarListaOrigemRef.current;
+
+                if (
+                    !recarregarListaOrigem
+                ) {
+                    return;
+                }
+
+                // Limpa antes de executar para evitar
+                // chamadas duplicadas em futuros focuses.
+                recarregarListaOrigemRef.current =
+                    null;
+
+                // ==================================================
+                // 3. ATUALIZA A LISTA DO PERFIL
+                // ==================================================
+
+                await recarregarListaOrigem();
+            };
+
+        void atualizarFeed();
+    }, [carregarFeed]),
+);
+
+  // ==========================================================
+// PERFIL ATUALIZADO
+// ==========================================================
+
+// [ALTERE AQUI]
+const handleProfileUpdated =
+    useCallback(
+        (
+            updatedProfile: ProfileUpdateResult,
+        ) => {
+            // Atualização imediata do avatar,
+            // caso a foto tenha sido alterada.
+            if (
+                updatedProfile.foto_perfil !==
+                undefined
+            ) {
+                setProfilePhoto(
+                    updatedProfile.foto_perfil ??
+                        null,
+                );
+            }
+
+            // Recarrega o estado oficial do perfil
+            // e as ocorrências usando o novo raio.
+            void carregarFeed();
+        },
+        [carregarFeed],
+    );
+
+  // ==========================================================
+  // DETALHES DA OCORRÊNCIA
+  // ==========================================================
+
+const abrirDetalheOcorrencia =
+    useCallback(
+        (
+            occurrenceId: number,
+            recarregarLista?:
+                RecarregarListaOcorrencias,
+        ) => {
+            recarregarListaOrigemRef.current =
+                recarregarLista ?? null;
+
+            setSelectedOccurrenceId(
+                occurrenceId,
+            );
+        },
+        [],
+    );
+
+  const handleOccurrenceEdit = useCallback(
+    (occurrenceId: number) => {
+      navigation.navigate("CadastroOcorrencia", {
+        ocorrenciaId: occurrenceId,
+      });
+    },
+    [navigation],
+  );
+
+const handleOccurrenceDeleted =
+    useCallback(
+        async (
+            occurrenceId: number,
+        ) => {
+            // ==================================================
+            // 1. REMOVE IMEDIATAMENTE DO FEED
+            // ==================================================
+
+            setOcorrencias((atuais) =>
+                atuais.filter(
+                    (occurrence) =>
+                        occurrence.id_ocorrencia !==
+                        occurrenceId,
+                ),
+            );
+
+            // ==================================================
+            // 2. RECUPERA A LISTA QUE ABRIU O DETALHE
+            // ==================================================
+
+            const recarregarListaOrigem =
+                recarregarListaOrigemRef.current;
+
+            recarregarListaOrigemRef.current =
+                null;
+
+            // ==================================================
+            // 3. ATUALIZA AS LISTAS
+            // ==================================================
+
+            const atualizacoes:
+                Promise<unknown>[] = [
+                    carregarFeed("refresh"),
+                ];
+
+            // Se a ocorrência foi aberta pelo Perfil,
+            // atualiza também as ocorrências do Perfil.
+            if (
+                recarregarListaOrigem
+            ) {
+                atualizacoes.push(
+                    Promise.resolve().then(
+                        recarregarListaOrigem,
+                    ),
+                );
+            }
+
+            await Promise.allSettled(
+                atualizacoes,
+            );
+        },
+        [carregarFeed],
+    );
+
+  // ==========================================================
+  // NAVEGAÇÃO DO FEED
+  // ==========================================================
+
+  //
+  const abrirMenu = useCallback(() => {
+    setMenuVisible(true);
+  }, []);
+
+  //
+  const fecharMenu = useCallback(() => {
+    setMenuVisible(false);
+  }, []);
+
+  const registrarOcorrencia = useCallback(() => {
+    navigation.navigate("CadastroOcorrencia");
+  }, [navigation]);
+  // ==========================================================
+  // BUSCA + FILTROS
+  // ==========================================================
+
+  const ocorrenciasFiltradas = useMemo(() => {
+    const termo = normalizarTexto(search);
+
+    return ocorrencias.filter((occurrence) => {
+      const correspondeBusca =
+        !termo ||
+        [
+          occurrence.tipo_animal,
+          occurrence.tipo_ocorrencia,
+          occurrence.status_badge,
+          occurrence.nivel_urgencia,
+          occurrence.endereco_localizacao,
+        ].some((valor) => normalizarTexto(valor).includes(termo));
+
+      if (!correspondeBusca) {
+        return false;
+      }
+
+      const status = normalizarTexto(occurrence.status_badge);
+
+      switch (filtro) {
+        case "PERDIDOS":
+          return status.includes("perdid");
+
+        case "AVISTADOS":
+          return status.includes("avist");
+
+        case "RUA":
+          return (
+            status.includes("rua") ||
+            normalizarTexto(occurrence.tipo_ocorrencia).includes(
+              "animal_de_rua",
+            )
+          );
+
+        case "URGENTES":
+          return ehUrgente(occurrence.nivel_urgencia);
+
+        case "TODAS":
+        default:
+          return true;
+      }
+    });
+  }, [ocorrencias, search, filtro]);
+
+  // ==========================================================
+  // LOADING INICIAL
+  // ==========================================================
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.stateContainer}>
+          <View style={styles.stateIcon}>
+            <MaterialCommunityIcons
+              name="paw"
+              size={35}
+              color={theme.colors.brand}
+            />
+          </View>
+
+          <ActivityIndicator size="small" color={theme.colors.brand} />
+
+          <Text style={styles.stateTitle}>Buscando ocorrências</Text>
+
+          <Text style={styles.stateDescription}>
+            Estamos procurando animais próximos da sua localização.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ==========================================================
+  // LOCALIZAÇÃO NEGADA
+  // ==========================================================
+
+  if (localizacaoNegada) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.stateContainer}>
+          <View style={styles.stateIcon}>
+            <Ionicons
+              name="location-outline"
+              size={34}
+              color={theme.colors.brand}
+            />
+          </View>
+
+          <Text style={styles.stateTitle}>Localização necessária</Text>
+
+          <Text style={styles.stateDescription}>
+            Precisamos da sua localização para mostrar as ocorrências mais
+            próximas de você.
+          </Text>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Tentar permitir localização novamente"
+            onPress={() => void carregarFeed()}
+            style={({ pressed }) => [
+              styles.stateButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons name="location" size={18} color={theme.colors.surface} />
+
+            <Text style={styles.stateButtonText}>Tentar novamente</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ==========================================================
+  // ERRO
+  // ==========================================================
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.stateContainer}>
+          <View style={[styles.stateIcon, styles.errorIcon]}>
+            <Ionicons
+              name="cloud-offline-outline"
+              size={34}
+              color={theme.colors.semantic.danger.text}
+            />
+          </View>
+
+          <Text style={styles.stateTitle}>Não foi possível carregar</Text>
+
+          <Text style={styles.stateDescription}>{error}</Text>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Tentar carregar feed novamente"
+            onPress={() => void carregarFeed()}
+            style={({ pressed }) => [
+              styles.stateButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons name="refresh" size={18} color={theme.colors.surface} />
+
+            <Text style={styles.stateButtonText}>Tentar novamente</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ==========================================================
+  // FEED
+  // ==========================================================
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={ocorrenciasFiltradas}
+        keyExtractor={(item) => String(item.id_ocorrencia)}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void carregarFeed("refresh")}
+            tintColor={theme.colors.brand}
+            colors={[theme.colors.brand]}
+          />
+        }
+        ListHeaderComponent={
+          <>
+            {/* ===============================================
+    HEADER
+================================================ */}
+
+            <View style={styles.header}>
+              {/* =====================================================
+        MENU LATERAL
+    ====================================================== */}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Abrir menu"
+                accessibilityHint="Abre o menu principal do PetRadar"
+                hitSlop={8}
+                onPress={abrirMenu}
+                style={({ pressed }) => [
+                  styles.headerMenuButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Ionicons
+                  name="menu-outline"
+                  size={24}
+                  color={theme.colors.textTitle}
+                />
+              </Pressable>
+
+              {/* =====================================================
+        TÍTULO
+    ====================================================== */}
+
+              <View style={styles.headerContent}>
+                <Text style={styles.headerTitle} numberOfLines={1}>
+                  Ocorrências
+                </Text>
+              </View>
+
+              {/* =====================================================
+        PERFIL + RAIO
+    ====================================================== */}
+
+              <View style={styles.headerActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Abrir perfil"
+                  accessibilityHint="Abre as opções da sua conta"
+                  onPress={() => setProfileMenuVisible(true)}
+                  style={({ pressed }) => [
+                    styles.headerAvatarButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <Image
+                    source={{
+                      uri: profilePhoto || "https://i.pravatar.cc/150?img=11",
+                    }}
+                    style={styles.headerAvatarImage}
+                  />
+
+                  <View style={styles.headerOnlineIndicator} />
+                </Pressable>
+
+                <View style={styles.radiusBadge}>
+                  <Ionicons
+                    name="navigate-outline"
+                    size={13}
+                    color={theme.colors.brand}
+                  />
+
+                  <Text style={styles.radiusText}>{raioPesquisaKm} km</Text>
+                </View>
+              </View>
+            </View>
+            {/* ===============================================
+                BANNER
+            ================================================ */}
+
+            <View style={styles.communityBanner}>
+              <View style={styles.communityIcon}>
+                <MaterialCommunityIcons
+                  name="heart-pulse"
+                  size={24}
+                  color={theme.colors.brand}
+                />
+              </View>
+
+              <View style={styles.communityContent}>
+                <Text style={styles.communityTitle}>
+                  Juntos fazemos a diferença
+                </Text>
+
+                <Text style={styles.communityDescription}>
+                  Acompanhe ocorrências próximas e ajude animais que precisam de
+                  cuidado.
+                </Text>
+              </View>
+            </View>
+
+            {/* ===============================================
+                BUSCA
+            ================================================ */}
+
+            <View style={styles.searchBox}>
+              <Ionicons
+                name="search-outline"
+                size={19}
+                color={theme.colors.textBody}
+              />
+
+              <TextInput
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Pesquisar animal ou local..."
+                placeholderTextColor={theme.colors.textBody}
+                style={styles.searchInput}
+                returnKeyType="search"
+              />
+
+              {search.length > 0 ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Limpar pesquisa"
+                  hitSlop={8}
+                  onPress={() => setSearch("")}
+                >
+                  <Ionicons
+                    name="close-circle"
+                    size={19}
+                    color={theme.colors.textBody}
+                  />
+                </Pressable>
+              ) : null}
+            </View>
+
+            {/* ===============================================
+                CABEÇALHO FEED
+            ================================================ */}
+
+            <View style={styles.feedSectionHeader}>
+              <View>
+                <Text style={styles.feedSectionTitle}>
+                  Ocorrências próximas
+                </Text>
+
+                <Text style={styles.feedSectionSubtitle}>
+                  Ordenadas da mais próxima para a mais distante
+                </Text>
+              </View>
+
+              <View style={styles.counterBadge}>
+                <Text style={styles.counterText}>
+                  {ocorrenciasFiltradas.length}
+                </Text>
+              </View>
+            </View>
+
+            {/* ===============================================
+                FILTROS
+            ================================================ */}
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filtersContent}
+            >
+              {FILTROS.map((item) => {
+                const ativo = filtro === item.id;
+
+                return (
+                  <Pressable
+                    key={item.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filtrar por ${item.label}`}
+                    onPress={() => setFiltro(item.id)}
+                    style={({ pressed }) => [
+                      styles.filterChip,
+
+                      ativo && styles.filterChipActive,
+
+                      pressed && styles.buttonPressed,
+                    ]}
+                  >
+                    <Ionicons
+                      name={item.icon}
+                      size={15}
+                      color={ativo ? theme.colors.surface : theme.colors.brand}
+                    />
+
+                    <Text
+                      style={[
+                        styles.filterText,
+
+                        ativo && styles.filterTextActive,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </>
+        }
+        renderItem={({ item }) => (
+          <OccurrenceCard occurrence={item} onPress={abrirDetalheOcorrencia} />
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIcon}>
+              <MaterialCommunityIcons
+                name="paw-outline"
+                size={34}
+                color={theme.colors.brand}
+              />
+            </View>
+
+            <Text style={styles.emptyTitle}>Nenhuma ocorrência encontrada</Text>
+
+            <Text style={styles.emptyText}>
+              {ocorrencias.length === 0
+                ? `Não encontramos ocorrências dentro do raio de ${raioPesquisaKm} km.`
+                : "Não encontramos ocorrências correspondentes à pesquisa ou ao filtro selecionado."}
+            </Text>
+
+            {(search || filtro !== "TODAS") && (
+              <Pressable
+                onPress={() => {
+                  setSearch("");
+                  setFiltro("TODAS");
+                }}
+                style={({ pressed }) => [
+                  styles.clearButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text style={styles.clearButtonText}>Limpar filtros</Text>
+              </Pressable>
+            )}
+          </View>
+        }
+      />
+      {/* ======================================================
+
+    REGISTRAR OCORRÊNCIA
+====================================================== */}
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Registrar nova ocorrência"
+        accessibilityHint="Abre o formulário para registrar um animal"
+        onPress={registrarOcorrencia}
+        style={({ pressed }) => [
+          styles.registerButton,
+          pressed && styles.registerButtonPressed,
+        ]}
+      >
+        <View style={styles.registerButtonIcon}>
+          <Ionicons name="add" size={23} color={theme.colors.brand} />
+        </View>
+
+        <View style={styles.registerButtonContent}>
+          <Text style={styles.registerButtonTitle}>Registrar ocorrência</Text>
+
+          <Text style={styles.registerButtonSubtitle}>Avise a comunidade</Text>
+        </View>
+
+        <View style={styles.registerButtonArrow}>
+          <Ionicons
+            name="arrow-forward"
+            size={19}
+            color={theme.colors.surface}
+          />
+        </View>
+      </Pressable>
+
+      {/* ======================================================
+    MENU PRINCIPAL
+
+    
+======================================================= */}
+
+      <AppNavigationDrawer
+        visible={menuVisible}
+        activeScreen="Feed"
+        profilePhoto={profilePhoto}
+        userName={user?.name || null}
+        userEmail={user?.email || null}
+        onClose={fecharMenu}
+        onNavigateMap={() => {
+          navigation.navigate("Mapa");
+        }}
+        onNavigateFeed={() => {
+          navigation.navigate("Feed");
+        }}
+      />
+
+      {/* ======================================================
+    MENU RÁPIDO DO PERFIL
+
+    [ALTERE AQUI]
+======================================================= */}
+
+<ProfileQuickMenu
+    visible={
+        profileMenuVisible
+    }
+
+    profilePhoto={
+        profilePhoto
+    }
+
+    userName={
+        user?.name || null
+    }
+
+    userEmail={
+        user?.email || null
+    }
+
+    onClose={() => {
+        setProfileMenuVisible(
+            false,
+        );
+    }}
+
+    onOpenProfile={() => {
+        setProfileDetailVisible(
+            true,
+        );
+    }}
+/>
+
+{/* ======================================================
+    PERFIL COMPLETO
+
+    [ALTERE AQUI]
+======================================================= */}
+
+<ProfileDetailScreen
+    visible={
+        profileDetailVisible
+    }
+
+    onClose={() => {
+        setProfileDetailVisible(
+            false,
+        );
+    }}
+
+    onProfileUpdated={
+        handleProfileUpdated
+    }
+
+    onOccurrencePress={
+        abrirDetalheOcorrencia
+    }
+/>
+
+
+
+      {/* ================================================
+    DETALHES DA OCORRÊNCIA
+================================================= */}
+
+      <OccurrenceDetailDrawer
+        visible={selectedOccurrenceId !== null}
+        occurrenceId={selectedOccurrenceId}
+        onClose={() => setSelectedOccurrenceId(null)}
+        onEdit={handleOccurrenceEdit}
+        onDeleted={handleOccurrenceDeleted}
+      />
+    </SafeAreaView>
+  );
+}
+
+// ============================================================
+// ESTILOS
+// ============================================================
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+
+  listContent: {
+    paddingHorizontal: theme.spacing.globalMargin,
+    paddingBottom: 125,
+  },
+
+  // ==========================================================
+  // HEADER
+  // ==========================================================
+
+  header: {
+    minHeight: 82,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingVertical: 10,
+
+    gap: 12,
+  },
+  // ==========================================================
+  // MENU
+  // ==========================================================
+
+  headerMenuButton: {
+    width: 46,
+    height: 46,
+
+    borderRadius: 23,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.surface,
+
+    ...theme.shadows.elevation1,
+  },
+
+  // ==========================================================
+  // TÍTULO
+  // ==========================================================
+
+  headerContent: {
+    flex: 1,
+
+    justifyContent: "center",
+
+    minWidth: 0,
+  },
+
+  headerTitle: {
+    color: theme.colors.textTitle,
+
+    fontSize: 20,
+    fontWeight: "900",
+
+    letterSpacing: -0.3,
+  },
+
+  // ==========================================================
+  // PERFIL + RAIO
+  // ==========================================================
+
+  headerActions: {
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: 5,
+  },
+
+  headerAvatarButton: {
+    width: 46,
+    height: 46,
+
+    borderRadius: 23,
+
+    padding: 2,
+
+    backgroundColor: theme.colors.surface,
+
+    ...theme.shadows.elevation1,
+  },
+
+  headerAvatarImage: {
+    width: "100%",
+    height: "100%",
+
+    borderRadius: 21,
+  },
+
+  headerOnlineIndicator: {
+    position: "absolute",
+
+    right: 1,
+    bottom: 1,
+
+    width: 11,
+    height: 11,
+
+    borderRadius: 6,
+
+    backgroundColor: theme.colors.semantic.success.text,
+
+    borderWidth: 2,
+    borderColor: theme.colors.surface,
+  },
+
+  radiusBadge: {
+    minHeight: 25,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: 3,
+
+    paddingHorizontal: 8,
+
+    borderRadius: theme.radius.button,
+
+    backgroundColor: theme.colors.semantic.success.bg,
+  },
+
+  radiusText: {
+    color: theme.colors.brand,
+
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  backButton: {
+    width: 42,
+    height: 42,
+
+    borderRadius: 14,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.surface,
+
+    ...theme.shadows.elevation1,
+  },
+
+  //
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 7,
+  },
+
+  //
+  headerPawIcon: {
+    width: 25,
+    height: 25,
+
+    borderRadius: 8,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.brand,
+  },
+
+  headerSubtitle: {
+    marginTop: 2,
+
+    color: theme.colors.textBody,
+
+    fontSize: 11,
+    fontWeight: "500",
+  },
+
+  // ==========================================================
+  // BANNER
+  // ==========================================================
+
+  communityBanner: {
+    minHeight: 92,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    marginTop: 4,
+    marginBottom: 14,
+
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+
+    borderRadius: theme.radius.card,
+
+    backgroundColor: theme.colors.brand,
+
+    ...theme.shadows.elevation1,
+  },
+
+  communityIcon: {
+    width: 46,
+    height: 46,
+
+    borderRadius: 15,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.surface,
+  },
+
+  communityContent: {
+    flex: 1,
+
+    marginLeft: 13,
+  },
+
+  communityTitle: {
+    color: theme.colors.surface,
+
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  communityDescription: {
+    marginTop: 4,
+
+    color: theme.colors.surface,
+
+    fontSize: 10,
+    lineHeight: 15,
+  },
+
+  // ==========================================================
+  // BUSCA
+  // ==========================================================
+
+  searchBox: {
+    minHeight: 48,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingHorizontal: 14,
+
+    borderRadius: 15,
+
+    backgroundColor: theme.colors.surface,
+
+    ...theme.shadows.elevation1,
+  },
+
+  searchInput: {
+    flex: 1,
+
+    height: 48,
+
+    marginLeft: 9,
+
+    color: theme.colors.textTitle,
+
+    fontSize: 13,
+  },
+
+  // ==========================================================
+  // TÍTULO DO FEED
+  // ==========================================================
+
+  feedSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+
+    marginTop: 22,
+    marginBottom: 12,
+  },
+
+  feedSectionTitle: {
+    color: theme.colors.textTitle,
+
+    fontSize: 16,
+    fontWeight: "900",
+  },
+
+  feedSectionSubtitle: {
+    marginTop: 3,
+
+    color: theme.colors.textBody,
+
+    fontSize: 10,
+  },
+
+  counterBadge: {
+    minWidth: 34,
+    height: 30,
+
+    paddingHorizontal: 9,
+
+    borderRadius: theme.radius.button,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.inputBg,
+  },
+
+  counterText: {
+    color: theme.colors.brand,
+
+    fontSize: 11,
+    fontWeight: "900",
+  },
+
+  // ==========================================================
+  // FILTROS
+  // ==========================================================
+
+  filtersContent: {
+    gap: 8,
+
+    paddingBottom: 14,
+    paddingRight: 6,
+  },
+
+  filterChip: {
+    minHeight: 38,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 6,
+
+    paddingHorizontal: 13,
+
+    borderRadius: theme.radius.button,
+
+    borderWidth: 1,
+    borderColor: theme.colors.inputBg,
+
+    backgroundColor: theme.colors.surface,
+  },
+
+  filterChipActive: {
+    borderColor: theme.colors.brand,
+
+    backgroundColor: theme.colors.brand,
+  },
+
+  filterText: {
+    color: theme.colors.textBody,
+
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  filterTextActive: {
+    color: theme.colors.surface,
+  },
+
+  // ==========================================================
+  // CARD
+  // ==========================================================
+
+  card: {
+    overflow: "hidden",
+
+    marginBottom: 17,
+
+    borderRadius: theme.radius.card,
+
+    backgroundColor: theme.colors.surface,
+
+    ...theme.shadows.elevation1,
+  },
+  cardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.995 }],
+  },
+
+  imageContainer: {
+    position: "relative",
+
+    height: 215,
+
+    backgroundColor: theme.colors.inputBg,
+  },
+
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+
+  imageFallback: {
+    flex: 1,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: 8,
+
+    backgroundColor: theme.colors.inputBg,
+  },
+
+  imageFallbackText: {
+    color: theme.colors.textBody,
+
+    fontSize: 11,
+    fontWeight: "600",
+  },
+
+  statusBadge: {
+    position: "absolute",
+
+    top: 12,
+    left: 12,
+
+    minHeight: 30,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 6,
+
+    paddingHorizontal: 10,
+
+    borderRadius: theme.radius.button,
+  },
+
+  statusDot: {
+    width: 7,
+    height: 7,
+
+    borderRadius: 4,
+  },
+
+  statusText: {
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  distanceBadge: {
+    position: "absolute",
+
+    top: 12,
+    right: 12,
+
+    minHeight: 30,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 4,
+
+    paddingHorizontal: 10,
+
+    borderRadius: theme.radius.button,
+
+    backgroundColor: theme.colors.surface,
+
+    ...theme.shadows.elevation1,
+  },
+
+  distanceText: {
+    color: theme.colors.brand,
+
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  cardContent: {
+    padding: theme.spacing.padding,
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+
+  cardTitleContainer: {
+    flex: 1,
+  },
+
+  cardTitle: {
+    color: theme.colors.textTitle,
+
+    fontSize: 16,
+    fontWeight: "900",
+
+    lineHeight: 21,
+  },
+
+  timeText: {
+    marginTop: 4,
+
+    color: theme.colors.textBody,
+
+    fontSize: 10,
+  },
+
+  animalIcon: {
+    width: 40,
+    height: 40,
+
+    marginLeft: 10,
+
+    borderRadius: 13,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.semantic.success.bg,
+  },
+
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+
+    marginTop: 14,
+  },
+
+  locationIcon: {
+    width: 31,
+    height: 31,
+
+    borderRadius: 10,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.inputBg,
+  },
+
+  locationText: {
+    flex: 1,
+
+    marginLeft: 9,
+
+    color: theme.colors.textBody,
+
+    fontSize: 11,
+    lineHeight: 16,
+  },
+
+  divider: {
+    height: 1,
+
+    marginVertical: 14,
+
+    backgroundColor: theme.colors.inputBg,
+  },
+
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+
+    gap: 10,
+  },
+
+  urgencyBadge: {
+    minHeight: 30,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 5,
+
+    paddingHorizontal: 10,
+
+    borderRadius: theme.radius.button,
+  },
+
+  urgencyText: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  registryText: {
+    color: theme.colors.textBody,
+
+    fontSize: 9,
+    fontWeight: "600",
+  },
+
+  // ==========================================================
+  // EMPTY STATE
+  // ==========================================================
+
+  emptyContainer: {
+    alignItems: "center",
+
+    paddingHorizontal: 25,
+    paddingVertical: 60,
+  },
+
+  emptyIcon: {
+    width: 72,
+    height: 72,
+
+    borderRadius: 36,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.semantic.success.bg,
+  },
+
+  emptyTitle: {
+    marginTop: 17,
+
+    color: theme.colors.textTitle,
+
+    fontSize: 16,
+    fontWeight: "900",
+
+    textAlign: "center",
+  },
+
+  emptyText: {
+    maxWidth: 290,
+
+    marginTop: 7,
+
+    color: theme.colors.textBody,
+
+    fontSize: 12,
+    lineHeight: 18,
+
+    textAlign: "center",
+  },
+
+  clearButton: {
+    minHeight: 40,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginTop: 18,
+
+    paddingHorizontal: 17,
+
+    borderRadius: theme.radius.button,
+
+    backgroundColor: theme.colors.inputBg,
+  },
+
+  clearButtonText: {
+    color: theme.colors.brand,
+
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  // ==========================================================
+  // REGISTRAR OCORRÊNCIA
+  // ==========================================================
+
+  //
+  registerButton: {
+    position: "absolute",
+
+    left: theme.spacing.globalMargin,
+
+    right: theme.spacing.globalMargin,
+
+    bottom: 18,
+
+    minHeight: 66,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingHorizontal: 12,
+
+    borderRadius: 21,
+
+    backgroundColor: theme.colors.brand,
+
+    ...theme.shadows.buttonGlow,
+  },
+
+  registerButtonPressed: {
+    transform: [
+      {
+        scale: 0.985,
+      },
+    ],
+
+    opacity: 0.96,
+  },
+
+  registerButtonIcon: {
+    width: 43,
+    height: 43,
+
+    borderRadius: 14,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.surface,
+  },
+
+  registerButtonContent: {
+    flex: 1,
+
+    marginLeft: 11,
+  },
+
+  registerButtonTitle: {
+    color: theme.colors.surface,
+
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  registerButtonSubtitle: {
+    marginTop: 2,
+
+    color: theme.colors.surface,
+
+    fontSize: 9,
+    fontWeight: "500",
+  },
+
+  registerButtonArrow: {
+    width: 38,
+    height: 38,
+
+    borderRadius: 12,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: theme.colors.action,
+  },
+  // ==========================================================
+  // LOADING / ERRO / LOCALIZAÇÃO
+  // ==========================================================
+
+  stateContainer: {
+    flex: 1,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 30,
+  },
+
+  stateIcon: {
+    width: 76,
+    height: 76,
+
+    borderRadius: 38,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginBottom: 16,
+
+    backgroundColor: theme.colors.semantic.success.bg,
+  },
+
+  errorIcon: {
+    backgroundColor: theme.colors.semantic.danger.bg,
+  },
+
+  stateTitle: {
+    marginTop: 14,
+
+    color: theme.colors.textTitle,
+
+    fontSize: 18,
+    fontWeight: "900",
+
+    textAlign: "center",
+  },
+
+  stateDescription: {
+    maxWidth: 300,
+
+    marginTop: 8,
+
+    color: theme.colors.textBody,
+
+    fontSize: 12,
+    lineHeight: 19,
+
+    textAlign: "center",
+  },
+
+  stateButton: {
+    minHeight: 48,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: 7,
+
+    marginTop: 22,
+
+    paddingHorizontal: 20,
+
+    borderRadius: theme.radius.button,
+
+    backgroundColor: theme.colors.brand,
+
+    ...theme.shadows.buttonGlow,
+  },
+
+  stateButtonText: {
+    color: theme.colors.surface,
+
+    fontSize: 12,
+    fontWeight: "800",
+  },
+
+  buttonPressed: {
+    opacity: 0.78,
+  },
+});
+
+
+================================================================================
 CAMINHO: mobile\src\screens\LoginScreen.tsx
 ================================================================================
 
@@ -7684,10 +11563,8 @@ import {
   StyleSheet,
   TextInput,
   Image,
-  Dimensions,
   Platform,
   Animated,
-  ScrollView,
   ActivityIndicator,
   Alert,
   Modal,
@@ -7706,6 +11583,8 @@ import ProfileDetailScreen, {
   type ProfileUpdateResult,
 } from "./ProfileDetailScreen";
 import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
+import AppNavigationDrawer from "../components/AppNavigationDrawer";
+import ProfileQuickMenu from "../components/ProfileQuickMenu";
 import api from "../services/api";
 
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -7727,16 +11606,6 @@ if (!MAPBOX_ACCESS_TOKEN) {
 } else {
   Mapbox.setAccessToken(MAPBOX_ACCESS_TOKEN);
 }
-
-/**
- * ============================================================
- * DIMENSÕES
- * ============================================================
- */
-
-const { width } = Dimensions.get("window");
-
-const DRAWER_WIDTH = Math.min(width * 0.84, 340);
 
 /**
  * ============================================================
@@ -7819,8 +11688,6 @@ export default function MapScreen() {
    * ==========================================================
    */
 
-  const logout = useAuthStore((state) => state.logout);
-
   const user = useAuthStore((state) => state.user);
 
   /**
@@ -7840,10 +11707,6 @@ export default function MapScreen() {
    * ANIMAÇÕES
    * ==========================================================
    */
-
-  const drawerAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
-
-  const overlayAnim = useRef(new Animated.Value(0)).current;
 
   const searchFocusAnim = useRef(new Animated.Value(0)).current;
 
@@ -7897,10 +11760,7 @@ export default function MapScreen() {
   );
 
   const abrirDetalheOcorrencia = useCallback(
-    (
-      occurrenceId: number,
-      recarregarLista?: RecarregarListaOcorrencias,
-    ) => {
+    (occurrenceId: number, recarregarLista?: RecarregarListaOcorrencias) => {
       recarregarListaOrigemRef.current = recarregarLista ?? null;
       setSelectedOccurrenceId(occurrenceId);
     },
@@ -8145,9 +12005,7 @@ export default function MapScreen() {
       const recarregarListaOrigem = recarregarListaOrigemRef.current;
       recarregarListaOrigemRef.current = null;
 
-      const atualizacoes: Promise<unknown>[] = [
-        recarregarOcorrenciasNoMapa(),
-      ];
+      const atualizacoes: Promise<unknown>[] = [recarregarOcorrenciasNoMapa()];
       if (recarregarListaOrigem) {
         atualizacoes.push(Promise.resolve().then(recarregarListaOrigem));
       }
@@ -8187,10 +12045,7 @@ export default function MapScreen() {
       };
 
       void atualizarMapa();
-    }, [
-      perfilMapaCarregado,
-      recarregarOcorrenciasNoMapa,
-    ]),
+    }, [perfilMapaCarregado, recarregarOcorrenciasNoMapa]),
   );
 
   const handleProfileUpdated = useCallback(
@@ -8242,66 +12097,10 @@ export default function MapScreen() {
 
   const abrirMenu = () => {
     setMenuVisible(true);
-
-    Animated.parallel([
-      Animated.spring(drawerAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 22,
-        stiffness: 180,
-      }),
-
-      Animated.timing(overlayAnim, {
-        toValue: 1,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-    ]).start();
   };
 
   const fecharMenu = () => {
-    Animated.parallel([
-      Animated.timing(drawerAnim, {
-        toValue: -DRAWER_WIDTH,
-        duration: 220,
-        useNativeDriver: true,
-      }),
-
-      Animated.timing(overlayAnim, {
-        toValue: 0,
-        duration: 180,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setMenuVisible(false);
-    });
-  };
-
-  /**
-   * ==========================================================
-   * LOGOUT
-   * ==========================================================
-   */
-
-  const handleLogout = () => {
-    setProfileMenuVisible(false);
-
-    Alert.alert(
-      "Sair da conta",
-      `Olá, ${user?.name || "Usuário"
-      }. Tem certeza de que deseja encerrar a sessão?`,
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: "Sair",
-          style: "destructive",
-          onPress: () => logout(),
-        },
-      ],
-    );
+    setMenuVisible(false);
   };
 
   /**
@@ -8401,8 +12200,9 @@ export default function MapScreen() {
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Ocorrência de ${ocorrencia.tipo_animal || "animal"
-                  }`}
+                accessibilityLabel={`Ocorrência de ${
+                  ocorrencia.tipo_animal || "animal"
+                }`}
                 accessibilityHint="Mostra os detalhes desta ocorrência"
                 onPress={() => {
                   abrirDetalheOcorrencia(ocorrencia.id_ocorrencia);
@@ -8639,11 +12439,7 @@ export default function MapScreen() {
               pressed && styles.controlPressed,
             ]}
           >
-            <Ionicons
-              name="add"
-              size={22}
-              color={theme.colors.textTitle}
-            />
+            <Ionicons name="add" size={22} color={theme.colors.textTitle} />
           </Pressable>
 
           <View style={styles.controlDivider} />
@@ -8657,11 +12453,7 @@ export default function MapScreen() {
               pressed && styles.controlPressed,
             ]}
           >
-            <Ionicons
-              name="remove"
-              size={22}
-              color={theme.colors.textTitle}
-            />
+            <Ionicons name="remove" size={22} color={theme.colors.textTitle} />
           </Pressable>
         </View>
       </View>
@@ -8693,16 +12485,14 @@ export default function MapScreen() {
       ======================================================= */}
 
       <View style={styles.bottomArea}>
-        {/* [ALTERE AQUI] — Banner provisório de anúncio */}
+        {/*  — Banner provisório de anúncio */}
         <View style={styles.adBanner}>
           <View style={styles.adBadge}>
             <Text style={styles.adBadgeText}>ANÚNCIO</Text>
           </View>
 
           <View style={styles.adContent}>
-            <Text style={styles.adTitle}>
-              Espaço publicitário
-            </Text>
+            <Text style={styles.adTitle}>Espaço publicitário</Text>
 
             <Text style={styles.adDescription}>
               Banner provisório para futura integração de anúncios
@@ -8750,125 +12540,23 @@ export default function MapScreen() {
           </View>
         </Pressable>
       </View>
-
       {/* ======================================================
-          MENU DO PERFIL
-      ======================================================= */}
+    MENU RÁPIDO DO PERFIL
 
-      <Modal
+======================================================= */}
+
+      <ProfileQuickMenu
         visible={profileMenuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setProfileMenuVisible(false)}
-      >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setProfileMenuVisible(false)}
-        >
-          <Pressable
-            style={styles.profileMenu}
-            onPress={(event) => event.stopPropagation()}
-          >
-            <View style={styles.profileMenuHeader}>
-              <Image
-                source={{
-                  uri: profilePhoto || "https://i.pravatar.cc/150?img=11",
-                }}
-                style={styles.profileMenuAvatar}
-              />
-
-              <View style={styles.profileMenuIdentity}>
-                <Text style={styles.profileMenuName} numberOfLines={1}>
-                  {user?.name || "Usuário"}
-                </Text>
-
-                <Text style={styles.profileMenuEmail} numberOfLines={1}>
-                  {user?.email || "email não informado"}
-                </Text>
-              </View>
-
-              <View style={styles.verifiedBadge}>
-                <Ionicons
-                  name="checkmark"
-                  size={13}
-                  color={theme.colors.surface}
-                />
-              </View>
-            </View>
-
-            <View style={styles.menuDivider} />
-
-            <Pressable
-              style={styles.profileMenuItem}
-              onPress={() => {
-                setProfileMenuVisible(false);
-
-                setProfileDetailVisible(true);
-              }}
-            >
-              <View style={styles.menuItemIcon}>
-                <Ionicons
-                  name="person-outline"
-                  size={19}
-                  color={theme.colors.brand}
-                />
-              </View>
-
-              <View>
-                <Text style={styles.menuItemTitle}>Meu perfil</Text>
-
-                <Text style={styles.menuItemDescription}>
-                  Dados e preferências
-                </Text>
-              </View>
-
-              <Ionicons
-                name="chevron-forward"
-                size={18}
-                color={theme.colors.textBody}
-                style={styles.menuItemArrow}
-              />
-            </Pressable>
-
-            <Pressable
-              style={styles.profileMenuItem}
-              onPress={() => setProfileMenuVisible(false)}
-            >
-              <View style={styles.menuItemIcon}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={19}
-                  color={theme.colors.brand}
-                />
-              </View>
-
-              <View>
-                <Text style={styles.menuItemTitle}>Notificações</Text>
-
-                <Text style={styles.menuItemDescription}>
-                  Alertas e atualizações
-                </Text>
-              </View>
-
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>1</Text>
-              </View>
-            </Pressable>
-
-            <View style={styles.menuDivider} />
-
-            <Pressable style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color={theme.colors.semantic.danger.text}
-              />
-
-              <Text style={styles.logoutText}>Sair da conta</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+        profilePhoto={profilePhoto}
+        userName={user?.name || null}
+        userEmail={user?.email || null}
+        onClose={() => {
+          setProfileMenuVisible(false);
+        }}
+        onOpenProfile={() => {
+          setProfileDetailVisible(true);
+        }}
+      />
 
       {/* ======================================================
           FILTROS
@@ -8991,155 +12679,27 @@ export default function MapScreen() {
       </Modal>
 
       {/* ======================================================
-          DRAWER LATERAL
-          
-          "Meu perfil" NÃO aparece aqui.
-      ======================================================= */}
+    DRAWER LATERAL
 
-      {menuVisible && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-          }}
-        >
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.drawerOverlay,
-              {
-                opacity: overlayAnim,
-              },
-            ]}
-          />
+  
 
-          <Pressable style={styles.drawerTouchableArea} onPress={fecharMenu} />
+    Componente compartilhado entre Mapa e Feed.
+======================================================= */}
 
-          <Animated.View
-            style={[
-              styles.drawer,
-              {
-                width: DRAWER_WIDTH,
-                transform: [
-                  {
-                    translateX: drawerAnim,
-                  },
-                ],
-              },
-            ]}
-          >
-            <SafeAreaView
-              edges={["top", "bottom"]}
-              style={styles.drawerSafeArea}
-            >
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.drawerContent}
-              >
-                {/* HEADER */}
-
-                <View style={styles.drawerHeader}>
-                  <View style={styles.drawerBrandIcon}>
-                    <MaterialCommunityIcons
-                      name="paw"
-                      size={23}
-                      color={theme.colors.surface}
-                    />
-                  </View>
-
-                  <View style={styles.drawerBrandContent}>
-                    <Text style={styles.drawerBrandTitle}>PetRadar</Text>
-
-                    <Text style={styles.drawerBrandSubtitle}>
-                      Comunidade que cuida
-                    </Text>
-                  </View>
-
-                  <Pressable onPress={fecharMenu} style={styles.drawerClose}>
-                    <Ionicons
-                      name="close"
-                      size={21}
-                      color={theme.colors.textTitle}
-                    />
-                  </Pressable>
-                </View>
-
-                {/* USUÁRIO */}
-
-                <View style={styles.drawerUserCard}>
-                  <Image
-                    source={{
-                      uri: profilePhoto || "https://i.pravatar.cc/150?img=11",
-                    }}
-                    style={styles.drawerAvatar}
-                  />
-
-                  <View style={styles.drawerUserInfo}>
-                    <Text style={styles.drawerUserName} numberOfLines={1}>
-                      {user?.name || "Usuário"}
-                    </Text>
-
-                    <Text style={styles.drawerUserEmail} numberOfLines={1}>
-                      {user?.email || "Bem-vindo ao PetRadar"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.drawerUserStatus} />
-                </View>
-
-                {/* EXPLORAR */}
-
-                <Text style={styles.drawerSectionTitle}>EXPLORAR</Text>
-
-                <DrawerItem icon="map-outline" label="Mapa" active />
-
-                <DrawerItem icon="newspaper-outline" label="Feed" />
-
-                <DrawerItem icon="people-outline" label="ONGs" />
-
-                <DrawerItem icon="search-outline" label="Procura-se" />
-
-                <View style={styles.drawerDivider} />
-
-                {/* CONTA E OPÇÕES */}
-
-                <Text style={styles.drawerSectionTitle}>CONTA E OPÇÕES</Text>
-
-                <DrawerItem icon="notifications-outline" label="Notificações" />
-
-                <DrawerItem icon="settings-outline" label="Configurações" />
-
-                {/* SOS */}
-
-                <View style={styles.sosCard}>
-                  <View style={styles.sosIcon}>
-                    <MaterialCommunityIcons
-                      name="alarm-light-outline"
-                      size={21}
-                      color={theme.colors.semantic.danger.text}
-                    />
-                  </View>
-
-                  <View style={styles.sosContent}>
-                    <Text style={styles.sosTitle}>Emergência</Text>
-
-                    <Text style={styles.sosDescription}>Precisa de ajuda?</Text>
-                  </View>
-
-                  <Ionicons
-                    name="chevron-forward"
-                    size={18}
-                    color={theme.colors.semantic.danger.text}
-                  />
-                </View>
-              </ScrollView>
-            </SafeAreaView>
-          </Animated.View>
-        </View>
-      )}
+      <AppNavigationDrawer
+        visible={menuVisible}
+        activeScreen="Mapa"
+        profilePhoto={profilePhoto}
+        userName={user?.name || null}
+        userEmail={user?.email || null}
+        onClose={fecharMenu}
+        onNavigateMap={() => {
+          navigation.navigate("Mapa");
+        }}
+        onNavigateFeed={() => {
+          navigation.navigate("Feed");
+        }}
+      />
 
       {/* ======================================================
           PERFIL COMPLETO
@@ -9164,52 +12724,6 @@ export default function MapScreen() {
         onDeleted={handleOccurrenceDeleted}
       />
     </SafeAreaView>
-  );
-}
-
-/**
- * ============================================================
- * DRAWER ITEM
- * ============================================================
- */
-
-interface DrawerItemProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  active?: boolean;
-  onPress?: () => void;
-}
-
-function DrawerItem({ icon, label, active = false, onPress }: DrawerItemProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.drawerItem,
-        active && styles.drawerItemActive,
-        pressed && styles.drawerItemPressed,
-      ]}
-    >
-      <View
-        style={[styles.drawerItemIcon, active && styles.drawerItemIconActive]}
-      >
-        <Ionicons
-          name={icon}
-          size={21}
-          color={active ? theme.colors.brand : theme.colors.textBody}
-        />
-      </View>
-
-      <Text
-        style={[styles.drawerItemText, active && styles.drawerItemTextActive]}
-      >
-        {label}
-      </Text>
-
-      {active && <View style={styles.drawerActiveIndicator} />}
-    </Pressable>
   );
 }
 
@@ -9638,8 +13152,6 @@ const styles = StyleSheet.create({
 
   primaryButtonContent: {
     flex: 1,
-
-     
   },
 
   primaryButtonLabel: {
@@ -9815,136 +13327,6 @@ const styles = StyleSheet.create({
 
   /**
    * ========================================================
-   * PERFIL
-   * ========================================================
-   */
-
-  modalBackdrop: {
-    flex: 1,
-    alignItems: "flex-end",
-    paddingTop: Platform.OS === "ios" ? 96 : 100,
-    paddingHorizontal: 16,
-    backgroundColor: "rgba(0,0,0,0.16)",
-  },
-
-  profileMenu: {
-    width: Math.min(width - 32, 340),
-    padding: 14,
-    borderRadius: 22,
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.elevation1,
-  },
-
-  profileMenuHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  profileMenuAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 17,
-    marginRight: 11,
-  },
-
-  profileMenuIdentity: {
-    flex: 1,
-  },
-
-  profileMenuName: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: theme.colors.textTitle,
-    marginBottom: 3,
-  },
-
-  profileMenuEmail: {
-    fontSize: 11,
-    color: theme.colors.textBody,
-  },
-
-  verifiedBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.semantic.success.text,
-  },
-
-  menuDivider: {
-    height: 1,
-    backgroundColor: theme.colors.inputBg,
-    marginVertical: 11,
-  },
-
-  profileMenuItem: {
-    minHeight: 54,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 15,
-    paddingHorizontal: 6,
-  },
-
-  menuItemIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.semantic.success.bg,
-    marginRight: 10,
-  },
-
-  menuItemTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: theme.colors.textTitle,
-  },
-
-  menuItemDescription: {
-    marginTop: 2,
-    fontSize: 10,
-    color: theme.colors.textBody,
-  },
-
-  menuItemArrow: {
-    marginLeft: "auto",
-  },
-
-  notificationBadge: {
-    marginLeft: "auto",
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.semantic.danger.text,
-  },
-
-  notificationBadgeText: {
-    color: theme.colors.surface,
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  logoutButton: {
-    height: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    borderRadius: 13,
-  },
-
-  logoutText: {
-    marginLeft: 10,
-    fontSize: 12,
-    fontWeight: "700",
-    color: theme.colors.semantic.danger.text,
-  },
-
-  /**
-   * ========================================================
    * FILTROS
    * ========================================================
    */
@@ -10095,201 +13477,6 @@ const styles = StyleSheet.create({
 
   /**
    * ========================================================
-   * DRAWER
-   * ========================================================
-   */
-
-  drawerOverlay: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: "rgba(10,24,20,0.48)",
-    zIndex: 90,
-  },
-
-  drawerTouchableArea: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    zIndex: 91,
-  },
-
-  drawer: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: theme.colors.background,
-    borderTopRightRadius: 30,
-    borderBottomRightRadius: 30,
-    overflow: "hidden",
-    zIndex: 100,
-    ...theme.shadows.elevation1,
-  },
-
-  drawerSafeArea: {
-    flex: 1,
-  },
-
-  drawerContent: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 28,
-  },
-
-  drawerHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    marginBottom: 18,
-  },
-
-  drawerBrandIcon: {
-    width: 43,
-    height: 43,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.brand,
-  },
-
-  drawerBrandContent: {
-    marginLeft: 11,
-    flex: 1,
-  },
-
-  drawerBrandTitle: {
-    fontSize: 17,
-    fontWeight: "900",
-    color: theme.colors.textTitle,
-  },
-
-  drawerBrandSubtitle: {
-    marginTop: 1,
-    fontSize: 10,
-    color: theme.colors.textBody,
-  },
-
-  drawerClose: {
-    width: 38,
-    height: 38,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.surface,
-  },
-
-  drawerUserCard: {
-    minHeight: 70,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 18,
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.elevation1,
-  },
-
-  drawerAvatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-  },
-
-  drawerUserInfo: {
-    flex: 1,
-    marginLeft: 10,
-  },
-
-  drawerUserName: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: theme.colors.textTitle,
-  },
-
-  drawerUserEmail: {
-    marginTop: 3,
-    fontSize: 10,
-    color: theme.colors.textBody,
-  },
-
-  drawerUserStatus: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: theme.colors.semantic.success.text,
-  },
-
-  drawerSectionTitle: {
-    marginTop: 25,
-    marginBottom: 9,
-    paddingHorizontal: 10,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1,
-    color: theme.colors.textBody,
-  },
-
-  drawerItem: {
-    minHeight: 49,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 7,
-    borderRadius: 15,
-    marginBottom: 3,
-  },
-
-  drawerItemActive: {
-    backgroundColor: theme.colors.semantic.success.bg,
-  },
-
-  drawerItemPressed: {
-    backgroundColor: theme.colors.inputBg,
-  },
-
-  drawerItemIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  drawerItemIconActive: {
-    backgroundColor: theme.colors.surface,
-  },
-
-  drawerItemText: {
-    marginLeft: 8,
-    fontSize: 13,
-    fontWeight: "600",
-    color: theme.colors.textTitle,
-  },
-
-  drawerItemTextActive: {
-    fontWeight: "800",
-    color: theme.colors.brand,
-  },
-
-  drawerActiveIndicator: {
-    width: 4,
-    height: 20,
-    borderRadius: 2,
-    marginLeft: "auto",
-    backgroundColor: theme.colors.brand,
-  },
-
-  drawerDivider: {
-    height: 1,
-    marginVertical: 12,
-    backgroundColor: theme.colors.inputBg,
-  },
-
-  /**
-   * ========================================================
    * SOS
    * ========================================================
    */
@@ -10368,6 +13555,7 @@ import {
 } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import axios from "axios";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -10835,6 +14023,10 @@ export default function ProfileDetailScreen({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteAccountVisible, setDeleteAccountVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
@@ -11124,6 +14316,72 @@ export default function ProfileDetailScreen({
   }, [logout]);
 
   // ----------------------------------------------------------
+  // EXCLUIR CONTA
+  // ----------------------------------------------------------
+
+  const handleCloseDeleteModal = useCallback(() => {
+    if (deletingAccount) {
+      return;
+    }
+
+    setDeleteAccountVisible(false);
+    setDeletePassword("");
+    setShowDeletePassword(false);
+  }, [deletingAccount]);
+
+  const handleExcluirConta = useCallback(async () => {
+    if (deletingAccount) {
+      return;
+    }
+
+    if (!deletePassword.trim()) {
+      Alert.alert(
+        "Senha obrigatória",
+        "Digite sua senha atual para confirmar a exclusão.",
+      );
+      return;
+    }
+
+    setDeletingAccount(true);
+
+    try {
+      await api.delete("/auth/me", {
+        data: {
+          senha: deletePassword,
+        },
+      });
+
+      setDeleteAccountVisible(false);
+      setDeletePassword("");
+      setShowDeletePassword(false);
+      onClose();
+      logout();
+
+      Alert.alert(
+        "Conta excluída",
+        "Sua conta foi excluída permanentemente.",
+      );
+    } catch (error: unknown) {
+      let detail: string | undefined;
+
+      if (axios.isAxiosError<{ detail?: unknown }>(error)) {
+        const responseDetail = error.response?.data?.detail;
+
+        if (typeof responseDetail === "string") {
+          detail = responseDetail;
+        }
+      }
+
+      Alert.alert(
+        "Erro ao excluir conta",
+        detail || "Não foi possível excluir sua conta. Tente novamente.",
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  }, [deletePassword, deletingAccount, logout, onClose]);
+
+  // ----------------------------------------------------------
   // CANCELAR
   // ----------------------------------------------------------
 
@@ -11151,6 +14409,9 @@ export default function ProfileDetailScreen({
       }).start();
     } else {
       setIsEditing(false);
+      setDeleteAccountVisible(false);
+      setDeletePassword("");
+      setShowDeletePassword(false);
 
       Animated.timing(translateX, {
         toValue: DRAWER_WIDTH,
@@ -11537,6 +14798,42 @@ export default function ProfileDetailScreen({
             </Text>
           </View>
         </View>
+
+        <Text style={styles.manageAccountLabel}>GERENCIAR CONTA</Text>
+
+        <View style={styles.deleteAccountCard}>
+          <View style={styles.deleteAccountHeader}>
+            <View style={styles.deleteAccountIcon}>
+              <Ionicons
+                name="trash-outline"
+                size={20}
+                color={COLORS.danger}
+              />
+            </View>
+
+            <View style={styles.deleteAccountContent}>
+              <Text style={styles.deleteAccountTitle}>Excluir minha conta</Text>
+
+              <Text style={styles.deleteAccountDescription}>
+                Esta ação é permanente.
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.deleteAccountButton}
+            onPress={() => setDeleteAccountVisible(true)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Excluir minha conta"
+            accessibilityHint="Abre a confirmação de exclusão permanente da conta"
+          >
+            <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+            <Text style={styles.deleteAccountButtonText}>
+              Excluir minha conta
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     );
   }, [
@@ -11783,6 +15080,121 @@ export default function ProfileDetailScreen({
             </>
           )}
         </Animated.View>
+
+        <Modal
+          transparent
+          visible={deleteAccountVisible}
+          animationType="fade"
+          onRequestClose={handleCloseDeleteModal}
+        >
+          <KeyboardAvoidingView
+            style={styles.deleteModalOverlay}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
+            <Pressable
+              style={styles.deleteModalBackdrop}
+              onPress={handleCloseDeleteModal}
+              disabled={deletingAccount}
+              accessibilityLabel="Cancelar exclusão da conta"
+            />
+
+            <View style={styles.deleteModalCard}>
+              <View style={styles.deleteModalIcon}>
+                <Ionicons
+                  name="warning-outline"
+                  size={26}
+                  color={COLORS.danger}
+                />
+              </View>
+
+              <Text style={styles.deleteModalTitle}>Excluir conta</Text>
+
+              <Text style={styles.deleteModalDescription}>
+                Esta ação é permanente. Seus dados e registros associados à sua
+                conta serão removidos do PetRadar.
+              </Text>
+
+              <Text style={styles.deletePasswordLabel}>Senha atual</Text>
+
+              <View style={styles.deletePasswordWrapper}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={19}
+                  color={COLORS.textBody}
+                />
+
+                <TextInput
+                  style={styles.deletePasswordInput}
+                  value={deletePassword}
+                  onChangeText={setDeletePassword}
+                  placeholder="Digite sua senha atual"
+                  placeholderTextColor={COLORS.textBody}
+                  secureTextEntry={!showDeletePassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!deletingAccount}
+                  accessibilityLabel="Senha atual"
+                />
+
+                <Pressable
+                  style={styles.deletePasswordToggle}
+                  onPress={() => setShowDeletePassword((current) => !current)}
+                  disabled={deletingAccount}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showDeletePassword ? "Ocultar senha" : "Mostrar senha"
+                  }
+                >
+                  <Ionicons
+                    name={showDeletePassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={COLORS.textBody}
+                  />
+                </Pressable>
+              </View>
+
+              <View style={styles.deleteModalActions}>
+                <TouchableOpacity
+                  style={styles.deleteModalCancelButton}
+                  onPress={handleCloseDeleteModal}
+                  disabled={deletingAccount}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancelar exclusão"
+                >
+                  <Text style={styles.deleteModalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.deleteModalConfirmButton,
+                    deletingAccount && styles.deleteModalButtonDisabled,
+                  ]}
+                  onPress={handleExcluirConta}
+                  disabled={deletingAccount}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="Excluir conta definitivamente"
+                >
+                  {deletingAccount ? (
+                    <ActivityIndicator size="small" color={COLORS.surface} />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="trash-outline"
+                        size={18}
+                        color={COLORS.surface}
+                      />
+                      <Text style={styles.deleteModalConfirmText}>
+                        Excluir definitivamente
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
       </View>
     </Modal>
   );
@@ -12342,6 +15754,252 @@ const styles = StyleSheet.create({
     lineHeight: 16,
 
     color: COLORS.textBody,
+  },
+
+  manageAccountLabel: {
+    marginTop: 24,
+    marginBottom: 10,
+
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+
+    color: COLORS.textBody,
+  },
+
+  deleteAccountCard: {
+    padding: 16,
+
+    borderRadius: 18,
+
+    backgroundColor: COLORS.surface,
+
+    borderWidth: 1,
+    borderColor: COLORS.dangerBg,
+
+    ...theme.shadows.elevation1,
+  },
+
+  deleteAccountHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  deleteAccountIcon: {
+    width: 40,
+    height: 40,
+
+    borderRadius: 13,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: COLORS.dangerBg,
+  },
+
+  deleteAccountContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+
+  deleteAccountTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+
+    color: COLORS.textTitle,
+  },
+
+  deleteAccountDescription: {
+    marginTop: 3,
+
+    fontSize: 11,
+    lineHeight: 16,
+
+    color: COLORS.textBody,
+  },
+
+  deleteAccountButton: {
+    minHeight: 46,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginTop: 14,
+
+    borderRadius: 14,
+
+    backgroundColor: COLORS.dangerBg,
+
+    borderWidth: 1,
+    borderColor: COLORS.danger,
+  },
+
+  deleteAccountButtonText: {
+    marginLeft: 7,
+
+    fontSize: 13,
+    fontWeight: "800",
+
+    color: COLORS.danger,
+  },
+
+  // ==========================================================
+  // DELETE ACCOUNT MODAL
+  // ==========================================================
+
+  deleteModalOverlay: {
+    flex: 1,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 20,
+
+    backgroundColor: "rgba(15, 23, 42, 0.62)",
+  },
+
+  deleteModalBackdrop: {
+    ...StyleSheet.absoluteFill,
+  },
+
+  deleteModalCard: {
+    width: "100%",
+    maxWidth: 420,
+
+    padding: 22,
+
+    borderRadius: 22,
+
+    backgroundColor: COLORS.surface,
+
+    ...theme.shadows.elevation1,
+  },
+
+  deleteModalIcon: {
+    width: 52,
+    height: 52,
+
+    borderRadius: 17,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: COLORS.dangerBg,
+  },
+
+  deleteModalTitle: {
+    marginTop: 16,
+
+    fontSize: 20,
+    fontWeight: "800",
+
+    color: COLORS.textTitle,
+  },
+
+  deleteModalDescription: {
+    marginTop: 8,
+
+    fontSize: 13,
+    lineHeight: 19,
+
+    color: COLORS.textBody,
+  },
+
+  deletePasswordLabel: {
+    marginTop: 20,
+    marginBottom: 8,
+
+    fontSize: 12,
+    fontWeight: "800",
+
+    color: COLORS.textTitle,
+  },
+
+  deletePasswordWrapper: {
+    minHeight: 52,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingLeft: 14,
+
+    borderRadius: 14,
+
+    borderWidth: 1,
+    borderColor: COLORS.dangerBg,
+
+    backgroundColor: COLORS.surface,
+  },
+
+  deletePasswordInput: {
+    flex: 1,
+
+    marginLeft: 10,
+    paddingVertical: 0,
+
+    fontSize: 14,
+
+    color: COLORS.textTitle,
+  },
+
+  deletePasswordToggle: {
+    width: 48,
+    minHeight: 50,
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  deleteModalActions: {
+    marginTop: 20,
+    gap: 10,
+  },
+
+  deleteModalCancelButton: {
+    minHeight: 48,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderRadius: 14,
+
+    backgroundColor: COLORS.surface,
+
+    borderWidth: 1,
+    borderColor: COLORS.dangerBg,
+  },
+
+  deleteModalCancelText: {
+    fontSize: 13,
+    fontWeight: "700",
+
+    color: COLORS.textBody,
+  },
+
+  deleteModalConfirmButton: {
+    minHeight: 50,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderRadius: 14,
+
+    backgroundColor: COLORS.danger,
+  },
+
+  deleteModalButtonDisabled: {
+    opacity: 0.7,
+  },
+
+  deleteModalConfirmText: {
+    marginLeft: 7,
+
+    fontSize: 13,
+    fontWeight: "800",
+
+    color: COLORS.surface,
   },
 
   // ==========================================================

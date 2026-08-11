@@ -11,11 +11,12 @@ import ProfileDetailScreen from './src/screens/ProfileDetailScreen';
 
 
 // Store do Zustand (Caminho corrigido para 'store' no singular)
-import { useAuthStore } from './src/store/useAuthStore'; 
+import { useAuthStore } from './src/store/useAuthStore';
 
 // Telas Reais
 import LoginScreen from './src/screens/LoginScreen';
 import MapScreen from './src/screens/MapScreen';
+import FeedNoticias from './src/screens/FeedNoticias';
 import CadastroUserScreen from './src/screens/CadastroUserScreen';
 import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
 import CadastroONGScreen from './src/screens/CadastroONGScreen';
@@ -48,14 +49,15 @@ export interface PetOcorrenciaPrefill {
 // Tipagem das Rotas da Aplicação Principal
 export type AppTabParamList = {
   Mapa: undefined;
+  Feed: undefined;
   SOS: undefined;
   Perfil: undefined;
   CadastroOcorrencia:
-    | {
-        pet?: PetOcorrenciaPrefill;
-        ocorrenciaId?: number;
-      }
-    | undefined;
+  | {
+    pet?: PetOcorrenciaPrefill;
+    ocorrenciaId?: number;
+  }
+  | undefined;
 };
 
 
@@ -91,14 +93,19 @@ function AuthNavigator() {
 
 function AppNavigator() {
   return (
-    <AppTabs.Navigator 
-      tabBar={() => null} 
-      screenOptions={{ 
-        headerShown: false, 
-        tabBarHideOnKeyboard: true 
+    <AppTabs.Navigator
+      tabBar={() => null}
+      screenOptions={{
+        headerShown: false,
+        tabBarHideOnKeyboard: true
       }}
     >
       <AppTabs.Screen name="Mapa" component={MapScreen} />
+      <AppTabs.Screen
+        name="Feed"
+        component={FeedNoticias}
+      />
+
       <AppTabs.Screen name="SOS" component={SOSScreen} />
       <AppTabs.Screen name="Perfil" component={ProfileScreen} />
       <AppTabs.Screen

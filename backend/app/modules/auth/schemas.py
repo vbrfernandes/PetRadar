@@ -72,6 +72,9 @@ class PerfilAtualizacao(BaseModel):
     endereco_completo: str | None = None  
     tem_pet: bool | None = None
 
+class ExcluirContaSolicitacao(BaseModel):
+    senha: str = Field(min_length=1)
+
 class PerfilDetalhadoResposta(BaseModel):
     id_conta: int
     email: EmailStr

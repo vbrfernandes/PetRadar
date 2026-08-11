@@ -28,6 +28,7 @@ import {
 } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import axios from "axios";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -495,6 +496,10 @@ export default function ProfileDetailScreen({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteAccountVisible, setDeleteAccountVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
@@ -784,6 +789,72 @@ export default function ProfileDetailScreen({
   }, [logout]);
 
   // ----------------------------------------------------------
+  // EXCLUIR CONTA
+  // ----------------------------------------------------------
+
+  const handleCloseDeleteModal = useCallback(() => {
+    if (deletingAccount) {
+      return;
+    }
+
+    setDeleteAccountVisible(false);
+    setDeletePassword("");
+    setShowDeletePassword(false);
+  }, [deletingAccount]);
+
+  const handleExcluirConta = useCallback(async () => {
+    if (deletingAccount) {
+      return;
+    }
+
+    if (!deletePassword.trim()) {
+      Alert.alert(
+        "Senha obrigatória",
+        "Digite sua senha atual para confirmar a exclusão.",
+      );
+      return;
+    }
+
+    setDeletingAccount(true);
+
+    try {
+      await api.delete("/auth/me", {
+        data: {
+          senha: deletePassword,
+        },
+      });
+
+      setDeleteAccountVisible(false);
+      setDeletePassword("");
+      setShowDeletePassword(false);
+      onClose();
+      logout();
+
+      Alert.alert(
+        "Conta excluída",
+        "Sua conta foi excluída permanentemente.",
+      );
+    } catch (error: unknown) {
+      let detail: string | undefined;
+
+      if (axios.isAxiosError<{ detail?: unknown }>(error)) {
+        const responseDetail = error.response?.data?.detail;
+
+        if (typeof responseDetail === "string") {
+          detail = responseDetail;
+        }
+      }
+
+      Alert.alert(
+        "Erro ao excluir conta",
+        detail || "Não foi possível excluir sua conta. Tente novamente.",
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  }, [deletePassword, deletingAccount, logout, onClose]);
+
+  // ----------------------------------------------------------
   // CANCELAR
   // ----------------------------------------------------------
 
@@ -811,6 +882,9 @@ export default function ProfileDetailScreen({
       }).start();
     } else {
       setIsEditing(false);
+      setDeleteAccountVisible(false);
+      setDeletePassword("");
+      setShowDeletePassword(false);
 
       Animated.timing(translateX, {
         toValue: DRAWER_WIDTH,
@@ -1197,6 +1271,42 @@ export default function ProfileDetailScreen({
             </Text>
           </View>
         </View>
+
+        <Text style={styles.manageAccountLabel}>GERENCIAR CONTA</Text>
+
+        <View style={styles.deleteAccountCard}>
+          <View style={styles.deleteAccountHeader}>
+            <View style={styles.deleteAccountIcon}>
+              <Ionicons
+                name="trash-outline"
+                size={20}
+                color={COLORS.danger}
+              />
+            </View>
+
+            <View style={styles.deleteAccountContent}>
+              <Text style={styles.deleteAccountTitle}>Excluir minha conta</Text>
+
+              <Text style={styles.deleteAccountDescription}>
+                Esta ação é permanente.
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.deleteAccountButton}
+            onPress={() => setDeleteAccountVisible(true)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Excluir minha conta"
+            accessibilityHint="Abre a confirmação de exclusão permanente da conta"
+          >
+            <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+            <Text style={styles.deleteAccountButtonText}>
+              Excluir minha conta
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     );
   }, [
@@ -1443,6 +1553,121 @@ export default function ProfileDetailScreen({
             </>
           )}
         </Animated.View>
+
+        <Modal
+          transparent
+          visible={deleteAccountVisible}
+          animationType="fade"
+          onRequestClose={handleCloseDeleteModal}
+        >
+          <KeyboardAvoidingView
+            style={styles.deleteModalOverlay}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
+            <Pressable
+              style={styles.deleteModalBackdrop}
+              onPress={handleCloseDeleteModal}
+              disabled={deletingAccount}
+              accessibilityLabel="Cancelar exclusão da conta"
+            />
+
+            <View style={styles.deleteModalCard}>
+              <View style={styles.deleteModalIcon}>
+                <Ionicons
+                  name="warning-outline"
+                  size={26}
+                  color={COLORS.danger}
+                />
+              </View>
+
+              <Text style={styles.deleteModalTitle}>Excluir conta</Text>
+
+              <Text style={styles.deleteModalDescription}>
+                Esta ação é permanente. Seus dados e registros associados à sua
+                conta serão removidos do PetRadar.
+              </Text>
+
+              <Text style={styles.deletePasswordLabel}>Senha atual</Text>
+
+              <View style={styles.deletePasswordWrapper}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={19}
+                  color={COLORS.textBody}
+                />
+
+                <TextInput
+                  style={styles.deletePasswordInput}
+                  value={deletePassword}
+                  onChangeText={setDeletePassword}
+                  placeholder="Digite sua senha atual"
+                  placeholderTextColor={COLORS.textBody}
+                  secureTextEntry={!showDeletePassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!deletingAccount}
+                  accessibilityLabel="Senha atual"
+                />
+
+                <Pressable
+                  style={styles.deletePasswordToggle}
+                  onPress={() => setShowDeletePassword((current) => !current)}
+                  disabled={deletingAccount}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showDeletePassword ? "Ocultar senha" : "Mostrar senha"
+                  }
+                >
+                  <Ionicons
+                    name={showDeletePassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={COLORS.textBody}
+                  />
+                </Pressable>
+              </View>
+
+              <View style={styles.deleteModalActions}>
+                <TouchableOpacity
+                  style={styles.deleteModalCancelButton}
+                  onPress={handleCloseDeleteModal}
+                  disabled={deletingAccount}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancelar exclusão"
+                >
+                  <Text style={styles.deleteModalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.deleteModalConfirmButton,
+                    deletingAccount && styles.deleteModalButtonDisabled,
+                  ]}
+                  onPress={handleExcluirConta}
+                  disabled={deletingAccount}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel="Excluir conta definitivamente"
+                >
+                  {deletingAccount ? (
+                    <ActivityIndicator size="small" color={COLORS.surface} />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="trash-outline"
+                        size={18}
+                        color={COLORS.surface}
+                      />
+                      <Text style={styles.deleteModalConfirmText}>
+                        Excluir definitivamente
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
       </View>
     </Modal>
   );
@@ -2002,6 +2227,252 @@ const styles = StyleSheet.create({
     lineHeight: 16,
 
     color: COLORS.textBody,
+  },
+
+  manageAccountLabel: {
+    marginTop: 24,
+    marginBottom: 10,
+
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+
+    color: COLORS.textBody,
+  },
+
+  deleteAccountCard: {
+    padding: 16,
+
+    borderRadius: 18,
+
+    backgroundColor: COLORS.surface,
+
+    borderWidth: 1,
+    borderColor: COLORS.dangerBg,
+
+    ...theme.shadows.elevation1,
+  },
+
+  deleteAccountHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  deleteAccountIcon: {
+    width: 40,
+    height: 40,
+
+    borderRadius: 13,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: COLORS.dangerBg,
+  },
+
+  deleteAccountContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+
+  deleteAccountTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+
+    color: COLORS.textTitle,
+  },
+
+  deleteAccountDescription: {
+    marginTop: 3,
+
+    fontSize: 11,
+    lineHeight: 16,
+
+    color: COLORS.textBody,
+  },
+
+  deleteAccountButton: {
+    minHeight: 46,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginTop: 14,
+
+    borderRadius: 14,
+
+    backgroundColor: COLORS.dangerBg,
+
+    borderWidth: 1,
+    borderColor: COLORS.danger,
+  },
+
+  deleteAccountButtonText: {
+    marginLeft: 7,
+
+    fontSize: 13,
+    fontWeight: "800",
+
+    color: COLORS.danger,
+  },
+
+  // ==========================================================
+  // DELETE ACCOUNT MODAL
+  // ==========================================================
+
+  deleteModalOverlay: {
+    flex: 1,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 20,
+
+    backgroundColor: "rgba(15, 23, 42, 0.62)",
+  },
+
+  deleteModalBackdrop: {
+    ...StyleSheet.absoluteFill,
+  },
+
+  deleteModalCard: {
+    width: "100%",
+    maxWidth: 420,
+
+    padding: 22,
+
+    borderRadius: 22,
+
+    backgroundColor: COLORS.surface,
+
+    ...theme.shadows.elevation1,
+  },
+
+  deleteModalIcon: {
+    width: 52,
+    height: 52,
+
+    borderRadius: 17,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: COLORS.dangerBg,
+  },
+
+  deleteModalTitle: {
+    marginTop: 16,
+
+    fontSize: 20,
+    fontWeight: "800",
+
+    color: COLORS.textTitle,
+  },
+
+  deleteModalDescription: {
+    marginTop: 8,
+
+    fontSize: 13,
+    lineHeight: 19,
+
+    color: COLORS.textBody,
+  },
+
+  deletePasswordLabel: {
+    marginTop: 20,
+    marginBottom: 8,
+
+    fontSize: 12,
+    fontWeight: "800",
+
+    color: COLORS.textTitle,
+  },
+
+  deletePasswordWrapper: {
+    minHeight: 52,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    paddingLeft: 14,
+
+    borderRadius: 14,
+
+    borderWidth: 1,
+    borderColor: COLORS.dangerBg,
+
+    backgroundColor: COLORS.surface,
+  },
+
+  deletePasswordInput: {
+    flex: 1,
+
+    marginLeft: 10,
+    paddingVertical: 0,
+
+    fontSize: 14,
+
+    color: COLORS.textTitle,
+  },
+
+  deletePasswordToggle: {
+    width: 48,
+    minHeight: 50,
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  deleteModalActions: {
+    marginTop: 20,
+    gap: 10,
+  },
+
+  deleteModalCancelButton: {
+    minHeight: 48,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderRadius: 14,
+
+    backgroundColor: COLORS.surface,
+
+    borderWidth: 1,
+    borderColor: COLORS.dangerBg,
+  },
+
+  deleteModalCancelText: {
+    fontSize: 13,
+    fontWeight: "700",
+
+    color: COLORS.textBody,
+  },
+
+  deleteModalConfirmButton: {
+    minHeight: 50,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderRadius: 14,
+
+    backgroundColor: COLORS.danger,
+  },
+
+  deleteModalButtonDisabled: {
+    opacity: 0.7,
+  },
+
+  deleteModalConfirmText: {
+    marginLeft: 7,
+
+    fontSize: 13,
+    fontWeight: "800",
+
+    color: COLORS.surface,
   },
 
   // ==========================================================

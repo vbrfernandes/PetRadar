@@ -1117,7 +1117,7 @@ class ONG(Base):
 CAMINHO: backend\app\modules\auth\router.py
 ================================================================================
 
-from fastapi import APIRouter, Depends, status, File, UploadFile
+from fastapi import APIRouter, Depends, status, File, UploadFile, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
@@ -1130,7 +1130,8 @@ from app.modules.auth.schemas import (
     TokenSchema, 
     ContaResposta,
     EsqueceuSenhaSolicitacao,
-    RedefinirSenha
+    RedefinirSenha,
+    ExcluirContaSolicitacao,
 )
 from app.modules.auth import service
 from app.modules.auth.schemas import PerfilDetalhadoResposta, PerfilAtualizacao
@@ -1174,6 +1175,15 @@ async def atualizar_meu_perfil(
 ):
     return await service.atualizar_perfil(db, conta_atual, dados)
 
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def excluir_minha_conta(
+    dados: ExcluirContaSolicitacao,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    await service.excluir_conta(db, conta_atual, dados.senha)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 @router.post("/me/foto")
 async def atualizar_foto_perfil(
     foto: UploadFile = File(...),
@@ -1184,6 +1194,7 @@ async def atualizar_foto_perfil(
     conta_atual.foto_perfil = url_foto
     await db.commit()
     return {"foto_perfil": url_foto}
+
 
 ================================================================================
 CAMINHO: backend\app\modules\auth\schemas.py
@@ -1263,6 +1274,9 @@ class PerfilAtualizacao(BaseModel):
     endereco_completo: str | None = None  
     tem_pet: bool | None = None
 
+class ExcluirContaSolicitacao(BaseModel):
+    senha: str = Field(min_length=1)
+
 class PerfilDetalhadoResposta(BaseModel):
     id_conta: int
     email: EmailStr
@@ -1294,10 +1308,20 @@ CAMINHO: backend\app\modules\auth\service.py
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import delete, or_
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from app.modules.auth.models import Conta, UsuarioFisico, ONG
 from app.modules.auth.schemas import UsuarioFisicoCriar, ONGCriar, LoginSchema, RedefinirSenha, PerfilAtualizacao
+from app.modules.chat.models import MensagemChat
+from app.modules.engajamento.models import Interacao, Comentario, Denuncia
+from app.modules.ocorrencias.models import (
+    Ocorrencia,
+    Avistamento,
+    HistoricoCuidadoOcorrencia,
+)
+from app.modules.pets.models import Pet
+from app.modules.ong.models import ProjetoAdocao, VoluntariadoSeguidor
 from app.core.security import gerar_hash_senha, verificar_senha, criar_token_acesso
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -1519,6 +1543,94 @@ async def atualizar_perfil(db: AsyncSession, conta: Conta, dados: PerfilAtualiza
     await db.commit()
     await db.refresh(conta)
     return await obter_perfil_completo(db, conta)
+
+async def excluir_conta(
+    db: AsyncSession,
+    conta: Conta,
+    senha_atual: str,
+) -> None:
+    if not verificar_senha(senha_atual, conta.senha):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Senha atual incorreta.",
+        )
+
+    id_conta = conta.id_conta
+    ocorrencias_da_conta = select(Ocorrencia.id_ocorrencia).where(
+        Ocorrencia.id_conta == id_conta
+    )
+
+    try:
+        for modelo in (
+            Interacao,
+            Comentario,
+            Denuncia,
+            HistoricoCuidadoOcorrencia,
+            Avistamento,
+        ):
+            await db.execute(
+                delete(modelo).where(
+                    or_(
+                        modelo.id_conta == id_conta,
+                        modelo.id_ocorrencia.in_(ocorrencias_da_conta),
+                    )
+                )
+            )
+
+        await db.execute(
+            delete(Ocorrencia).where(Ocorrencia.id_conta == id_conta)
+        )
+
+        await db.execute(
+            delete(MensagemChat).where(
+                or_(
+                    MensagemChat.id_remetente_conta == id_conta,
+                    MensagemChat.id_destinatario_conta == id_conta,
+                )
+            )
+        )
+
+        if conta.tipo_conta == "PESSOA_FISICA":
+            id_usuario = await db.scalar(
+                select(UsuarioFisico.id_usuario).where(
+                    UsuarioFisico.id_conta == id_conta
+                )
+            )
+
+            if id_usuario is not None:
+                await db.execute(
+                    delete(VoluntariadoSeguidor).where(
+                        VoluntariadoSeguidor.id_usuario == id_usuario
+                    )
+                )
+                await db.execute(delete(Pet).where(Pet.id_usuario == id_usuario))
+                await db.execute(
+                    delete(UsuarioFisico).where(
+                        UsuarioFisico.id_usuario == id_usuario
+                    )
+                )
+
+        elif conta.tipo_conta == "ONG":
+            id_ong = await db.scalar(
+                select(ONG.id_ong).where(ONG.id_conta == id_conta)
+            )
+
+            if id_ong is not None:
+                await db.execute(
+                    delete(VoluntariadoSeguidor).where(
+                        VoluntariadoSeguidor.id_ong == id_ong
+                    )
+                )
+                await db.execute(
+                    delete(ProjetoAdocao).where(ProjetoAdocao.id_ong == id_ong)
+                )
+                await db.execute(delete(ONG).where(ONG.id_ong == id_ong))
+
+        await db.execute(delete(Conta).where(Conta.id_conta == id_conta))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
 
 ================================================================================
@@ -2035,6 +2147,11 @@ async def listar_ocorrencias_proximas(
         )
     )
 
+    distancia_metros = func.ST_Distance(
+        ocorrencia_geography,
+        ponto_usuario_geography
+    )
+
     # ---------------------------------------------------------
     # CONSULTA ESPACIAL
     # ---------------------------------------------------------
@@ -2048,6 +2165,7 @@ async def listar_ocorrencias_proximas(
             ST_X(
                 Ocorrencia.localizacao
             ).label("longitude"),
+            distancia_metros.label("distancia_metros"),
         )
         .where(
             ST_DWithin(
@@ -2057,6 +2175,7 @@ async def listar_ocorrencias_proximas(
             )
         )
         .order_by(
+            distancia_metros.asc(),
             Ocorrencia.data_ocorrencia.desc()
         )
         .limit(limite)
@@ -2070,7 +2189,7 @@ async def listar_ocorrencias_proximas(
 
     ocorrencias = []
 
-    for ocorrencia, latitude, longitude in resultado.all():
+    for ocorrencia, latitude, longitude, distancia_metros_resultado, in resultado.all():
 
         ocorrencias.append(
             {
@@ -2087,6 +2206,10 @@ async def listar_ocorrencias_proximas(
                 ),
                 "latitude": float(latitude),
                 "longitude": float(longitude),
+                "distancia_km": round(
+                    float(distancia_metros_resultado) / 1000,
+                    3
+                ),
             }
         )
 
@@ -2485,6 +2608,7 @@ class OcorrenciaResposta(BaseModel):
     endereco_localizacao: str | None = None
     latitude: float
     longitude: float
+    distancia_km: float | None = None
 
     class Config:
         from_attributes = True

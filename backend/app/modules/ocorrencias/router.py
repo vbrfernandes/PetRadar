@@ -291,6 +291,11 @@ async def listar_ocorrencias_proximas(
         )
     )
 
+    distancia_metros = func.ST_Distance(
+        ocorrencia_geography,
+        ponto_usuario_geography
+    )
+
     # ---------------------------------------------------------
     # CONSULTA ESPACIAL
     # ---------------------------------------------------------
@@ -304,6 +309,7 @@ async def listar_ocorrencias_proximas(
             ST_X(
                 Ocorrencia.localizacao
             ).label("longitude"),
+            distancia_metros.label("distancia_metros"),
         )
         .where(
             ST_DWithin(
@@ -313,6 +319,7 @@ async def listar_ocorrencias_proximas(
             )
         )
         .order_by(
+            distancia_metros.asc(),
             Ocorrencia.data_ocorrencia.desc()
         )
         .limit(limite)
@@ -326,7 +333,7 @@ async def listar_ocorrencias_proximas(
 
     ocorrencias = []
 
-    for ocorrencia, latitude, longitude in resultado.all():
+    for ocorrencia, latitude, longitude, distancia_metros_resultado, in resultado.all():
 
         ocorrencias.append(
             {
@@ -343,6 +350,10 @@ async def listar_ocorrencias_proximas(
                 ),
                 "latitude": float(latitude),
                 "longitude": float(longitude),
+                "distancia_km": round(
+                    float(distancia_metros_resultado) / 1000,
+                    3
+                ),
             }
         )
 

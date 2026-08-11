@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, File, UploadFile
+from fastapi import APIRouter, Depends, status, File, UploadFile, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import obter_conta_atual
@@ -11,7 +11,8 @@ from app.modules.auth.schemas import (
     TokenSchema, 
     ContaResposta,
     EsqueceuSenhaSolicitacao,
-    RedefinirSenha
+    RedefinirSenha,
+    ExcluirContaSolicitacao,
 )
 from app.modules.auth import service
 from app.modules.auth.schemas import PerfilDetalhadoResposta, PerfilAtualizacao
@@ -54,6 +55,15 @@ async def atualizar_meu_perfil(
     db: AsyncSession = Depends(get_db)
 ):
     return await service.atualizar_perfil(db, conta_atual, dados)
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def excluir_minha_conta(
+    dados: ExcluirContaSolicitacao,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    await service.excluir_conta(db, conta_atual, dados.senha)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.post("/me/foto")
 async def atualizar_foto_perfil(
