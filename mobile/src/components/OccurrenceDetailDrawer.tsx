@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
   Easing,
@@ -22,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
 import api from "../services/api";
+import { useAuthStore } from "../store/useAuthStore";
 import { theme } from "../theme/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -32,6 +34,8 @@ interface OccurrenceDetailDrawerProps {
   visible: boolean;
   occurrenceId: number | null;
   onClose: () => void;
+  onEdit: (occurrenceId: number) => void;
+  onDeleted: (occurrenceId: number) => void | Promise<void>;
 }
 
 type TipoCuidado = "AGUA" | "COMIDA";
@@ -445,6 +449,8 @@ export default function OccurrenceDetailDrawer({
   visible,
   occurrenceId,
   onClose,
+  onEdit,
+  onDeleted,
 }: OccurrenceDetailDrawerProps) {
   const translateX = useRef(
     new Animated.Value(DRAWER_WIDTH)
@@ -455,6 +461,9 @@ export default function OccurrenceDetailDrawer({
   ).current;
 
   const cuidadoEmRegistro = useRef(false);
+  const exclusaoEmAndamento = useRef(false);
+
+  const user = useAuthStore((state) => state.user);
 
   const [mounted, setMounted] = useState(false);
   const [occurrence, setOccurrence] =
@@ -486,6 +495,8 @@ export default function OccurrenceDetailDrawer({
   const [erroHistorico, setErroHistorico] =
     useState<string | null>(null);
 
+  const [excluindo, setExcluindo] = useState(false);
+
   useEffect(() => {
     if (!visible || occurrenceId === null) {
       return;
@@ -502,8 +513,10 @@ export default function OccurrenceDetailDrawer({
     setHistorico(null);
     setErroHistorico(null);
     setTipoCuidadoCarregando(null);
+    setExcluindo(false);
 
     cuidadoEmRegistro.current = false;
+    exclusaoEmAndamento.current = false;
 
     translateX.setValue(DRAWER_WIDTH);
     overlayOpacity.setValue(0);
@@ -566,6 +579,7 @@ export default function OccurrenceDetailDrawer({
 
   const limparEstado = () => {
     cuidadoEmRegistro.current = false;
+    exclusaoEmAndamento.current = false;
 
     setMounted(false);
     setOccurrence(null);
@@ -579,9 +593,10 @@ export default function OccurrenceDetailDrawer({
     setHistorico(null);
     setCarregandoHistorico(false);
     setErroHistorico(null);
+    setExcluindo(false);
   };
 
-  const fechar = () => {
+  const animarFechamento = (aposFechar?: () => void) => {
     Animated.parallel([
       Animated.timing(translateX, {
         toValue: DRAWER_WIDTH,
@@ -597,7 +612,12 @@ export default function OccurrenceDetailDrawer({
     ]).start(() => {
       limparEstado();
       onClose();
+      aposFechar?.();
     });
+  };
+
+  const fechar = () => {
+    animarFechamento();
   };
 
   const registrarCuidadoAgora = async (
@@ -697,6 +717,77 @@ export default function OccurrenceDetailDrawer({
     }
   };
 
+  const editarOcorrencia = () => {
+    if (!occurrence) {
+      return;
+    }
+
+    const id = occurrence.id_ocorrencia;
+    animarFechamento(() => onEdit(id));
+  };
+
+  const excluirOcorrencia = async () => {
+    if (!occurrence || exclusaoEmAndamento.current) {
+      return;
+    }
+
+    exclusaoEmAndamento.current = true;
+    setExcluindo(true);
+
+    const id = occurrence.id_ocorrencia;
+
+    try {
+      await api.delete(`/ocorrencias/${id}`);
+
+      animarFechamento(() => {
+        void (async () => {
+          try {
+            await onDeleted(id);
+          } catch (err: unknown) {
+            console.warn(
+              "[OccurrenceDetailDrawer] Erro ao atualizar ocorrências após exclusão:",
+              err,
+            );
+          } finally {
+            Alert.alert(
+              "Ocorrência excluída",
+              "A ocorrência foi removida com sucesso.",
+            );
+          }
+        })();
+      });
+    } catch (err: unknown) {
+      exclusaoEmAndamento.current = false;
+      setExcluindo(false);
+      Alert.alert(
+        "Não foi possível excluir",
+        mensagemErroApi(
+          err,
+          "Não foi possível excluir a ocorrência. Tente novamente.",
+        ),
+      );
+    }
+  };
+
+  const confirmarExclusao = () => {
+    if (excluindo) {
+      return;
+    }
+
+    Alert.alert(
+      "Excluir ocorrência?",
+      "Esta ação removerá permanentemente esta ocorrência e os registros relacionados.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => void excluirOcorrencia(),
+        },
+      ],
+    );
+  };
+
   if (!mounted) {
     return null;
   }
@@ -716,6 +807,10 @@ export default function OccurrenceDetailDrawer({
   const nomeAnimal =
     normalizarTexto(occurrence?.tipo_animal) ||
     "Animal não informado";
+
+  const ehProprietario = Boolean(
+    occurrence && Number(user?.id) === occurrence.id_conta,
+  );
 
   return (
     <Modal
@@ -1511,6 +1606,73 @@ export default function OccurrenceDetailDrawer({
                     </View>
                   ) : null}
 
+                  {ehProprietario ? (
+                    <View style={styles.managementSection}>
+                      <SectionHeader
+                        title="Gerenciar ocorrência"
+                        subtitle="Edite as informações ou remova este registro."
+                      />
+
+                      <View style={styles.managementActions}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Editar ocorrência"
+                          disabled={excluindo}
+                          onPress={editarOcorrencia}
+                          style={({ pressed }) => [
+                            styles.managementButton,
+                            pressed && styles.pressed,
+                            excluindo && styles.managementButtonDisabled,
+                          ]}
+                        >
+                          <Ionicons
+                            name="create-outline"
+                            size={20}
+                            color={COLORS.primary}
+                          />
+                          <Text style={styles.managementButtonText}>
+                            Editar ocorrência
+                          </Text>
+                        </Pressable>
+
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Excluir ocorrência"
+                          accessibilityState={{ disabled: excluindo }}
+                          disabled={excluindo}
+                          onPress={confirmarExclusao}
+                          style={({ pressed }) => [
+                            styles.managementButton,
+                            styles.managementDeleteButton,
+                            pressed && styles.pressed,
+                            excluindo && styles.managementButtonDisabled,
+                          ]}
+                        >
+                          {excluindo ? (
+                            <ActivityIndicator
+                              size="small"
+                              color={COLORS.danger}
+                            />
+                          ) : (
+                            <Ionicons
+                              name="trash-outline"
+                              size={20}
+                              color={COLORS.danger}
+                            />
+                          )}
+                          <Text
+                            style={[
+                              styles.managementButtonText,
+                              styles.managementDeleteButtonText,
+                            ]}
+                          >
+                            {excluindo ? "Excluindo..." : "Excluir ocorrência"}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : null}
+
                   <View style={styles.footer}>
                     <View style={styles.footerLine} />
 
@@ -1544,7 +1706,7 @@ const styles = StyleSheet.create({
   },
 
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: COLORS.overlay,
   },
 
@@ -1654,7 +1816,7 @@ const styles = StyleSheet.create({
   },
 
   photoShade: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: COLORS.imageOverlay,
   },
 
@@ -2210,6 +2372,46 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: "500",
     color: COLORS.textTitle,
+  },
+
+  managementSection: {
+    marginBottom: 20,
+  },
+
+  managementActions: {
+    gap: 10,
+  },
+
+  managementButton: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "rgba(31, 92, 77, 0.18)",
+    borderRadius: 15,
+    backgroundColor: COLORS.surface,
+  },
+
+  managementDeleteButton: {
+    borderColor: "rgba(185, 28, 28, 0.18)",
+    backgroundColor: COLORS.dangerBg,
+  },
+
+  managementButtonDisabled: {
+    opacity: 0.55,
+  },
+
+  managementButtonText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: COLORS.primary,
+  },
+
+  managementDeleteButtonText: {
+    color: COLORS.danger,
   },
 
   footer: {

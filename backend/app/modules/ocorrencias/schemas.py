@@ -103,6 +103,8 @@ class OcorrenciaDetalheResposta(BaseModel):
     data_ocorrencia: datetime
 
     endereco_localizacao: str | None = None
+    latitude: float
+    longitude: float
 
     foto: str
     observacao: str | None = None

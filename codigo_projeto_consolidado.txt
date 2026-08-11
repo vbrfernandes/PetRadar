@@ -1798,7 +1798,18 @@ class Avistamento(Base):
 CAMINHO: backend\app\modules\ocorrencias\router.py
 ================================================================================
 
-from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -1813,9 +1824,11 @@ from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
 from app.modules.auth.models import Conta, ONG, UsuarioFisico
 from app.modules.ocorrencias.models import (
+    Avistamento,
     HistoricoCuidadoOcorrencia,
     Ocorrencia,
 )
+from app.modules.engajamento.models import Comentario, Denuncia, Interacao
 from app.modules.ocorrencias.schemas import (
     CuidadoOcorrenciaCriar,
     CuidadoOcorrenciaResposta,
@@ -1823,7 +1836,7 @@ from app.modules.ocorrencias.schemas import (
     OcorrenciaDetalheResposta,
 )
 from datetime import datetime
-from sqlalchemy import cast, func
+from sqlalchemy import cast, delete, func
 from geoalchemy2 import Geography
 from app.modules.pets.models import Pet
 
@@ -1859,6 +1872,39 @@ def _query_cuidados_com_autor(id_ocorrencia: int):
         .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
         .where(HistoricoCuidadoOcorrencia.id_ocorrencia == id_ocorrencia)
     )
+
+
+async def _carregar_cuidados_atuais(
+    db: AsyncSession,
+    id_ocorrencia: int,
+) -> dict:
+    cuidados_resultado = await db.execute(
+        _query_cuidados_com_autor(id_ocorrencia)
+        .distinct(HistoricoCuidadoOcorrencia.tipo_cuidado)
+        .order_by(
+            HistoricoCuidadoOcorrencia.tipo_cuidado,
+            HistoricoCuidadoOcorrencia.data_cuidado.desc(),
+            HistoricoCuidadoOcorrencia.id_historico.desc(),
+        )
+    )
+    cuidados_atuais = {"agua": None, "comida": None}
+    for cuidado, nome_autor in cuidados_resultado.all():
+        chave = cuidado.tipo_cuidado.lower()
+        if cuidados_atuais[chave] is None:
+            cuidados_atuais[chave] = _serializar_cuidado(cuidado, nome_autor)
+    return cuidados_atuais
+
+
+def _validar_proprietario(
+    ocorrencia: Ocorrencia,
+    conta_atual: Conta,
+    mensagem: str,
+) -> None:
+    if ocorrencia.id_conta != conta_atual.id_conta:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=mensagem,
+        )
 
 @router.post("/", response_model=OcorrenciaResposta, status_code=status.HTTP_201_CREATED)
 async def criar_ocorrencia(
@@ -2146,6 +2192,192 @@ async def listar_minhas_ocorrencias(
 
     return ocorrencias
 
+
+@router.put(
+    "/{id_ocorrencia:int}",
+    response_model=OcorrenciaDetalheResposta,
+)
+async def atualizar_ocorrencia(
+    id_ocorrencia: int,
+    request: Request,
+    tipo_ocorrencia: str | None = Form(None),
+    status_badge: str | None = Form(None),
+    tipo_animal: str | None = Form(None),
+    raca: str | None = Form(None),
+    sexo: str | None = Form(None),
+    cor: str | None = Form(None),
+    porte: str | None = Form(None),
+    idade: str | None = Form(None),
+    saude_critica: bool | None = Form(None),
+    saude_detalhes: str | None = Form(None),
+    cuidados_iniciais: str | None = Form(None),
+    deficiencia: bool | None = Form(None),
+    deficiencia_detalhes: str | None = Form(None),
+    nivel_urgencia: str | None = Form(None),
+    data_ocorrencia: datetime | None = Form(None),
+    endereco_localizacao: str | None = Form(None),
+    latitude: float | None = Form(None),
+    longitude: float | None = Form(None),
+    observacao: str | None = Form(None),
+    foto: UploadFile | None = File(None),
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    resultado = await db.execute(
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        ).where(Ocorrencia.id_ocorrencia == id_ocorrencia)
+    )
+    linha = resultado.one_or_none()
+
+    if linha is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    ocorrencia, latitude_atual, longitude_atual = linha
+    _validar_proprietario(
+        ocorrencia,
+        conta_atual,
+        "Você não tem permissão para alterar esta ocorrência.",
+    )
+
+    formulario = await request.form()
+    campos_texto = {
+        "tipo_ocorrencia": tipo_ocorrencia,
+        "status_badge": status_badge,
+        "tipo_animal": tipo_animal,
+        "raca": raca,
+        "sexo": sexo,
+        "cor": cor,
+        "porte": porte,
+        "idade": idade,
+        "saude_detalhes": saude_detalhes,
+        "cuidados_iniciais": cuidados_iniciais,
+        "deficiencia_detalhes": deficiencia_detalhes,
+        "nivel_urgencia": nivel_urgencia,
+        "endereco_localizacao": endereco_localizacao,
+        "observacao": observacao,
+    }
+
+    try:
+        for campo, valor in campos_texto.items():
+            if campo in formulario:
+                setattr(ocorrencia, campo, valor)
+
+        if "saude_critica" in formulario:
+            ocorrencia.saude_critica = bool(saude_critica)
+        if "deficiencia" in formulario:
+            ocorrencia.deficiencia = bool(deficiencia)
+        if "data_ocorrencia" in formulario:
+            ocorrencia.data_ocorrencia = data_ocorrencia
+
+        localizacao_modificada = (
+            "latitude" in formulario or "longitude" in formulario
+        )
+        if localizacao_modificada:
+            nova_latitude = (
+                latitude if "latitude" in formulario else float(latitude_atual)
+            )
+            nova_longitude = (
+                longitude if "longitude" in formulario else float(longitude_atual)
+            )
+            if (
+                nova_latitude is None
+                or nova_longitude is None
+                or not -90 <= nova_latitude <= 90
+                or not -180 <= nova_longitude <= 180
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Coordenadas inválidas.",
+                )
+            ponto_wkt = f"POINT({nova_longitude} {nova_latitude})"
+            ocorrencia.localizacao = ST_GeomFromText(ponto_wkt, 4326)
+
+        if foto is not None:
+            ocorrencia.foto = await upload_foto_pet(
+                foto,
+                pasta="ocorrencias",
+            )
+
+        await db.commit()
+        await db.refresh(ocorrencia)
+    except Exception:
+        await db.rollback()
+        raise
+
+    detalhe_resultado = await db.execute(
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        )
+        .options(selectinload(Ocorrencia.avistamentos))
+        .where(Ocorrencia.id_ocorrencia == id_ocorrencia)
+    )
+    ocorrencia_atualizada, latitude_atualizada, longitude_atualizada = (
+        detalhe_resultado.one()
+    )
+    ocorrencia_atualizada.latitude = float(latitude_atualizada)
+    ocorrencia_atualizada.longitude = float(longitude_atualizada)
+    ocorrencia_atualizada.cuidados_atuais = await _carregar_cuidados_atuais(
+        db,
+        id_ocorrencia,
+    )
+    return ocorrencia_atualizada
+
+
+@router.delete(
+    "/{id_ocorrencia:int}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
+async def excluir_ocorrencia(
+    id_ocorrencia: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    ocorrencia = await db.get(Ocorrencia, id_ocorrencia)
+    if ocorrencia is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    _validar_proprietario(
+        ocorrencia,
+        conta_atual,
+        "Você não tem permissão para excluir esta ocorrência.",
+    )
+
+    try:
+        for modelo in (
+            Interacao,
+            Comentario,
+            Denuncia,
+            HistoricoCuidadoOcorrencia,
+            Avistamento,
+        ):
+            await db.execute(
+                delete(modelo).where(modelo.id_ocorrencia == id_ocorrencia)
+            )
+        await db.execute(
+            delete(Ocorrencia).where(
+                Ocorrencia.id_ocorrencia == id_ocorrencia
+            )
+        )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get(
     "/{id_ocorrencia:int}",
     response_model=OcorrenciaDetalheResposta
@@ -2155,7 +2387,11 @@ async def obter_ocorrencia_detalhada(
     db: AsyncSession = Depends(get_db)
 ):
     query = (
-        select(Ocorrencia)
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        )
         .options(
             selectinload(
                 Ocorrencia.avistamentos
@@ -2169,29 +2405,21 @@ async def obter_ocorrencia_detalhada(
 
     resultado = await db.execute(query)
 
-    ocorrencia = resultado.scalar_one_or_none()
+    linha = resultado.one_or_none()
 
-    if ocorrencia is None:
+    if linha is None:
         raise HTTPException(
             status_code=404,
             detail="Ocorrência não encontrada."
         )
 
-    cuidados_resultado = await db.execute(
-        _query_cuidados_com_autor(id_ocorrencia)
-        .distinct(HistoricoCuidadoOcorrencia.tipo_cuidado)
-        .order_by(
-            HistoricoCuidadoOcorrencia.tipo_cuidado,
-            HistoricoCuidadoOcorrencia.data_cuidado.desc(),
-            HistoricoCuidadoOcorrencia.id_historico.desc(),
-        )
+    ocorrencia, latitude, longitude = linha
+    ocorrencia.latitude = float(latitude)
+    ocorrencia.longitude = float(longitude)
+    ocorrencia.cuidados_atuais = await _carregar_cuidados_atuais(
+        db,
+        id_ocorrencia,
     )
-    cuidados_atuais = {"agua": None, "comida": None}
-    for cuidado, nome_autor in cuidados_resultado.all():
-        chave = cuidado.tipo_cuidado.lower()
-        if cuidados_atuais[chave] is None:
-            cuidados_atuais[chave] = _serializar_cuidado(cuidado, nome_autor)
-    ocorrencia.cuidados_atuais = cuidados_atuais
     return ocorrencia
 
 
@@ -2380,6 +2608,8 @@ class OcorrenciaDetalheResposta(BaseModel):
     data_ocorrencia: datetime
 
     endereco_localizacao: str | None = None
+    latitude: float
+    longitude: float
 
     foto: str
     observacao: str | None = None
@@ -2761,6 +2991,7 @@ export type AppTabParamList = {
   CadastroOcorrencia:
     | {
         pet?: PetOcorrenciaPrefill;
+        ocorrenciaId?: number;
       }
     | undefined;
 };
@@ -2834,6 +3065,7 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
 
 ================================================================================
 CAMINHO: mobile\CLAUDE.md
@@ -2974,6 +3206,7 @@ CAMINHO: mobile\src\components\OccurrenceDetailDrawer.tsx
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
   Easing,
@@ -2995,6 +3228,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
 import api from "../services/api";
+import { useAuthStore } from "../store/useAuthStore";
 import { theme } from "../theme/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -3005,6 +3239,8 @@ interface OccurrenceDetailDrawerProps {
   visible: boolean;
   occurrenceId: number | null;
   onClose: () => void;
+  onEdit: (occurrenceId: number) => void;
+  onDeleted: (occurrenceId: number) => void | Promise<void>;
 }
 
 type TipoCuidado = "AGUA" | "COMIDA";
@@ -3418,6 +3654,8 @@ export default function OccurrenceDetailDrawer({
   visible,
   occurrenceId,
   onClose,
+  onEdit,
+  onDeleted,
 }: OccurrenceDetailDrawerProps) {
   const translateX = useRef(
     new Animated.Value(DRAWER_WIDTH)
@@ -3428,6 +3666,9 @@ export default function OccurrenceDetailDrawer({
   ).current;
 
   const cuidadoEmRegistro = useRef(false);
+  const exclusaoEmAndamento = useRef(false);
+
+  const user = useAuthStore((state) => state.user);
 
   const [mounted, setMounted] = useState(false);
   const [occurrence, setOccurrence] =
@@ -3459,6 +3700,8 @@ export default function OccurrenceDetailDrawer({
   const [erroHistorico, setErroHistorico] =
     useState<string | null>(null);
 
+  const [excluindo, setExcluindo] = useState(false);
+
   useEffect(() => {
     if (!visible || occurrenceId === null) {
       return;
@@ -3475,8 +3718,10 @@ export default function OccurrenceDetailDrawer({
     setHistorico(null);
     setErroHistorico(null);
     setTipoCuidadoCarregando(null);
+    setExcluindo(false);
 
     cuidadoEmRegistro.current = false;
+    exclusaoEmAndamento.current = false;
 
     translateX.setValue(DRAWER_WIDTH);
     overlayOpacity.setValue(0);
@@ -3539,6 +3784,7 @@ export default function OccurrenceDetailDrawer({
 
   const limparEstado = () => {
     cuidadoEmRegistro.current = false;
+    exclusaoEmAndamento.current = false;
 
     setMounted(false);
     setOccurrence(null);
@@ -3552,9 +3798,10 @@ export default function OccurrenceDetailDrawer({
     setHistorico(null);
     setCarregandoHistorico(false);
     setErroHistorico(null);
+    setExcluindo(false);
   };
 
-  const fechar = () => {
+  const animarFechamento = (aposFechar?: () => void) => {
     Animated.parallel([
       Animated.timing(translateX, {
         toValue: DRAWER_WIDTH,
@@ -3570,7 +3817,12 @@ export default function OccurrenceDetailDrawer({
     ]).start(() => {
       limparEstado();
       onClose();
+      aposFechar?.();
     });
+  };
+
+  const fechar = () => {
+    animarFechamento();
   };
 
   const registrarCuidadoAgora = async (
@@ -3670,6 +3922,77 @@ export default function OccurrenceDetailDrawer({
     }
   };
 
+  const editarOcorrencia = () => {
+    if (!occurrence) {
+      return;
+    }
+
+    const id = occurrence.id_ocorrencia;
+    animarFechamento(() => onEdit(id));
+  };
+
+  const excluirOcorrencia = async () => {
+    if (!occurrence || exclusaoEmAndamento.current) {
+      return;
+    }
+
+    exclusaoEmAndamento.current = true;
+    setExcluindo(true);
+
+    const id = occurrence.id_ocorrencia;
+
+    try {
+      await api.delete(`/ocorrencias/${id}`);
+
+      animarFechamento(() => {
+        void (async () => {
+          try {
+            await onDeleted(id);
+          } catch (err: unknown) {
+            console.warn(
+              "[OccurrenceDetailDrawer] Erro ao atualizar ocorrências após exclusão:",
+              err,
+            );
+          } finally {
+            Alert.alert(
+              "Ocorrência excluída",
+              "A ocorrência foi removida com sucesso.",
+            );
+          }
+        })();
+      });
+    } catch (err: unknown) {
+      exclusaoEmAndamento.current = false;
+      setExcluindo(false);
+      Alert.alert(
+        "Não foi possível excluir",
+        mensagemErroApi(
+          err,
+          "Não foi possível excluir a ocorrência. Tente novamente.",
+        ),
+      );
+    }
+  };
+
+  const confirmarExclusao = () => {
+    if (excluindo) {
+      return;
+    }
+
+    Alert.alert(
+      "Excluir ocorrência?",
+      "Esta ação removerá permanentemente esta ocorrência e os registros relacionados.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: () => void excluirOcorrencia(),
+        },
+      ],
+    );
+  };
+
   if (!mounted) {
     return null;
   }
@@ -3689,6 +4012,10 @@ export default function OccurrenceDetailDrawer({
   const nomeAnimal =
     normalizarTexto(occurrence?.tipo_animal) ||
     "Animal não informado";
+
+  const ehProprietario = Boolean(
+    occurrence && Number(user?.id) === occurrence.id_conta,
+  );
 
   return (
     <Modal
@@ -4484,6 +4811,73 @@ export default function OccurrenceDetailDrawer({
                     </View>
                   ) : null}
 
+                  {ehProprietario ? (
+                    <View style={styles.managementSection}>
+                      <SectionHeader
+                        title="Gerenciar ocorrência"
+                        subtitle="Edite as informações ou remova este registro."
+                      />
+
+                      <View style={styles.managementActions}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Editar ocorrência"
+                          disabled={excluindo}
+                          onPress={editarOcorrencia}
+                          style={({ pressed }) => [
+                            styles.managementButton,
+                            pressed && styles.pressed,
+                            excluindo && styles.managementButtonDisabled,
+                          ]}
+                        >
+                          <Ionicons
+                            name="create-outline"
+                            size={20}
+                            color={COLORS.primary}
+                          />
+                          <Text style={styles.managementButtonText}>
+                            Editar ocorrência
+                          </Text>
+                        </Pressable>
+
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Excluir ocorrência"
+                          accessibilityState={{ disabled: excluindo }}
+                          disabled={excluindo}
+                          onPress={confirmarExclusao}
+                          style={({ pressed }) => [
+                            styles.managementButton,
+                            styles.managementDeleteButton,
+                            pressed && styles.pressed,
+                            excluindo && styles.managementButtonDisabled,
+                          ]}
+                        >
+                          {excluindo ? (
+                            <ActivityIndicator
+                              size="small"
+                              color={COLORS.danger}
+                            />
+                          ) : (
+                            <Ionicons
+                              name="trash-outline"
+                              size={20}
+                              color={COLORS.danger}
+                            />
+                          )}
+                          <Text
+                            style={[
+                              styles.managementButtonText,
+                              styles.managementDeleteButtonText,
+                            ]}
+                          >
+                            {excluindo ? "Excluindo..." : "Excluir ocorrência"}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : null}
+
                   <View style={styles.footer}>
                     <View style={styles.footerLine} />
 
@@ -4517,7 +4911,7 @@ const styles = StyleSheet.create({
   },
 
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: COLORS.overlay,
   },
 
@@ -4627,7 +5021,7 @@ const styles = StyleSheet.create({
   },
 
   photoShade: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: COLORS.imageOverlay,
   },
 
@@ -5185,6 +5579,46 @@ const styles = StyleSheet.create({
     color: COLORS.textTitle,
   },
 
+  managementSection: {
+    marginBottom: 20,
+  },
+
+  managementActions: {
+    gap: 10,
+  },
+
+  managementButton: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: "rgba(31, 92, 77, 0.18)",
+    borderRadius: 15,
+    backgroundColor: COLORS.surface,
+  },
+
+  managementDeleteButton: {
+    borderColor: "rgba(185, 28, 28, 0.18)",
+    backgroundColor: COLORS.dangerBg,
+  },
+
+  managementButtonDisabled: {
+    opacity: 0.55,
+  },
+
+  managementButtonText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: COLORS.primary,
+  },
+
+  managementDeleteButtonText: {
+    color: COLORS.danger,
+  },
+
   footer: {
     marginTop: 2,
     marginBottom: 8,
@@ -5472,6 +5906,7 @@ const styles = StyleSheet.create({
   },
 });
 
+
 ================================================================================
 CAMINHO: mobile\src\screens\CadastroOcorrenciaScreen.tsx
 ================================================================================
@@ -5496,6 +5931,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useFocusEffect } from "@react-navigation/native";
+import axios from "axios";
 
 import { theme } from "../theme/colors";
 import { useAuthStore } from "../store/useAuthStore";
@@ -5628,6 +6064,41 @@ interface RespostaGeocodingMapbox {
   features: SugestaoEndereco[];
 }
 
+interface OcorrenciaEdicao {
+  id_ocorrencia: number;
+  tipo_ocorrencia: string;
+  status_badge: string;
+  tipo_animal: string;
+  raca: string | null;
+  sexo: string | null;
+  cor: string | null;
+  porte: string | null;
+  idade: string | null;
+  saude_critica: boolean;
+  saude_detalhes: string | null;
+  cuidados_iniciais: string | null;
+  deficiencia: boolean;
+  deficiencia_detalhes: string | null;
+  nivel_urgencia: string;
+  data_ocorrencia: string;
+  endereco_localizacao: string | null;
+  latitude: number;
+  longitude: number;
+  foto: string;
+  observacao: string | null;
+}
+
+const ehTipoOcorrencia = (valor: string): valor is TipoOcorrencia =>
+  tiposOcorrencia.some((tipo) => tipo.valor === valor);
+
+const separarValores = (valor: string | null) =>
+  valor
+    ? valor
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+
 export default function CadastroOcorrenciaScreen({
   navigation,
   route,
@@ -5676,6 +6147,13 @@ export default function CadastroOcorrenciaScreen({
   const [comidaRegistrada, setComidaRegistrada] = useState<Date | null>(null);
 
   const [fotoUri, setFotoUri] = useState<string | null>(null);
+  const [fotoOriginal, setFotoOriginal] = useState<string | null>(null);
+
+  const [cuidadosIniciaisOriginais, setCuidadosIniciaisOriginais] = useState<
+    string | null
+  >(null);
+  const [cuidadosIniciaisAlterados, setCuidadosIniciaisAlterados] =
+    useState(false);
 
   const [nivelUrgencia, setNivelUrgencia] = useState("Moderado");
 
@@ -5687,6 +6165,7 @@ export default function CadastroOcorrenciaScreen({
 
   const [salvando, setSalvando] = useState(false);
   const [localizando, setLocalizando] = useState(false);
+  const [carregandoOcorrencia, setCarregandoOcorrencia] = useState(false);
 
   const limparFormulario = useCallback(() => {
     setTipoOcorrencia(null);
@@ -5719,6 +6198,9 @@ export default function CadastroOcorrenciaScreen({
     setComidaRegistrada(null);
 
     setFotoUri(null);
+    setFotoOriginal(null);
+    setCuidadosIniciaisOriginais(null);
+    setCuidadosIniciaisAlterados(false);
 
     setNivelUrgencia("Moderado");
 
@@ -5727,16 +6209,121 @@ export default function CadastroOcorrenciaScreen({
     setMostrarSeletorData(false);
 
     setObservacao("");
+    setCarregandoOcorrencia(false);
   }, []);
 
   const petOrigem =
     route.params?.pet ?? null;
+  const ocorrenciaId = route.params?.ocorrenciaId ?? null;
+  const modoEdicao = ocorrenciaId !== null;
 
   useFocusEffect(
     useCallback(() => {
+      let ativo = true;
+
       limparFormulario();
 
-      if (petOrigem) {
+      if (modoEdicao) {
+        setCarregandoOcorrencia(true);
+
+        const carregarOcorrencia = async () => {
+          try {
+            const response = await api.get<OcorrenciaEdicao>(
+              `/ocorrencias/${ocorrenciaId}`,
+            );
+
+            if (!ativo) {
+              return;
+            }
+
+            const occurrence = response.data;
+
+            setTipoOcorrencia(
+              ehTipoOcorrencia(occurrence.tipo_ocorrencia)
+                ? occurrence.tipo_ocorrencia
+                : null,
+            );
+
+            const tipoAnimalNormalizado = occurrence.tipo_animal
+              .trim()
+              .toUpperCase();
+            if (tipoAnimalNormalizado === "CACHORRO") {
+              setTipoAnimal("CACHORRO");
+              setTipoAnimalOutro("");
+            } else if (tipoAnimalNormalizado === "GATO") {
+              setTipoAnimal("GATO");
+              setTipoAnimalOutro("");
+            } else {
+              setTipoAnimal("OUTRO");
+              setTipoAnimalOutro(occurrence.tipo_animal);
+            }
+
+            setEndereco(occurrence.endereco_localizacao ?? "");
+            setEnderecoSelecionado(true);
+            setLatitude(Number(occurrence.latitude));
+            setLongitude(Number(occurrence.longitude));
+
+            setSexo(occurrence.sexo ?? "");
+            setCor(occurrence.cor ?? "");
+            setPorte(occurrence.porte ?? "");
+            setIdade(occurrence.idade ?? "");
+
+            const racaExistente = occurrence.raca?.trim() ?? "";
+            setRaca(racaExistente);
+            setRacaConhecida(Boolean(racaExistente));
+
+            setSaudeCritica(Boolean(occurrence.saude_critica));
+            setProblemasSelecionados(
+              separarValores(occurrence.saude_detalhes),
+            );
+
+            setDeficiencia(Boolean(occurrence.deficiencia));
+            setDeficienciasSelecionadas(
+              separarValores(occurrence.deficiencia_detalhes),
+            );
+
+            setNivelUrgencia(occurrence.nivel_urgencia || "Moderado");
+
+            const data = new Date(occurrence.data_ocorrencia);
+            if (!Number.isNaN(data.getTime())) {
+              setDataOcorrencia(data);
+              setDataOcorrenciaTexto(
+                data.toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }),
+              );
+            }
+
+            setFotoUri(occurrence.foto);
+            setFotoOriginal(occurrence.foto);
+            setObservacao(occurrence.observacao ?? "");
+            setCuidadosIniciaisOriginais(occurrence.cuidados_iniciais);
+          } catch (error: unknown) {
+            if (!ativo) {
+              return;
+            }
+
+            const mensagem = axios.isAxiosError(error)
+              ? error.response?.data?.detail
+              : null;
+            Alert.alert(
+              "Não foi possível carregar",
+              typeof mensagem === "string"
+                ? mensagem
+                : "Não foi possível carregar a ocorrência para edição.",
+              [{ text: "Voltar", onPress: () => navigation.goBack() }],
+            );
+          } finally {
+            if (ativo) {
+              setCarregandoOcorrencia(false);
+            }
+          }
+        };
+
+        void carregarOcorrencia();
+      } else if (petOrigem) {
         // É um animal pertencente ao usuário.
         setTipoOcorrencia("PET_PERDIDO");
 
@@ -5763,9 +6350,16 @@ export default function CadastroOcorrenciaScreen({
       }
 
       return () => {
+        ativo = false;
         limparFormulario();
       };
-    }, [limparFormulario, petOrigem]),
+    }, [
+      limparFormulario,
+      modoEdicao,
+      navigation,
+      ocorrenciaId,
+      petOrigem,
+    ]),
   );
 
   const voltarParaMapa = () => {
@@ -6007,6 +6601,7 @@ export default function CadastroOcorrenciaScreen({
 
   const registrarCuidado = (tipo: "agua" | "comida") => {
     const agora = new Date();
+    setCuidadosIniciaisAlterados(true);
 
     if (tipo === "agua") {
       setAguaRegistrada(aguaRegistrada ? null : agora);
@@ -6153,7 +6748,13 @@ export default function CadastroOcorrenciaScreen({
        * como texto. Posteriormente vamos normalizar esses dados
        * no backend em campos próprios.
        */
-      formData.append("cuidados_iniciais", cuidadosFormatados);
+      const cuidadosIniciaisParaEnviar =
+        modoEdicao && !cuidadosIniciaisAlterados
+          ? cuidadosIniciaisOriginais
+          : cuidadosFormatados;
+      if (cuidadosIniciaisParaEnviar !== null) {
+        formData.append("cuidados_iniciais", cuidadosIniciaisParaEnviar);
+      }
 
       formData.append("deficiencia", String(deficiencia));
 
@@ -6179,8 +6780,16 @@ export default function CadastroOcorrenciaScreen({
           petOrigem?.foto &&
           fotoUri === petOrigem.foto
         );
+      const fotoRemotaMantida = Boolean(
+        modoEdicao &&
+          fotoOriginal &&
+          fotoUri === fotoOriginal &&
+          /^https?:\/\//i.test(fotoUri.trim()),
+      );
 
-      if (
+      if (fotoRemotaMantida) {
+        // O backend conserva a foto atual quando nenhum novo arquivo é enviado.
+      } else if (
         fotoEhDoPet &&
         petOrigem
       ) {
@@ -6214,16 +6823,24 @@ export default function CadastroOcorrenciaScreen({
         );
       }
 
-      await api.post("/ocorrencias/", formData, {
+      const config = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         timeout: 30000,
-      });
+      };
+
+      if (modoEdicao) {
+        await api.put(`/ocorrencias/${ocorrenciaId}`, formData, config);
+      } else {
+        await api.post("/ocorrencias/", formData, config);
+      }
 
       Alert.alert(
-        "Ocorrência registrada",
-        "Obrigado por ajudar a comunidade a localizar e proteger animais.",
+        modoEdicao ? "Ocorrência atualizada" : "Ocorrência registrada",
+        modoEdicao
+          ? "As alterações foram salvas com sucesso."
+          : "Obrigado por ajudar a comunidade a localizar e proteger animais.",
         [
           {
             text: "Voltar ao mapa",
@@ -6231,18 +6848,28 @@ export default function CadastroOcorrenciaScreen({
           },
         ],
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const erroApi = axios.isAxiosError(error) ? error : null;
       console.error(
-        "[CadastroOcorrencia] Erro ao registrar ocorrência:",
-        error?.response?.status,
-        error?.response?.data || error?.message,
+        `[CadastroOcorrencia] Erro ao ${
+          modoEdicao ? "atualizar" : "registrar"
+        } ocorrência:`,
+        erroApi?.response?.status,
+        erroApi?.response?.data || erroApi?.message,
       );
 
       const mensagem =
-        error?.response?.data?.detail ||
-        "Não foi possível registrar a ocorrência. Verifique sua conexão e tente novamente.";
+        erroApi?.response?.data?.detail ||
+        `Não foi possível ${
+          modoEdicao ? "atualizar" : "registrar"
+        } a ocorrência. Verifique sua conexão e tente novamente.`;
 
-      Alert.alert("Não foi possível registrar", mensagem);
+      Alert.alert(
+        modoEdicao
+          ? "Não foi possível atualizar"
+          : "Não foi possível registrar",
+        mensagem,
+      );
     } finally {
       setSalvando(false);
     }
@@ -6343,6 +6970,20 @@ export default function CadastroOcorrenciaScreen({
     </View>
   );
 
+  if (modoEdicao && carregandoOcorrencia) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.editLoadingContainer}>
+          <ActivityIndicator color={theme.colors.brand} size="large" />
+          <Text style={styles.editLoadingTitle}>Carregando ocorrência</Text>
+          <Text style={styles.editLoadingText}>
+            Preparando os dados para edição.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -6374,7 +7015,9 @@ export default function CadastroOcorrenciaScreen({
             <View style={styles.topBarTitle}>
               <Text style={styles.eyebrow}>PETRADAR</Text>
 
-              <Text style={styles.screenTitle}>Registrar ocorrência</Text>
+              <Text style={styles.screenTitle}>
+                {modoEdicao ? "Editar ocorrência" : "Registrar ocorrência"}
+              </Text>
             </View>
 
             <View style={styles.topBarSpacer} />
@@ -7275,7 +7918,11 @@ export default function CadastroOcorrenciaScreen({
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Registrar ocorrência"
+            accessibilityLabel={
+              modoEdicao
+                ? "Salvar alterações da ocorrência"
+                : "Registrar ocorrência"
+            }
             onPress={handleSalvar}
             disabled={salvando}
             style={({ pressed }) => [
@@ -7297,9 +7944,13 @@ export default function CadastroOcorrenciaScreen({
                 </View>
 
                 <View style={styles.submitContent}>
-                  <Text style={styles.submitTitle}>Registrar ocorrência</Text>
+                  <Text style={styles.submitTitle}>
+                    {modoEdicao ? "Salvar alterações" : "Registrar ocorrência"}
+                  </Text>
 
-                  <Text style={styles.submitSubtitle}>Enviar para o mapa</Text>
+                  <Text style={styles.submitSubtitle}>
+                    {modoEdicao ? "Atualizar ocorrência" : "Enviar para o mapa"}
+                  </Text>
                 </View>
 
                 <Ionicons
@@ -7614,6 +8265,27 @@ const styles = StyleSheet.create({
 
   flex: {
     flex: 1,
+  },
+
+  editLoadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+  },
+
+  editLoadingTitle: {
+    marginTop: 16,
+    color: theme.colors.textTitle,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+
+  editLoadingText: {
+    marginTop: 6,
+    color: theme.colors.textBody,
+    fontSize: 13,
+    textAlign: "center",
   },
 
   scrollContent: {
@@ -9929,6 +10601,8 @@ interface OcorrenciaMapa {
   longitude: number;
 }
 
+type RecarregarListaOcorrencias = () => void | Promise<void>;
+
 /**
  * ============================================================
  * COMPONENTE PRINCIPAL
@@ -10022,6 +10696,21 @@ export default function MapScreen() {
   const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<
     number | null
   >(null);
+
+  const recarregarListaOrigemRef = useRef<RecarregarListaOcorrencias | null>(
+    null,
+  );
+
+  const abrirDetalheOcorrencia = useCallback(
+    (
+      occurrenceId: number,
+      recarregarLista?: RecarregarListaOcorrencias,
+    ) => {
+      recarregarListaOrigemRef.current = recarregarLista ?? null;
+      setSelectedOccurrenceId(occurrenceId);
+    },
+    [],
+  );
 
   useEffect(() => {
     raioPesquisaKmRef.current = raioPesquisaKm;
@@ -10237,6 +10926,49 @@ export default function MapScreen() {
     [],
   );
 
+  const recarregarOcorrenciasNoMapa = useCallback(async () => {
+    if (userLocation) {
+      await carregarOcorrenciasProximas(
+        userLocation.coords.latitude,
+        userLocation.coords.longitude,
+        raioPesquisaKmRef.current,
+      );
+      return;
+    }
+
+    await obterLocalizacaoInicial();
+  }, [carregarOcorrenciasProximas, obterLocalizacaoInicial, userLocation]);
+
+  const handleOccurrenceDeleted = useCallback(
+    async (occurrenceId: number) => {
+      setOcorrencias((atuais) =>
+        atuais.filter(
+          (ocorrencia) => ocorrencia.id_ocorrencia !== occurrenceId,
+        ),
+      );
+
+      const recarregarListaOrigem = recarregarListaOrigemRef.current;
+      recarregarListaOrigemRef.current = null;
+
+      const atualizacoes: Promise<unknown>[] = [
+        recarregarOcorrenciasNoMapa(),
+      ];
+      if (recarregarListaOrigem) {
+        atualizacoes.push(Promise.resolve().then(recarregarListaOrigem));
+      }
+
+      await Promise.allSettled(atualizacoes);
+    },
+    [recarregarOcorrenciasNoMapa],
+  );
+
+  const handleOccurrenceEdit = useCallback(
+    (occurrenceId: number) => {
+      navigation.navigate("CadastroOcorrencia", { ocorrenciaId: occurrenceId });
+    },
+    [navigation],
+  );
+
   /**
    * ==========================================================
    * ATUALIZAÇÃO AO VOLTAR PARA O MAPA
@@ -10250,25 +10982,19 @@ export default function MapScreen() {
       }
 
       const atualizarMapa = async () => {
-        if (userLocation) {
-          await carregarOcorrenciasProximas(
-            userLocation.coords.latitude,
-            userLocation.coords.longitude,
-            raioPesquisaKmRef.current,
-          );
+        await recarregarOcorrenciasNoMapa();
 
-          return;
+        const recarregarListaOrigem = recarregarListaOrigemRef.current;
+        if (recarregarListaOrigem) {
+          recarregarListaOrigemRef.current = null;
+          await recarregarListaOrigem();
         }
-
-        await obterLocalizacaoInicial();
       };
 
       void atualizarMapa();
     }, [
       perfilMapaCarregado,
-      userLocation,
-      carregarOcorrenciasProximas,
-      obterLocalizacaoInicial,
+      recarregarOcorrenciasNoMapa,
     ]),
   );
 
@@ -10484,7 +11210,7 @@ export default function MapScreen() {
                   }`}
                 accessibilityHint="Mostra os detalhes desta ocorrência"
                 onPress={() => {
-                  setSelectedOccurrenceId(ocorrencia.id_ocorrencia);
+                  abrirDetalheOcorrencia(ocorrencia.id_ocorrencia);
                 }}
                 style={({ pressed }) => [
                   styles.markerPressable,
@@ -11228,6 +11954,7 @@ export default function MapScreen() {
         visible={profileDetailVisible}
         onClose={() => setProfileDetailVisible(false)}
         onProfileUpdated={handleProfileUpdated}
+        onOccurrencePress={abrirDetalheOcorrencia}
       />
 
       {/* ======================================================
@@ -11238,6 +11965,8 @@ export default function MapScreen() {
         visible={selectedOccurrenceId !== null}
         occurrenceId={selectedOccurrenceId}
         onClose={() => setSelectedOccurrenceId(null)}
+        onEdit={handleOccurrenceEdit}
+        onDeleted={handleOccurrenceDeleted}
       />
     </SafeAreaView>
   );
@@ -12499,6 +13228,10 @@ interface ProfileDetailProps {
   visible: boolean;
   onClose: () => void;
   onProfileUpdated?: (profile: ProfileUpdateResult) => void;
+  onOccurrencePress: (
+    occurrenceId: number,
+    onChanged: () => void | Promise<void>,
+  ) => void;
 }
 
 interface UserProfile {
@@ -12804,7 +13537,12 @@ const PetSwitch = React.memo(({ value, onChange }: PetSwitchProps) => {
 // OCORRÊNCIA
 // ============================================================
 
-const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
+interface OcorrenciaCardProps {
+  item: Ocorrencia;
+  onPress: (occurrenceId: number) => void;
+}
+
+const OcorrenciaCard = React.memo(({ item, onPress }: OcorrenciaCardProps) => {
   const isPerdido = item.status_badge?.toUpperCase() === "PERDIDO";
 
   const statusColor = isPerdido ? COLORS.danger : COLORS.warning;
@@ -12812,7 +13550,18 @@ const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
   const statusBackground = isPerdido ? COLORS.dangerBg : COLORS.warningBg;
 
   return (
-    <View style={styles.occurrenceCard}>
+    <Pressable
+      onPress={() => onPress(item.id_ocorrencia)}
+      accessibilityRole="button"
+      accessibilityLabel={`Abrir detalhes da ocorrência de ${
+        item.tipo_animal || "animal"
+      }`}
+      accessibilityHint="Mostra os detalhes completos desta ocorrência"
+      style={({ pressed }) => [
+        styles.occurrenceCard,
+        pressed && styles.occurrenceCardPressed,
+      ]}
+    >
       <View style={styles.occurrenceImageWrapper}>
         {item.foto ? (
           <Image source={{ uri: item.foto }} style={styles.occurrenceImage} />
@@ -12862,7 +13611,7 @@ const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
       </View>
 
       <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
-    </View>
+    </Pressable>
   );
 });
 
@@ -12874,6 +13623,7 @@ export default function ProfileDetailScreen({
   visible,
   onClose,
   onProfileUpdated,
+  onOccurrencePress,
 }: ProfileDetailProps) {
   const { logout } = useAuthStore();
 
@@ -13823,7 +14573,14 @@ export default function ProfileDetailScreen({
                         </Text>
                       </View>
                     }
-                    renderItem={({ item }) => <OcorrenciaCard item={item} />}
+                    renderItem={({ item }) => (
+                      <OcorrenciaCard
+                        item={item}
+                        onPress={(occurrenceId) =>
+                          onOccurrencePress(occurrenceId, carregarDados)
+                        }
+                      />
+                    )}
                     showsVerticalScrollIndicator={false}
                   />
                 )}
@@ -14757,6 +15514,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(15, 23, 42, 0.055)",
 
     ...theme.shadows.elevation1,
+  },
+
+  occurrenceCardPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
   },
 
   occurrenceImageWrapper: {

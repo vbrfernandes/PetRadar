@@ -83,6 +83,10 @@ interface ProfileDetailProps {
   visible: boolean;
   onClose: () => void;
   onProfileUpdated?: (profile: ProfileUpdateResult) => void;
+  onOccurrencePress: (
+    occurrenceId: number,
+    onChanged: () => void | Promise<void>,
+  ) => void;
 }
 
 interface UserProfile {
@@ -388,7 +392,12 @@ const PetSwitch = React.memo(({ value, onChange }: PetSwitchProps) => {
 // OCORRÊNCIA
 // ============================================================
 
-const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
+interface OcorrenciaCardProps {
+  item: Ocorrencia;
+  onPress: (occurrenceId: number) => void;
+}
+
+const OcorrenciaCard = React.memo(({ item, onPress }: OcorrenciaCardProps) => {
   const isPerdido = item.status_badge?.toUpperCase() === "PERDIDO";
 
   const statusColor = isPerdido ? COLORS.danger : COLORS.warning;
@@ -396,7 +405,18 @@ const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
   const statusBackground = isPerdido ? COLORS.dangerBg : COLORS.warningBg;
 
   return (
-    <View style={styles.occurrenceCard}>
+    <Pressable
+      onPress={() => onPress(item.id_ocorrencia)}
+      accessibilityRole="button"
+      accessibilityLabel={`Abrir detalhes da ocorrência de ${
+        item.tipo_animal || "animal"
+      }`}
+      accessibilityHint="Mostra os detalhes completos desta ocorrência"
+      style={({ pressed }) => [
+        styles.occurrenceCard,
+        pressed && styles.occurrenceCardPressed,
+      ]}
+    >
       <View style={styles.occurrenceImageWrapper}>
         {item.foto ? (
           <Image source={{ uri: item.foto }} style={styles.occurrenceImage} />
@@ -446,7 +466,7 @@ const OcorrenciaCard = React.memo(({ item }: { item: Ocorrencia }) => {
       </View>
 
       <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
-    </View>
+    </Pressable>
   );
 });
 
@@ -458,6 +478,7 @@ export default function ProfileDetailScreen({
   visible,
   onClose,
   onProfileUpdated,
+  onOccurrencePress,
 }: ProfileDetailProps) {
   const { logout } = useAuthStore();
 
@@ -1407,7 +1428,14 @@ export default function ProfileDetailScreen({
                         </Text>
                       </View>
                     }
-                    renderItem={({ item }) => <OcorrenciaCard item={item} />}
+                    renderItem={({ item }) => (
+                      <OcorrenciaCard
+                        item={item}
+                        onPress={(occurrenceId) =>
+                          onOccurrencePress(occurrenceId, carregarDados)
+                        }
+                      />
+                    )}
                     showsVerticalScrollIndicator={false}
                   />
                 )}
@@ -2341,6 +2369,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(15, 23, 42, 0.055)",
 
     ...theme.shadows.elevation1,
+  },
+
+  occurrenceCardPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
   },
 
   occurrenceImageWrapper: {

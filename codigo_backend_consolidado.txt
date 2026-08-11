@@ -1742,7 +1742,18 @@ class Avistamento(Base):
 CAMINHO: backend\app\modules\ocorrencias\router.py
 ================================================================================
 
-from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -1757,9 +1768,11 @@ from app.core.deps import obter_conta_atual
 from app.core.cloudinary import upload_foto_pet
 from app.modules.auth.models import Conta, ONG, UsuarioFisico
 from app.modules.ocorrencias.models import (
+    Avistamento,
     HistoricoCuidadoOcorrencia,
     Ocorrencia,
 )
+from app.modules.engajamento.models import Comentario, Denuncia, Interacao
 from app.modules.ocorrencias.schemas import (
     CuidadoOcorrenciaCriar,
     CuidadoOcorrenciaResposta,
@@ -1767,7 +1780,7 @@ from app.modules.ocorrencias.schemas import (
     OcorrenciaDetalheResposta,
 )
 from datetime import datetime
-from sqlalchemy import cast, func
+from sqlalchemy import cast, delete, func
 from geoalchemy2 import Geography
 from app.modules.pets.models import Pet
 
@@ -1803,6 +1816,39 @@ def _query_cuidados_com_autor(id_ocorrencia: int):
         .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
         .where(HistoricoCuidadoOcorrencia.id_ocorrencia == id_ocorrencia)
     )
+
+
+async def _carregar_cuidados_atuais(
+    db: AsyncSession,
+    id_ocorrencia: int,
+) -> dict:
+    cuidados_resultado = await db.execute(
+        _query_cuidados_com_autor(id_ocorrencia)
+        .distinct(HistoricoCuidadoOcorrencia.tipo_cuidado)
+        .order_by(
+            HistoricoCuidadoOcorrencia.tipo_cuidado,
+            HistoricoCuidadoOcorrencia.data_cuidado.desc(),
+            HistoricoCuidadoOcorrencia.id_historico.desc(),
+        )
+    )
+    cuidados_atuais = {"agua": None, "comida": None}
+    for cuidado, nome_autor in cuidados_resultado.all():
+        chave = cuidado.tipo_cuidado.lower()
+        if cuidados_atuais[chave] is None:
+            cuidados_atuais[chave] = _serializar_cuidado(cuidado, nome_autor)
+    return cuidados_atuais
+
+
+def _validar_proprietario(
+    ocorrencia: Ocorrencia,
+    conta_atual: Conta,
+    mensagem: str,
+) -> None:
+    if ocorrencia.id_conta != conta_atual.id_conta:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=mensagem,
+        )
 
 @router.post("/", response_model=OcorrenciaResposta, status_code=status.HTTP_201_CREATED)
 async def criar_ocorrencia(
@@ -2090,6 +2136,192 @@ async def listar_minhas_ocorrencias(
 
     return ocorrencias
 
+
+@router.put(
+    "/{id_ocorrencia:int}",
+    response_model=OcorrenciaDetalheResposta,
+)
+async def atualizar_ocorrencia(
+    id_ocorrencia: int,
+    request: Request,
+    tipo_ocorrencia: str | None = Form(None),
+    status_badge: str | None = Form(None),
+    tipo_animal: str | None = Form(None),
+    raca: str | None = Form(None),
+    sexo: str | None = Form(None),
+    cor: str | None = Form(None),
+    porte: str | None = Form(None),
+    idade: str | None = Form(None),
+    saude_critica: bool | None = Form(None),
+    saude_detalhes: str | None = Form(None),
+    cuidados_iniciais: str | None = Form(None),
+    deficiencia: bool | None = Form(None),
+    deficiencia_detalhes: str | None = Form(None),
+    nivel_urgencia: str | None = Form(None),
+    data_ocorrencia: datetime | None = Form(None),
+    endereco_localizacao: str | None = Form(None),
+    latitude: float | None = Form(None),
+    longitude: float | None = Form(None),
+    observacao: str | None = Form(None),
+    foto: UploadFile | None = File(None),
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    resultado = await db.execute(
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        ).where(Ocorrencia.id_ocorrencia == id_ocorrencia)
+    )
+    linha = resultado.one_or_none()
+
+    if linha is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    ocorrencia, latitude_atual, longitude_atual = linha
+    _validar_proprietario(
+        ocorrencia,
+        conta_atual,
+        "Você não tem permissão para alterar esta ocorrência.",
+    )
+
+    formulario = await request.form()
+    campos_texto = {
+        "tipo_ocorrencia": tipo_ocorrencia,
+        "status_badge": status_badge,
+        "tipo_animal": tipo_animal,
+        "raca": raca,
+        "sexo": sexo,
+        "cor": cor,
+        "porte": porte,
+        "idade": idade,
+        "saude_detalhes": saude_detalhes,
+        "cuidados_iniciais": cuidados_iniciais,
+        "deficiencia_detalhes": deficiencia_detalhes,
+        "nivel_urgencia": nivel_urgencia,
+        "endereco_localizacao": endereco_localizacao,
+        "observacao": observacao,
+    }
+
+    try:
+        for campo, valor in campos_texto.items():
+            if campo in formulario:
+                setattr(ocorrencia, campo, valor)
+
+        if "saude_critica" in formulario:
+            ocorrencia.saude_critica = bool(saude_critica)
+        if "deficiencia" in formulario:
+            ocorrencia.deficiencia = bool(deficiencia)
+        if "data_ocorrencia" in formulario:
+            ocorrencia.data_ocorrencia = data_ocorrencia
+
+        localizacao_modificada = (
+            "latitude" in formulario or "longitude" in formulario
+        )
+        if localizacao_modificada:
+            nova_latitude = (
+                latitude if "latitude" in formulario else float(latitude_atual)
+            )
+            nova_longitude = (
+                longitude if "longitude" in formulario else float(longitude_atual)
+            )
+            if (
+                nova_latitude is None
+                or nova_longitude is None
+                or not -90 <= nova_latitude <= 90
+                or not -180 <= nova_longitude <= 180
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Coordenadas inválidas.",
+                )
+            ponto_wkt = f"POINT({nova_longitude} {nova_latitude})"
+            ocorrencia.localizacao = ST_GeomFromText(ponto_wkt, 4326)
+
+        if foto is not None:
+            ocorrencia.foto = await upload_foto_pet(
+                foto,
+                pasta="ocorrencias",
+            )
+
+        await db.commit()
+        await db.refresh(ocorrencia)
+    except Exception:
+        await db.rollback()
+        raise
+
+    detalhe_resultado = await db.execute(
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        )
+        .options(selectinload(Ocorrencia.avistamentos))
+        .where(Ocorrencia.id_ocorrencia == id_ocorrencia)
+    )
+    ocorrencia_atualizada, latitude_atualizada, longitude_atualizada = (
+        detalhe_resultado.one()
+    )
+    ocorrencia_atualizada.latitude = float(latitude_atualizada)
+    ocorrencia_atualizada.longitude = float(longitude_atualizada)
+    ocorrencia_atualizada.cuidados_atuais = await _carregar_cuidados_atuais(
+        db,
+        id_ocorrencia,
+    )
+    return ocorrencia_atualizada
+
+
+@router.delete(
+    "/{id_ocorrencia:int}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
+async def excluir_ocorrencia(
+    id_ocorrencia: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    ocorrencia = await db.get(Ocorrencia, id_ocorrencia)
+    if ocorrencia is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    _validar_proprietario(
+        ocorrencia,
+        conta_atual,
+        "Você não tem permissão para excluir esta ocorrência.",
+    )
+
+    try:
+        for modelo in (
+            Interacao,
+            Comentario,
+            Denuncia,
+            HistoricoCuidadoOcorrencia,
+            Avistamento,
+        ):
+            await db.execute(
+                delete(modelo).where(modelo.id_ocorrencia == id_ocorrencia)
+            )
+        await db.execute(
+            delete(Ocorrencia).where(
+                Ocorrencia.id_ocorrencia == id_ocorrencia
+            )
+        )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get(
     "/{id_ocorrencia:int}",
     response_model=OcorrenciaDetalheResposta
@@ -2099,7 +2331,11 @@ async def obter_ocorrencia_detalhada(
     db: AsyncSession = Depends(get_db)
 ):
     query = (
-        select(Ocorrencia)
+        select(
+            Ocorrencia,
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
+        )
         .options(
             selectinload(
                 Ocorrencia.avistamentos
@@ -2113,29 +2349,21 @@ async def obter_ocorrencia_detalhada(
 
     resultado = await db.execute(query)
 
-    ocorrencia = resultado.scalar_one_or_none()
+    linha = resultado.one_or_none()
 
-    if ocorrencia is None:
+    if linha is None:
         raise HTTPException(
             status_code=404,
             detail="Ocorrência não encontrada."
         )
 
-    cuidados_resultado = await db.execute(
-        _query_cuidados_com_autor(id_ocorrencia)
-        .distinct(HistoricoCuidadoOcorrencia.tipo_cuidado)
-        .order_by(
-            HistoricoCuidadoOcorrencia.tipo_cuidado,
-            HistoricoCuidadoOcorrencia.data_cuidado.desc(),
-            HistoricoCuidadoOcorrencia.id_historico.desc(),
-        )
+    ocorrencia, latitude, longitude = linha
+    ocorrencia.latitude = float(latitude)
+    ocorrencia.longitude = float(longitude)
+    ocorrencia.cuidados_atuais = await _carregar_cuidados_atuais(
+        db,
+        id_ocorrencia,
     )
-    cuidados_atuais = {"agua": None, "comida": None}
-    for cuidado, nome_autor in cuidados_resultado.all():
-        chave = cuidado.tipo_cuidado.lower()
-        if cuidados_atuais[chave] is None:
-            cuidados_atuais[chave] = _serializar_cuidado(cuidado, nome_autor)
-    ocorrencia.cuidados_atuais = cuidados_atuais
     return ocorrencia
 
 
@@ -2324,6 +2552,8 @@ class OcorrenciaDetalheResposta(BaseModel):
     data_ocorrencia: datetime
 
     endereco_localizacao: str | None = None
+    latitude: float
+    longitude: float
 
     foto: str
     observacao: str | None = None

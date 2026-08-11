@@ -124,6 +124,8 @@ interface OcorrenciaMapa {
   longitude: number;
 }
 
+type RecarregarListaOcorrencias = () => void | Promise<void>;
+
 /**
  * ============================================================
  * COMPONENTE PRINCIPAL
@@ -217,6 +219,21 @@ export default function MapScreen() {
   const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<
     number | null
   >(null);
+
+  const recarregarListaOrigemRef = useRef<RecarregarListaOcorrencias | null>(
+    null,
+  );
+
+  const abrirDetalheOcorrencia = useCallback(
+    (
+      occurrenceId: number,
+      recarregarLista?: RecarregarListaOcorrencias,
+    ) => {
+      recarregarListaOrigemRef.current = recarregarLista ?? null;
+      setSelectedOccurrenceId(occurrenceId);
+    },
+    [],
+  );
 
   useEffect(() => {
     raioPesquisaKmRef.current = raioPesquisaKm;
@@ -432,6 +449,49 @@ export default function MapScreen() {
     [],
   );
 
+  const recarregarOcorrenciasNoMapa = useCallback(async () => {
+    if (userLocation) {
+      await carregarOcorrenciasProximas(
+        userLocation.coords.latitude,
+        userLocation.coords.longitude,
+        raioPesquisaKmRef.current,
+      );
+      return;
+    }
+
+    await obterLocalizacaoInicial();
+  }, [carregarOcorrenciasProximas, obterLocalizacaoInicial, userLocation]);
+
+  const handleOccurrenceDeleted = useCallback(
+    async (occurrenceId: number) => {
+      setOcorrencias((atuais) =>
+        atuais.filter(
+          (ocorrencia) => ocorrencia.id_ocorrencia !== occurrenceId,
+        ),
+      );
+
+      const recarregarListaOrigem = recarregarListaOrigemRef.current;
+      recarregarListaOrigemRef.current = null;
+
+      const atualizacoes: Promise<unknown>[] = [
+        recarregarOcorrenciasNoMapa(),
+      ];
+      if (recarregarListaOrigem) {
+        atualizacoes.push(Promise.resolve().then(recarregarListaOrigem));
+      }
+
+      await Promise.allSettled(atualizacoes);
+    },
+    [recarregarOcorrenciasNoMapa],
+  );
+
+  const handleOccurrenceEdit = useCallback(
+    (occurrenceId: number) => {
+      navigation.navigate("CadastroOcorrencia", { ocorrenciaId: occurrenceId });
+    },
+    [navigation],
+  );
+
   /**
    * ==========================================================
    * ATUALIZAÇÃO AO VOLTAR PARA O MAPA
@@ -445,25 +505,19 @@ export default function MapScreen() {
       }
 
       const atualizarMapa = async () => {
-        if (userLocation) {
-          await carregarOcorrenciasProximas(
-            userLocation.coords.latitude,
-            userLocation.coords.longitude,
-            raioPesquisaKmRef.current,
-          );
+        await recarregarOcorrenciasNoMapa();
 
-          return;
+        const recarregarListaOrigem = recarregarListaOrigemRef.current;
+        if (recarregarListaOrigem) {
+          recarregarListaOrigemRef.current = null;
+          await recarregarListaOrigem();
         }
-
-        await obterLocalizacaoInicial();
       };
 
       void atualizarMapa();
     }, [
       perfilMapaCarregado,
-      userLocation,
-      carregarOcorrenciasProximas,
-      obterLocalizacaoInicial,
+      recarregarOcorrenciasNoMapa,
     ]),
   );
 
@@ -679,7 +733,7 @@ export default function MapScreen() {
                   }`}
                 accessibilityHint="Mostra os detalhes desta ocorrência"
                 onPress={() => {
-                  setSelectedOccurrenceId(ocorrencia.id_ocorrencia);
+                  abrirDetalheOcorrencia(ocorrencia.id_ocorrencia);
                 }}
                 style={({ pressed }) => [
                   styles.markerPressable,
@@ -1423,6 +1477,7 @@ export default function MapScreen() {
         visible={profileDetailVisible}
         onClose={() => setProfileDetailVisible(false)}
         onProfileUpdated={handleProfileUpdated}
+        onOccurrencePress={abrirDetalheOcorrencia}
       />
 
       {/* ======================================================
@@ -1433,6 +1488,8 @@ export default function MapScreen() {
         visible={selectedOccurrenceId !== null}
         occurrenceId={selectedOccurrenceId}
         onClose={() => setSelectedOccurrenceId(null)}
+        onEdit={handleOccurrenceEdit}
+        onDeleted={handleOccurrenceDeleted}
       />
     </SafeAreaView>
   );

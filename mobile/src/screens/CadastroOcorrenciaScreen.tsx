@@ -18,6 +18,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useFocusEffect } from "@react-navigation/native";
+import axios from "axios";
 
 import { theme } from "../theme/colors";
 import { useAuthStore } from "../store/useAuthStore";
@@ -150,6 +151,41 @@ interface RespostaGeocodingMapbox {
   features: SugestaoEndereco[];
 }
 
+interface OcorrenciaEdicao {
+  id_ocorrencia: number;
+  tipo_ocorrencia: string;
+  status_badge: string;
+  tipo_animal: string;
+  raca: string | null;
+  sexo: string | null;
+  cor: string | null;
+  porte: string | null;
+  idade: string | null;
+  saude_critica: boolean;
+  saude_detalhes: string | null;
+  cuidados_iniciais: string | null;
+  deficiencia: boolean;
+  deficiencia_detalhes: string | null;
+  nivel_urgencia: string;
+  data_ocorrencia: string;
+  endereco_localizacao: string | null;
+  latitude: number;
+  longitude: number;
+  foto: string;
+  observacao: string | null;
+}
+
+const ehTipoOcorrencia = (valor: string): valor is TipoOcorrencia =>
+  tiposOcorrencia.some((tipo) => tipo.valor === valor);
+
+const separarValores = (valor: string | null) =>
+  valor
+    ? valor
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : [];
+
 export default function CadastroOcorrenciaScreen({
   navigation,
   route,
@@ -198,6 +234,13 @@ export default function CadastroOcorrenciaScreen({
   const [comidaRegistrada, setComidaRegistrada] = useState<Date | null>(null);
 
   const [fotoUri, setFotoUri] = useState<string | null>(null);
+  const [fotoOriginal, setFotoOriginal] = useState<string | null>(null);
+
+  const [cuidadosIniciaisOriginais, setCuidadosIniciaisOriginais] = useState<
+    string | null
+  >(null);
+  const [cuidadosIniciaisAlterados, setCuidadosIniciaisAlterados] =
+    useState(false);
 
   const [nivelUrgencia, setNivelUrgencia] = useState("Moderado");
 
@@ -209,6 +252,7 @@ export default function CadastroOcorrenciaScreen({
 
   const [salvando, setSalvando] = useState(false);
   const [localizando, setLocalizando] = useState(false);
+  const [carregandoOcorrencia, setCarregandoOcorrencia] = useState(false);
 
   const limparFormulario = useCallback(() => {
     setTipoOcorrencia(null);
@@ -241,6 +285,9 @@ export default function CadastroOcorrenciaScreen({
     setComidaRegistrada(null);
 
     setFotoUri(null);
+    setFotoOriginal(null);
+    setCuidadosIniciaisOriginais(null);
+    setCuidadosIniciaisAlterados(false);
 
     setNivelUrgencia("Moderado");
 
@@ -249,16 +296,121 @@ export default function CadastroOcorrenciaScreen({
     setMostrarSeletorData(false);
 
     setObservacao("");
+    setCarregandoOcorrencia(false);
   }, []);
 
   const petOrigem =
     route.params?.pet ?? null;
+  const ocorrenciaId = route.params?.ocorrenciaId ?? null;
+  const modoEdicao = ocorrenciaId !== null;
 
   useFocusEffect(
     useCallback(() => {
+      let ativo = true;
+
       limparFormulario();
 
-      if (petOrigem) {
+      if (modoEdicao) {
+        setCarregandoOcorrencia(true);
+
+        const carregarOcorrencia = async () => {
+          try {
+            const response = await api.get<OcorrenciaEdicao>(
+              `/ocorrencias/${ocorrenciaId}`,
+            );
+
+            if (!ativo) {
+              return;
+            }
+
+            const occurrence = response.data;
+
+            setTipoOcorrencia(
+              ehTipoOcorrencia(occurrence.tipo_ocorrencia)
+                ? occurrence.tipo_ocorrencia
+                : null,
+            );
+
+            const tipoAnimalNormalizado = occurrence.tipo_animal
+              .trim()
+              .toUpperCase();
+            if (tipoAnimalNormalizado === "CACHORRO") {
+              setTipoAnimal("CACHORRO");
+              setTipoAnimalOutro("");
+            } else if (tipoAnimalNormalizado === "GATO") {
+              setTipoAnimal("GATO");
+              setTipoAnimalOutro("");
+            } else {
+              setTipoAnimal("OUTRO");
+              setTipoAnimalOutro(occurrence.tipo_animal);
+            }
+
+            setEndereco(occurrence.endereco_localizacao ?? "");
+            setEnderecoSelecionado(true);
+            setLatitude(Number(occurrence.latitude));
+            setLongitude(Number(occurrence.longitude));
+
+            setSexo(occurrence.sexo ?? "");
+            setCor(occurrence.cor ?? "");
+            setPorte(occurrence.porte ?? "");
+            setIdade(occurrence.idade ?? "");
+
+            const racaExistente = occurrence.raca?.trim() ?? "";
+            setRaca(racaExistente);
+            setRacaConhecida(Boolean(racaExistente));
+
+            setSaudeCritica(Boolean(occurrence.saude_critica));
+            setProblemasSelecionados(
+              separarValores(occurrence.saude_detalhes),
+            );
+
+            setDeficiencia(Boolean(occurrence.deficiencia));
+            setDeficienciasSelecionadas(
+              separarValores(occurrence.deficiencia_detalhes),
+            );
+
+            setNivelUrgencia(occurrence.nivel_urgencia || "Moderado");
+
+            const data = new Date(occurrence.data_ocorrencia);
+            if (!Number.isNaN(data.getTime())) {
+              setDataOcorrencia(data);
+              setDataOcorrenciaTexto(
+                data.toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }),
+              );
+            }
+
+            setFotoUri(occurrence.foto);
+            setFotoOriginal(occurrence.foto);
+            setObservacao(occurrence.observacao ?? "");
+            setCuidadosIniciaisOriginais(occurrence.cuidados_iniciais);
+          } catch (error: unknown) {
+            if (!ativo) {
+              return;
+            }
+
+            const mensagem = axios.isAxiosError(error)
+              ? error.response?.data?.detail
+              : null;
+            Alert.alert(
+              "Não foi possível carregar",
+              typeof mensagem === "string"
+                ? mensagem
+                : "Não foi possível carregar a ocorrência para edição.",
+              [{ text: "Voltar", onPress: () => navigation.goBack() }],
+            );
+          } finally {
+            if (ativo) {
+              setCarregandoOcorrencia(false);
+            }
+          }
+        };
+
+        void carregarOcorrencia();
+      } else if (petOrigem) {
         // É um animal pertencente ao usuário.
         setTipoOcorrencia("PET_PERDIDO");
 
@@ -285,9 +437,16 @@ export default function CadastroOcorrenciaScreen({
       }
 
       return () => {
+        ativo = false;
         limparFormulario();
       };
-    }, [limparFormulario, petOrigem]),
+    }, [
+      limparFormulario,
+      modoEdicao,
+      navigation,
+      ocorrenciaId,
+      petOrigem,
+    ]),
   );
 
   const voltarParaMapa = () => {
@@ -529,6 +688,7 @@ export default function CadastroOcorrenciaScreen({
 
   const registrarCuidado = (tipo: "agua" | "comida") => {
     const agora = new Date();
+    setCuidadosIniciaisAlterados(true);
 
     if (tipo === "agua") {
       setAguaRegistrada(aguaRegistrada ? null : agora);
@@ -675,7 +835,13 @@ export default function CadastroOcorrenciaScreen({
        * como texto. Posteriormente vamos normalizar esses dados
        * no backend em campos próprios.
        */
-      formData.append("cuidados_iniciais", cuidadosFormatados);
+      const cuidadosIniciaisParaEnviar =
+        modoEdicao && !cuidadosIniciaisAlterados
+          ? cuidadosIniciaisOriginais
+          : cuidadosFormatados;
+      if (cuidadosIniciaisParaEnviar !== null) {
+        formData.append("cuidados_iniciais", cuidadosIniciaisParaEnviar);
+      }
 
       formData.append("deficiencia", String(deficiencia));
 
@@ -701,8 +867,16 @@ export default function CadastroOcorrenciaScreen({
           petOrigem?.foto &&
           fotoUri === petOrigem.foto
         );
+      const fotoRemotaMantida = Boolean(
+        modoEdicao &&
+          fotoOriginal &&
+          fotoUri === fotoOriginal &&
+          /^https?:\/\//i.test(fotoUri.trim()),
+      );
 
-      if (
+      if (fotoRemotaMantida) {
+        // O backend conserva a foto atual quando nenhum novo arquivo é enviado.
+      } else if (
         fotoEhDoPet &&
         petOrigem
       ) {
@@ -736,16 +910,24 @@ export default function CadastroOcorrenciaScreen({
         );
       }
 
-      await api.post("/ocorrencias/", formData, {
+      const config = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         timeout: 30000,
-      });
+      };
+
+      if (modoEdicao) {
+        await api.put(`/ocorrencias/${ocorrenciaId}`, formData, config);
+      } else {
+        await api.post("/ocorrencias/", formData, config);
+      }
 
       Alert.alert(
-        "Ocorrência registrada",
-        "Obrigado por ajudar a comunidade a localizar e proteger animais.",
+        modoEdicao ? "Ocorrência atualizada" : "Ocorrência registrada",
+        modoEdicao
+          ? "As alterações foram salvas com sucesso."
+          : "Obrigado por ajudar a comunidade a localizar e proteger animais.",
         [
           {
             text: "Voltar ao mapa",
@@ -753,18 +935,28 @@ export default function CadastroOcorrenciaScreen({
           },
         ],
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const erroApi = axios.isAxiosError(error) ? error : null;
       console.error(
-        "[CadastroOcorrencia] Erro ao registrar ocorrência:",
-        error?.response?.status,
-        error?.response?.data || error?.message,
+        `[CadastroOcorrencia] Erro ao ${
+          modoEdicao ? "atualizar" : "registrar"
+        } ocorrência:`,
+        erroApi?.response?.status,
+        erroApi?.response?.data || erroApi?.message,
       );
 
       const mensagem =
-        error?.response?.data?.detail ||
-        "Não foi possível registrar a ocorrência. Verifique sua conexão e tente novamente.";
+        erroApi?.response?.data?.detail ||
+        `Não foi possível ${
+          modoEdicao ? "atualizar" : "registrar"
+        } a ocorrência. Verifique sua conexão e tente novamente.`;
 
-      Alert.alert("Não foi possível registrar", mensagem);
+      Alert.alert(
+        modoEdicao
+          ? "Não foi possível atualizar"
+          : "Não foi possível registrar",
+        mensagem,
+      );
     } finally {
       setSalvando(false);
     }
@@ -865,6 +1057,20 @@ export default function CadastroOcorrenciaScreen({
     </View>
   );
 
+  if (modoEdicao && carregandoOcorrencia) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.editLoadingContainer}>
+          <ActivityIndicator color={theme.colors.brand} size="large" />
+          <Text style={styles.editLoadingTitle}>Carregando ocorrência</Text>
+          <Text style={styles.editLoadingText}>
+            Preparando os dados para edição.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -896,7 +1102,9 @@ export default function CadastroOcorrenciaScreen({
             <View style={styles.topBarTitle}>
               <Text style={styles.eyebrow}>PETRADAR</Text>
 
-              <Text style={styles.screenTitle}>Registrar ocorrência</Text>
+              <Text style={styles.screenTitle}>
+                {modoEdicao ? "Editar ocorrência" : "Registrar ocorrência"}
+              </Text>
             </View>
 
             <View style={styles.topBarSpacer} />
@@ -1797,7 +2005,11 @@ export default function CadastroOcorrenciaScreen({
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Registrar ocorrência"
+            accessibilityLabel={
+              modoEdicao
+                ? "Salvar alterações da ocorrência"
+                : "Registrar ocorrência"
+            }
             onPress={handleSalvar}
             disabled={salvando}
             style={({ pressed }) => [
@@ -1819,9 +2031,13 @@ export default function CadastroOcorrenciaScreen({
                 </View>
 
                 <View style={styles.submitContent}>
-                  <Text style={styles.submitTitle}>Registrar ocorrência</Text>
+                  <Text style={styles.submitTitle}>
+                    {modoEdicao ? "Salvar alterações" : "Registrar ocorrência"}
+                  </Text>
 
-                  <Text style={styles.submitSubtitle}>Enviar para o mapa</Text>
+                  <Text style={styles.submitSubtitle}>
+                    {modoEdicao ? "Atualizar ocorrência" : "Enviar para o mapa"}
+                  </Text>
                 </View>
 
                 <Ionicons
@@ -2136,6 +2352,27 @@ const styles = StyleSheet.create({
 
   flex: {
     flex: 1,
+  },
+
+  editLoadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+  },
+
+  editLoadingTitle: {
+    marginTop: 16,
+    color: theme.colors.textTitle,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+
+  editLoadingText: {
+    marginTop: 6,
+    color: theme.colors.textBody,
+    fontSize: 13,
+    textAlign: "center",
   },
 
   scrollContent: {

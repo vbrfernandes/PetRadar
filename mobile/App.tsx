@@ -53,6 +53,7 @@ export type AppTabParamList = {
   CadastroOcorrencia:
     | {
         pet?: PetOcorrenciaPrefill;
+        ocorrenciaId?: number;
       }
     | undefined;
 };
