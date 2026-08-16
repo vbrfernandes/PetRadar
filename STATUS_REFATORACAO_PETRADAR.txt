@@ -24,6 +24,18 @@ commit Inicial de refatoração de codigo
 FASE ATUAL
 ==========
 
+FASE 2 — ESTRUTURA MODULAR BASE
+
+Status:
+CONCLUÍDA
+
+Próxima fase:
+FASE 3 — AUTH — NÃO INICIADA.
+
+======================================================================
+FASE 1 — NAVIGATION — CONCLUÍDA
+================================
+
 FASE 1 — NAVIGATION
 
 Status:
@@ -80,6 +92,101 @@ Fechamento formal da Fase 1 — Navigation:
 [X] nenhuma alteração de backend realizada
 [X] Mapbox não alterado
 [X] nenhuma dependência alterada
+
+======================================================================
+FASE 2 — ESTRUTURA MODULAR BASE
+================================
+
+Status:
+CONCLUÍDA
+
+Checkpoint arquitetural:
+[X] domínios atuais identificados
+[X] auth definido
+[X] occurrences definido
+[X] feed definido
+[X] map definido
+[X] profile definido
+[X] pets definido
+[X] shared reservado apenas para código realmente genérico
+[X] infrastructure reservado para integrações tecnológicas
+[X] política de criação progressiva de diretórios definida
+[X] nenhuma pasta vazia criada
+[X] nenhum arquivo `.gitkeep` criado
+[X] nenhum arquivo da aplicação movido
+[X] nenhum comportamento alterado
+[X] `npx tsc --noEmit` concluído com 0 erros
+
+Estrutura real analisada em `mobile/src/`:
+* `components/`: AnimatedCTA.tsx, AppNavigationDrawer.tsx, FeedBannerCarousel.tsx, OccurrenceDetailDrawer.tsx e ProfileQuickMenu.tsx.
+* `navigation/`: navigation.types.ts, AuthNavigator.tsx, AppNavigator.tsx e RootNavigator.tsx.
+* `screens/`: CadastroOcorrenciaScreen.tsx, CadastroONGScreen.tsx, CadastroUserScreen.tsx, EsqueceuSenhaScreen.tsx, FeedNoticias.tsx, LoginScreen.tsx, MapScreen.tsx, ProfileDetailScreen.tsx, RegistrarPet.tsx e TipoCadastroScreen.tsx.
+* `services/`: api.ts.
+* `store/`: useAuthStore.ts.
+* `theme/`: colors.ts.
+* `types/`: diretório vazio preexistente, não alterado nesta fase.
+
+Domínios atuais confirmados:
+* `features/auth/`
+* `features/occurrences/`
+* `features/feed/`
+* `features/map/`
+* `features/profile/`
+* `features/pets/`
+* `shared/`, reservado para código realmente genérico após validação definitiva na Fase 11.
+* `infrastructure/`, reservado para integrações tecnológicas a partir da Fase 10.
+
+Mapeamento progressivo validado no código real:
+
+AUTH:
+* `mobile/src/screens/LoginScreen.tsx` → `features/auth/screens/LoginScreen.tsx`.
+* `mobile/src/screens/EsqueceuSenhaScreen.tsx` → `features/auth/screens/EsqueceuSenhaScreen.tsx`.
+* `mobile/src/screens/TipoCadastroScreen.tsx` → `features/auth/screens/TipoCadastroScreen.tsx`.
+* `mobile/src/screens/CadastroUserScreen.tsx` → `features/auth/screens/CadastroUserScreen.tsx`.
+* `mobile/src/screens/CadastroONGScreen.tsx` → `features/auth/screens/CadastroONGScreen.tsx`.
+* `mobile/src/store/useAuthStore.ts` pertence conceitualmente ao estado de autenticação e permanece no local atual até decisão específica de migração.
+* Os nomes atuais serão preservados na primeira movimentação para reduzir risco.
+
+OCCURRENCES:
+* `mobile/src/screens/CadastroOcorrenciaScreen.tsx` → `features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+* `mobile/src/components/OccurrenceDetailDrawer.tsx` → `features/occurrences/components/OccurrenceDetailDrawer.tsx`.
+
+FEED:
+* `mobile/src/screens/FeedNoticias.tsx` → `features/feed/screens/FeedNoticias.tsx`.
+* `mobile/src/components/FeedBannerCarousel.tsx` → candidato confirmado a `features/feed/components/FeedBannerCarousel.tsx`.
+
+MAP:
+* `mobile/src/screens/MapScreen.tsx` → `features/map/screens/MapScreen.tsx`.
+
+PROFILE:
+* `mobile/src/screens/ProfileDetailScreen.tsx` continua implementado como Modal/Drawer e tem destino conceitual `features/profile/components/ProfileDetailDrawer.tsx`; não foi renomeado nem movido nesta fase.
+* `mobile/src/components/ProfileQuickMenu.tsx` → candidato confirmado a `features/profile/components/ProfileQuickMenu.tsx`.
+
+PETS:
+* `mobile/src/screens/RegistrarPet.tsx` é renderizado dentro de ProfileDetailScreen e não é rota independente; tem destino conceitual `features/pets/components/RegistrarPet.tsx`, sem renomeação ou movimentação nesta fase.
+
+SHARED — candidatos, sem decisão definitiva de movimentação:
+* `mobile/src/components/AnimatedCTA.tsx` → candidato a `shared/components/`; atualmente não possui consumidor no código real.
+* `mobile/src/components/AppNavigationDrawer.tsx` → candidato a `shared/components/`; atualmente é utilizado por FeedNoticias e MapScreen.
+* A classificação definitiva será realizada na Fase 11.
+
+INFRASTRUCTURE — integrações reservadas para migração futura:
+* `mobile/src/services/api.ts` permanece no local atual; eventual migração para `infrastructure/api/` ocorrerá somente na Fase 10.
+* Acesso a `expo-location` fica reservado conceitualmente para `infrastructure/location/`.
+* Configuração/acesso ao Mapbox fica reservado conceitualmente para `infrastructure/maps/`, sem substituir Mapbox.
+* Acesso a `expo-image-picker` fica reservado conceitualmente para `infrastructure/media/`.
+* Persistência tecnológica baseada em AsyncStorage fica reservada conceitualmente para `infrastructure/storage/`.
+
+NAVIGATION:
+* `mobile/src/navigation/navigation.types.ts`, AuthNavigator.tsx, AppNavigator.tsx e RootNavigator.tsx permanecem onde estão e não foram alterados.
+
+THEME:
+* `mobile/src/theme/colors.ts` permanece onde está; sua evolução pertence à Fase 12.
+
+Decisão arquitetural da Fase 2:
+“As pastas da arquitetura modular serão criadas progressivamente quando receberem código real. Não serão utilizados diretórios vazios ou .gitkeep apenas para materializar antecipadamente a árvore-alvo.”
+
+Não foram criados os domínios futuros care, engagement, reports, sightings, ong, chat, notifications ou sos. Sua existência futura dependerá de código real suficiente para justificá-los.
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -265,12 +372,14 @@ DECISÕES TOMADAS
 * RootNavigator passa a residir em `src/navigation/RootNavigator.tsx`.
 * A decisão autenticado/não autenticado deixa o App.tsx e passa a residir no RootNavigator.
 * NavigationContainer e providers permanecem no App.tsx nesta subetapa.
+* A estrutura modular base foi definida conceitualmente sem criar diretórios vazios ou mover arquivos.
+* Diretórios de domínio serão criados progressivamente ao receberem o primeiro arquivo real.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar instrução do usuário antes de iniciar a Fase 2 — Estrutura modular base.
+Aguardar instrução do usuário antes de iniciar a Fase 3 — Auth.
 
 ======================================================================
 FASES
@@ -278,7 +387,7 @@ FASES
 
 [X] Fase 0  — Baseline / branch — CONCLUÍDA
 [X] Fase 1  — Navigation — CONCLUÍDA
-[ ] Fase 2  — Estrutura modular base
+[X] Fase 2  — Estrutura modular base — CONCLUÍDA
 [ ] Fase 3  — Auth
 [ ] Fase 4  — Feed
 [ ] Fase 5  — Profile
@@ -295,19 +404,20 @@ FASES
 [ ] Fase 16 — Limpeza final
 
 Última fase concluída:
-Fase 1 — Navigation.
+Fase 2 — Estrutura modular base.
 
 Fase atual:
-Fase 1 — Navigation — CONCLUÍDA.
+Fase 2 — Estrutura modular base — CONCLUÍDA.
 
 Próxima fase:
-Fase 2 — Estrutura modular base — NÃO INICIADA.
+Fase 3 — Auth — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
 * Extração do AuthNavigator para `src/navigation/AuthNavigator.tsx`.
 * Extração do AppNavigator para `src/navigation/AppNavigator.tsx`.
 * Extração do RootNavigator e da decisão autenticado/não autenticado para `src/navigation/RootNavigator.tsx`.
+* Checkpoint arquitetural da estrutura modular base, sem criação de pastas vazias ou movimentação de arquivos.
 
 Último arquivo alterado pela refatoração:
 `mobile/src/navigation/RootNavigator.tsx` e `mobile/App.tsx`.
@@ -316,7 +426,7 @@ Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar instrução do usuário antes de iniciar a Fase 2 — Estrutura modular base.
+Aguardar instrução do usuário antes de iniciar a Fase 3 — Auth.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
