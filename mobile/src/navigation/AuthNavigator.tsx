@@ -5,7 +5,7 @@ import LoginScreen from '../screens/LoginScreen';
 import TipoCadastroScreen from '../features/auth/screens/TipoCadastroScreen';
 import CadastroUserScreen from '../screens/CadastroUserScreen';
 import CadastroONGScreen from '../screens/CadastroONGScreen';
-import EsqueceuSenhaScreen from '../screens/EsqueceuSenhaScreen';
+import EsqueceuSenhaScreen from '../features/auth/screens/EsqueceuSenhaScreen';
 import type { AuthStackParamList } from './navigation.types';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
