@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7D — occurrenceService / leituras.
+FASE 7E — occurrenceService / escritas nucleares.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1113,7 +1113,10 @@ Subetapas:
 [X] smoke test manual da Fase 7C
 [X] leituras de Occurrences centralizadas em occurrenceService
 [X] validação técnica da Fase 7D
-[ ] smoke test manual da Fase 7D
+[X] smoke test manual da Fase 7D
+[X] escritas nucleares de Occurrences centralizadas em occurrenceService
+[X] validação técnica da Fase 7E
+[ ] smoke test manual da Fase 7E
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1205,9 +1208,34 @@ Subetapa Fase 7D — occurrenceService / leituras:
 * Mapbox, backend, dependências e funcionalidades existentes não foram alterados.
 * Nenhum RF novo, hook, componente, util, constant, style compartilhado, pasta vazia, index.ts ou `.gitkeep` foi criado.
 * `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7E foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 * `git diff --check` restrito aos arquivos da Fase 7D foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7D:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7E — occurrenceService / escritas nucleares:
+* occurrenceService manteve intactos getById, getNearby e getMine e passou a conter também create, update e deleteById.
+* A configuração multipart foi centralizada no mesmo service com header `Content-Type: multipart/form-data` e timeout 30000 preservados exatamente.
+* create executa POST `/ocorrencias/` com o FormData recebido e a configuração multipart compartilhada.
+* update executa PUT `/ocorrencias/{id}` com occurrenceId, FormData e a mesma configuração multipart.
+* deleteById executa DELETE `/ocorrencias/{id}`.
+* CadastroOcorrenciaScreen migrou somente POST e PUT para occurrenceService.create e occurrenceService.update.
+* O objeto config local foi removido do Cadastro por não possuir outro uso; o import direto de api também foi removido por não possuir consumidor restante na Screen.
+* A construção e o conteúdo do FormData, todos os campos, id_pet, foto, regras de foto remota, foto reutilizada do Pet, trim e validações permaneceram na Screen e inalterados.
+* Os blocos if/else dos modos edição e criação, a ordem das operações, tratamento de erro, Alerts e navegação após sucesso permaneceram inalterados.
+* ImagePicker, Location, Mapbox/geocoding e o prefill Pet → INFORMAR COMO PERDIDO permaneceram intactos.
+* OccurrenceDetailDrawer migrou somente DELETE para occurrenceService.deleteById; exclusaoEmAndamento, loading, animação, onDeleted, Promise, Alerts, tratamento de erro, reset e mensagens permaneceram inalterados.
+* Care e histórico de cuidados continuam diretamente no Drawer via api.
+* Força/ECO e denúncias continuam diretamente no Feed e não foram migrados.
+* FeedNoticias, MapScreen, ProfileDetailScreen e OcorrenciaResumo permaneceram intactos nesta subetapa.
+* POST `/ocorrencias/`, PUT `/ocorrencias/{id}` e DELETE `/ocorrencias/{id}` foram centralizados sem alteração de URL, método, dados ou configuração.
+* OcorrenciaDetalhe, OcorrenciaEdicao, OcorrenciaMapa e OcorrenciaFeed permaneceram em seus locais atuais.
+* Mapbox, backend, dependências e funcionalidades existentes não foram alterados.
+* Nenhum RF novo, hook, componente, util, constant, style compartilhado, pasta vazia, index.ts ou `.gitkeep` foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+
+Smoke test Fase 7E:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1277,7 +1305,10 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7C aprovado pelo usuário
 [X] Fase 7D — operações de leitura centralizadas em `features/occurrences/services/occurrenceService.ts`
 [X] Validação técnica da Fase 7D concluída
-[ ] Smoke test manual da Fase 7D
+[X] Smoke test manual da Fase 7D aprovado pelo usuário
+[X] Fase 7E — operações de escrita nucleares centralizadas em `features/occurrences/services/occurrenceService.ts`
+[X] Validação técnica da Fase 7E concluída
+[ ] Smoke test manual da Fase 7E
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1515,7 +1546,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7D.
+Aguardar aprovação manual do smoke test da Fase 7E.
 
 ======================================================================
 FASES
@@ -1546,7 +1577,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Fase 7E — NÃO INICIADA.
+Próxima subetapa da Fase 7 — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1582,10 +1613,11 @@ Subetapas concluídas:
 * Fase 7A — movimentação estrutural de `OccurrenceDetailDrawer.tsx` para `features/occurrences/components/`, aprovada manualmente pelo usuário.
 * Fase 7B — movimentação estrutural de `CadastroOcorrenciaScreen.tsx` para `features/occurrences/screens/`, aprovada manualmente pelo usuário.
 * Fase 7C — extração do tipo-base compartilhado `OcorrenciaResumo` para `features/occurrences/types/occurrence.types.ts`, aprovada manualmente pelo usuário.
-* Fase 7D — centralização das três operações compartilhadas de leitura em `features/occurrences/services/occurrenceService.ts`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7D — centralização das três operações compartilhadas de leitura em `features/occurrences/services/occurrenceService.ts`, aprovada manualmente pelo usuário.
+* Fase 7E — centralização das operações nucleares de criação, atualização e exclusão em `features/occurrences/services/occurrenceService.ts`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/services/occurrenceService.ts`, `mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx`, `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`, `mobile/src/features/feed/screens/FeedNoticias.tsx`, `mobile/src/features/profile/components/ProfileDetailScreen.tsx` e `mobile/src/screens/MapScreen.tsx`.
+`mobile/src/features/occurrences/services/occurrenceService.ts`, `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1594,7 +1626,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7D; não iniciar a Fase 7E automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7E; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

@@ -22,7 +22,6 @@ import axios from "axios";
 
 import { theme } from "../../../theme/colors";
 import { useAuthStore } from "../../../store/useAuthStore";
-import api from "../../../services/api";
 
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
@@ -911,17 +910,10 @@ export default function CadastroOcorrenciaScreen({
         );
       }
 
-      const config = {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        timeout: 30000,
-      };
-
       if (modoEdicao) {
-        await api.put(`/ocorrencias/${ocorrenciaId}`, formData, config);
+        await occurrenceService.update(ocorrenciaId, formData);
       } else {
-        await api.post("/ocorrencias/", formData, config);
+        await occurrenceService.create(formData);
       }
 
       Alert.alert(

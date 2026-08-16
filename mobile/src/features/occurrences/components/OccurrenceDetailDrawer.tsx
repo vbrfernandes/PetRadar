@@ -739,7 +739,7 @@ export default function OccurrenceDetailDrawer({
     const id = occurrence.id_ocorrencia;
 
     try {
-      await api.delete(`/ocorrencias/${id}`);
+      await occurrenceService.deleteById(id);
 
       animarFechamento(() => {
         void (async () => {
