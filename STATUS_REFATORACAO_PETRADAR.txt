@@ -33,8 +33,8 @@ Subetapas:
 [X] navigation.types.ts
 [X] AuthNavigator.tsx
 [X] AppNavigator.tsx
-[ ] RootNavigator.tsx
-[ ] decisão autenticado/não autenticado fora do App.tsx
+[X] RootNavigator.tsx
+[X] decisão autenticado/não autenticado fora do App.tsx
 [ ] validação final da Fase 1
 
 Tipos extraídos sem alteração de contrato:
@@ -42,7 +42,8 @@ Tipos extraídos sem alteração de contrato:
 * PetOcorrenciaPrefill
 * AppTabParamList
 
-Routes e a decisão autenticado/não autenticado permanecem no App.tsx.
+RootNavigator concentra a decisão autenticado/não autenticado.
+NavigationContainer e providers permanecem no App.tsx.
 
 Validações da subetapa:
 [X] Contratos de navegação preservados integralmente
@@ -54,11 +55,16 @@ Validações da subetapa:
 [X] Rotas, ordem e screenOptions do AuthNavigator preservados integralmente
 [X] Rotas, ordem, tabBar e screenOptions do AppNavigator preservados integralmente
 [X] SOSScreen e ProfileScreen temporários movidos sem alteração de JSX
+[X] Decisão autenticado/não autenticado extraída sem alteração de comportamento
+[X] AuthNavigator, AppNavigator e navigation.types.ts não alterados na Fase 1D
 
 Smoke test da Fase 1B — AuthNavigator:
 APROVADO MANUALMENTE PELO USUÁRIO.
 
 Smoke test da Fase 1C — AppNavigator:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Smoke test da Fase 1D — RootNavigator:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -218,6 +224,13 @@ Subetapa Fase 1C — AppNavigator:
 * Preservados `tabBar={() => null}` e os screenOptions existentes.
 * Routes, providers, AppStack e decisão de autenticação permanecem no App.tsx.
 
+Subetapa Fase 1D — RootNavigator:
+* Criado `mobile/src/navigation/RootNavigator.tsx`.
+* Movidos somente useAuthStore, AuthNavigator, AppNavigator e a decisão autenticado/não autenticado.
+* Preservada integralmente a decisão baseada em `isAuthenticated`.
+* NavigationContainer, providers, StatusBar e função App permanecem no App.tsx.
+* AuthNavigator, AppNavigator e navigation.types.ts não foram alterados.
+
 ======================================================================
 DECISÕES TOMADAS
 ================
@@ -235,13 +248,15 @@ DECISÕES TOMADAS
 * Os tipos de navegação passam a ser importados de `src/navigation/navigation.types.ts`.
 * AuthNavigator passa a residir em `src/navigation/AuthNavigator.tsx`.
 * AppNavigator passa a residir em `src/navigation/AppNavigator.tsx`.
-* Routes e a decisão autenticado/não autenticado permanecem no App.tsx nesta subetapa.
+* RootNavigator passa a residir em `src/navigation/RootNavigator.tsx`.
+* A decisão autenticado/não autenticado deixa o App.tsx e passa a residir no RootNavigator.
+* NavigationContainer e providers permanecem no App.tsx nesta subetapa.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar revisão do ChatGPT antes de extrair outro elemento de Navigation.
+Aguardar revisão e teste manual do usuário antes de fechar a Fase 1.
 
 ======================================================================
 FASES
@@ -275,14 +290,15 @@ Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
 * Extração do AuthNavigator para `src/navigation/AuthNavigator.tsx`.
 * Extração do AppNavigator para `src/navigation/AppNavigator.tsx`.
+* Extração do RootNavigator e da decisão autenticado/não autenticado para `src/navigation/RootNavigator.tsx`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/navigation/AppNavigator.tsx` e `mobile/App.tsx`.
+`mobile/src/navigation/RootNavigator.tsx` e `mobile/App.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar revisão do ChatGPT antes de extrair outro elemento de Navigation.
+Aguardar revisão e teste manual do usuário antes de fechar a Fase 1.
 
 ======================================================================

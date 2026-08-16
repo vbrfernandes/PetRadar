@@ -6,22 +6,11 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
 import ProfileDetailScreen from './src/screens/ProfileDetailScreen';
-import AuthNavigator from './src/navigation/AuthNavigator';
-import AppNavigator from './src/navigation/AppNavigator';
-
-
-// Store do Zustand (Caminho corrigido para 'store' no singular)
-import { useAuthStore } from './src/store/useAuthStore';
+import RootNavigator from './src/navigation/RootNavigator';
 
 // Telas Temporárias
 
 const AppStack = createNativeStackNavigator();
-
-function Routes() {
-  const { isAuthenticated } = useAuthStore();
-
-  return isAuthenticated ? <AppNavigator /> : <AuthNavigator />;
-}
 
 export default function App() {
   return (
@@ -29,7 +18,7 @@ export default function App() {
       <PaperProvider>
         <NavigationContainer>
           <StatusBar style="auto" />
-          <Routes />
+          <RootNavigator />
         </NavigationContainer>
       </PaperProvider>
     </SafeAreaProvider>
