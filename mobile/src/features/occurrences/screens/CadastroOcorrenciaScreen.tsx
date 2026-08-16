@@ -34,6 +34,7 @@ import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
 import SelectionChipGroup from "../components/form/SelectionChipGroup";
+import { occurrenceFormSharedStyles } from "../components/form/occurrenceForm.styles";
 import { occurrenceService } from "../services/occurrenceService";
 import type {
   TipoAnimal,
@@ -2309,32 +2310,10 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-  fieldLabel: {
-    color: theme.colors.textTitle,
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 8,
-    marginTop: 3,
-  },
-
-  fieldLabelSpacing: {
-    marginTop: 16,
-  },
+  ...occurrenceFormSharedStyles,
 
   otherAnimalField: {
     marginTop: 14,
-  },
-
-  inputContainer: {
-    minHeight: 54,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.inputBg,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.08)",
-    paddingHorizontal: 14,
-    marginBottom: 12,
   },
 
   addressInput: {
@@ -2401,29 +2380,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(31, 92, 77, 0.08)",
   },
 
-  inputIcon: {
-    marginRight: 10,
-    marginTop: 1,
-  },
-
-  input: {
-    flex: 1,
-    color: theme.colors.textTitle,
-    fontSize: 15,
-    lineHeight: 21,
-    paddingVertical: 12,
-  },
-
   optionalText: {
     color: theme.colors.textBody,
     fontSize: 10,
     fontWeight: "700",
-  },
-
-  binaryRow: {
-    flexDirection: "row",
-    gap: 9,
-    marginBottom: 4,
   },
 
   conditionalBox: {

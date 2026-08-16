@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7J — SelectionChipGroup.
+FASE 7K — estilos compartilhados do formulário.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1133,7 +1133,10 @@ Subetapas:
 [X] smoke test manual da Fase 7I
 [X] SelectionChipGroup extraído para components/form
 [X] validação técnica da Fase 7J
-[ ] smoke test manual da Fase 7J
+[X] smoke test manual da Fase 7J
+[X] estilos compartilhados do formulário centralizados
+[X] validação técnica da Fase 7K
+[ ] smoke test manual da Fase 7K
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1348,6 +1351,24 @@ Subetapa Fase 7J — SelectionChipGroup:
 * `git diff --check` restrito aos arquivos da Fase 7J foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7J:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7K — estilos compartilhados do formulário:
+* Criado `mobile/src/features/occurrences/components/form/occurrenceForm.styles.ts` somente para centralizar o núcleo de styles com reuso comprovado no formulário de ocorrência.
+* `occurrenceFormSharedStyles` exporta um objeto `as const`, sem StyleSheet.create e sem `any`, contendo exatamente fieldLabel, fieldLabelSpacing, inputContainer, inputIcon, input e binaryRow.
+* Os valores das seis definições foram preservados integralmente.
+* CadastroOcorrenciaScreen incorpora `...occurrenceFormSharedStyles` no StyleSheet.create existente; não foi criado segundo StyleSheet.
+* Todas as referências JSX continuam usando `styles.fieldLabel`, `styles.fieldLabelSpacing`, `styles.inputContainer`, `styles.inputIcon`, `styles.input` e `styles.binaryRow`; nenhum JSX foi alterado.
+* `otherAnimalField` e `optionalText` permaneceram locais na Screen para futura avaliação junto ao AnimalSection.
+* `addressInput`, demais styles específicos de Localização, `conditionalBox`, `conditionalTitle`, `sectionDivider` e demais styles específicos de Saúde permaneceram locais.
+* OccurrenceTypeSection, AnimalTypeSelector, ChoiceButton, SelectionChip e SelectionChipGroup permaneceram intactos.
+* Toda a lógica do formulário, incluindo estados, efeitos, callbacks, handlers, setters, validações e FormData, permaneceu intacta.
+* occurrence.types, occurrenceService, OccurrenceDetailDrawer, criação, edição, exclusão, prefill de Pet, foto, ImagePicker, Location, Mapbox/geocoding, Feed, Map, Profile, Pets, navegação, backend, endpoints, payloads e Alerts permaneceram intactos.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7K foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7K:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1437,7 +1458,10 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7I aprovado pelo usuário
 [X] Fase 7J — SelectionChipGroup extraído para `features/occurrences/components/form/`
 [X] Validação técnica da Fase 7J concluída
-[ ] Smoke test manual da Fase 7J
+[X] Smoke test manual da Fase 7J aprovado pelo usuário
+[X] Fase 7K — estilos compartilhados centralizados em `features/occurrences/components/form/occurrenceForm.styles.ts`
+[X] Validação técnica da Fase 7K concluída
+[ ] Smoke test manual da Fase 7K
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1675,7 +1699,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7J.
+Aguardar aprovação manual do smoke test da Fase 7K.
 
 ======================================================================
 FASES
@@ -1706,7 +1730,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Smoke test manual da Fase 7J — PENDENTE.
+Smoke test manual da Fase 7K — PENDENTE.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1748,10 +1772,11 @@ Subetapas concluídas:
 * Fase 7G — extração do grid visual de tipo do animal para `features/occurrences/components/form/AnimalTypeSelector.tsx`, aprovada manualmente pelo usuário.
 * Fase 7H — extração do componente reutilizável ChoiceButton para `features/occurrences/components/form/ChoiceButton.tsx`, aprovada manualmente pelo usuário.
 * Fase 7I — extração do elemento visual/interativo SelectionChip para `features/occurrences/components/form/SelectionChip.tsx`, aprovada manualmente pelo usuário.
-* Fase 7J — extração do componente de grupo SelectionChipGroup para `features/occurrences/components/form/SelectionChipGroup.tsx`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7J — extração do componente de grupo SelectionChipGroup para `features/occurrences/components/form/SelectionChipGroup.tsx`, aprovada manualmente pelo usuário.
+* Fase 7K — centralização dos seis styles compartilhados do formulário em `features/occurrences/components/form/occurrenceForm.styles.ts`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/form/SelectionChipGroup.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+`mobile/src/features/occurrences/components/form/occurrenceForm.styles.ts` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1760,7 +1785,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7J; não iniciar nova subetapa automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7K; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
