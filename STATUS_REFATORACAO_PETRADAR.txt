@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 5A — ProfileQuickMenu migrado para o domínio Profile.
+FASE 5B — ProfileDetailScreen migrado para o domínio Profile.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -723,7 +723,7 @@ EM ANDAMENTO
 
 Subetapas:
 [X] ProfileQuickMenu migrado
-[ ] ProfileDetailScreen avaliado/migrado
+[X] ProfileDetailScreen avaliado/migrado
 [ ] organização interna de Profile avaliada
 [ ] validação final da Fase 5
 
@@ -748,6 +748,31 @@ Subetapa Fase 5A — ProfileQuickMenu:
 * Nenhum endpoint, contrato de API, backend, dependência, comportamento visual ou RF novo foi alterado.
 
 Smoke test Fase 5A:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 5B — ProfileDetailScreen:
+* Movido `mobile/src/screens/ProfileDetailScreen.tsx` para `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
+* Nome do arquivo e export default `ProfileDetailScreen` preservados; nenhuma renomeação para Drawer foi realizada.
+* `ProfileUpdateResult` permaneceu exportado pelo mesmo módulo do componente, com contrato integralmente preservado.
+* `ProfileDetailProps` permaneceu interno ao componente, com tipos, opcionalidade e callbacks integralmente preservados.
+* JSX, comportamento, Modal/Drawer, animações, tabs, perfil, edição, foto, raio, Pets, ocorrências, exclusão de conta, logout, estados, Alerts, validações, accessibility e styles preservados.
+* Operações GET `/auth/me`, GET `/ocorrencias/minhas`, PUT `/auth/me`, POST `/auth/me/foto` e DELETE `/auth/me` preservadas sem alteração de endpoints, payloads, headers, FormData ou tratamento de erro.
+* Import relativo de theme ajustado de `../theme/colors` para `../../../theme/colors`, continuando a resolver para `mobile/src/theme/colors.ts`.
+* Import relativo de api ajustado de `../services/api` para `../../../services/api`, continuando a resolver para `mobile/src/services/api.ts`.
+* Import relativo de useAuthStore ajustado de `../store/useAuthStore` para `../../../store/useAuthStore`, continuando a resolver para `mobile/src/store/useAuthStore.ts`.
+* Import relativo de RegistrarPet ajustado de `./RegistrarPet` para `../../../screens/RegistrarPet`, continuando a resolver para `mobile/src/screens/RegistrarPet.tsx`.
+* A dependência temporária de Profile com RegistrarPet no caminho legado foi preservada e permanece reservada para a Fase 6 — Pets.
+* FeedNoticias teve somente o import de ProfileDetailScreen e `ProfileUpdateResult` ajustado.
+* MapScreen teve somente o import de ProfileDetailScreen e `ProfileUpdateResult` ajustado; MapScreen não foi movido.
+* App.tsx teve somente o import de ProfileDetailScreen ajustado; suas pendências preexistentes não foram limpas.
+* ProfileQuickMenu permaneceu intacto no domínio Profile após aprovação manual da Fase 5A.
+* RegistrarPet permaneceu em `mobile/src/screens/`, sem movimentação ou alteração.
+* axios e expo-image-picker permaneceram importados e utilizados diretamente pelo componente sem reorganização.
+* Nenhum service, hook, types ou abstração adicional de Profile foi criado.
+* Comparação normalizada do componente antes/depois, desconsiderando somente os quatro imports relativos obrigatórios, confirmou 0 diferenças de conteúdo.
+* `npx tsc --noEmit` concluído com 0 erros.
+
+Smoke test Fase 5B:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -784,6 +809,8 @@ ETAPAS CONCLUÍDAS
 [X] Fase 4G — fechamento formal da Fase 4 — Feed
 [X] Fase 4 — Feed concluída
 [X] Fase 5A — ProfileQuickMenu movido para `features/profile/components/`
+[X] Smoke test manual da Fase 5A aprovado pelo usuário
+[X] Fase 5B — ProfileDetailScreen movido para `features/profile/components/`
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -991,13 +1018,14 @@ DECISÕES TOMADAS
 * A Fase 4 foi encerrada sem criar novas abstrações porque a análise do código real não demonstrou benefício arquitetural suficiente para extrações adicionais no escopo atual do Feed.
 * AppNavigationDrawer permanece candidato a Shared na Fase 11; OccurrenceDetailDrawer permanece reservado ao domínio Occurrences.
 * ProfileQuickMenu foi escolhido como primeira subetapa de Profile por possuir fronteira clara, contrato por props e somente dois consumidores executáveis.
-* ProfileDetailScreen permanece no local atual até avaliação separada porque depende diretamente de RegistrarPet, pertencente conceitualmente à Fase 6 — Pets.
+* ProfileDetailScreen foi movido sem renomeação para isolar e validar primeiro a mudança física; eventual renomeação para Drawer permanece adiada.
+* A dependência direta de ProfileDetailScreen com RegistrarPet foi preservada temporariamente e será tratada somente na Fase 6 — Pets.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 5A antes de avaliar ProfileDetailScreen.
+Aguardar smoke test manual da Fase 5B antes de avaliar a organização interna de Profile.
 
 ======================================================================
 FASES
@@ -1051,9 +1079,10 @@ Subetapas concluídas:
 * Fase 4F — consolidação técnica das alterações validadas de 4D + 4E em um único checkpoint.
 * Fase 4G — fechamento formal da Fase 4 — Feed, sem alteração de código funcional.
 * Fase 5A — movimentação de ProfileQuickMenu.tsx para `features/profile/components/`.
+* Fase 5B — movimentação de ProfileDetailScreen.tsx para `features/profile/components/`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/profile/components/ProfileQuickMenu.tsx` e os consumidores `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/screens/MapScreen.tsx`.
+`mobile/src/features/profile/components/ProfileDetailScreen.tsx` e os consumidores `mobile/App.tsx`, `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/screens/MapScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1062,7 +1091,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar smoke test manual da Fase 5A antes de avaliar ProfileDetailScreen.
+Aguardar smoke test manual da Fase 5B antes de avaliar a organização interna de Profile.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

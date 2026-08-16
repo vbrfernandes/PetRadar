@@ -30,7 +30,7 @@ import { theme } from "../theme/colors";
 import { useAuthStore } from "../store/useAuthStore";
 import ProfileDetailScreen, {
   type ProfileUpdateResult,
-} from "./ProfileDetailScreen";
+} from "../features/profile/components/ProfileDetailScreen";
 import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
 import AppNavigationDrawer from "../components/AppNavigationDrawer";
 import ProfileQuickMenu from "../features/profile/components/ProfileQuickMenu";

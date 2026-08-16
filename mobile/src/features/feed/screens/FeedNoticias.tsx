@@ -83,7 +83,7 @@ import {
 
 import ProfileDetailScreen, {
   type ProfileUpdateResult,
-} from "../../../screens/ProfileDetailScreen";
+} from "../../profile/components/ProfileDetailScreen";
 
 import {
   theme,

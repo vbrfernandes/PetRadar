@@ -34,11 +34,11 @@ import * as ImagePicker from "expo-image-picker";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { theme } from "../theme/colors";
-import api from "../services/api";
-import { useAuthStore } from "../store/useAuthStore";
+import { theme } from "../../../theme/colors";
+import api from "../../../services/api";
+import { useAuthStore } from "../../../store/useAuthStore";
 
-import RegistrarPet from "./RegistrarPet";
+import RegistrarPet from "../../../screens/RegistrarPet";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
