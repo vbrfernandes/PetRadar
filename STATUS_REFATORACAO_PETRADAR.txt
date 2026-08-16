@@ -27,10 +27,10 @@ FASE ATUAL
 FASE 5 — PROFILE
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapa atual:
-FASE 5C — operações HTTP próprias de Profile extraídas para profileService.
+FASE 5D — avaliação final da organização interna e fechamento formal da Fase 5 — concluída.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -719,13 +719,13 @@ FASE 5 — PROFILE
 ================
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapas:
 [X] ProfileQuickMenu migrado
 [X] ProfileDetailScreen avaliado/migrado
-[ ] organização interna de Profile avaliada
-[ ] validação final da Fase 5
+[X] organização interna de Profile avaliada
+[X] validação final da Fase 5
 
 Subetapa Fase 5A — ProfileQuickMenu:
 * Movido `mobile/src/components/ProfileQuickMenu.tsx` para `mobile/src/features/profile/components/ProfileQuickMenu.tsx`.
@@ -797,7 +797,77 @@ Subetapa Fase 5C — profileService:
 * `npx tsc --noEmit` concluído com 0 erros.
 
 Smoke test Fase 5C:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+O smoke test da Fase 5C constitui a validação funcional final da organização interna de Profile. Os smoke tests 5A, 5B e 5C foram aprovados manualmente pelo usuário; nenhum novo smoke foi solicitado no fechamento documental.
+
+Subetapa Fase 5D — avaliação final e fechamento formal da Fase 5:
+* A estrutura final de `mobile/src/features/profile/` foi revisada no código real e contém somente `components/ProfileDetailScreen.tsx`, `components/ProfileQuickMenu.tsx`, `services/profileService.ts` e `types/profile.types.ts`.
+* Os diretórios components, services e types contêm código real; nenhuma pasta vazia, arquivo `.gitkeep` ou `index.ts` artificial existe no domínio Profile.
+* Avatar possui uma instanciação e permanece componente interno de ProfileDetailScreen.
+* TabBar possui uma instanciação e permanece componente interno de ProfileDetailScreen.
+* InfoRow possui nove instanciações, todas dentro de ProfileDetailScreen; já constitui a abstração interna que elimina a repetição relevante.
+* PetSwitch possui uma instanciação e permanece componente interno de ProfileDetailScreen.
+* OcorrenciaCard possui uma instanciação e permanece componente interno de ProfileDetailScreen.
+* Decisão arquitetural: não extrair atualmente ProfileAvatar.tsx, ProfileTabBar.tsx, ProfileInfoRow.tsx, ProfilePetSwitch.tsx ou ProfileOccurrenceCard.tsx, nem equivalentes com outros nomes.
+* Todos esses componentes pertencem exclusivamente à composição interna de ProfileDetailScreen, não possuem consumidores externos e compartilham constantes e/ou StyleSheet da própria composição. A extração criaria arquivos, imports e possíveis tipos/styles compartilhados sem ganho arquitetural real.
+* A permanência desses componentes internos é decisão arquitetural definitiva da Fase 5 e não constitui pendência.
+* O nome `ProfileDetailScreen` foi preservado para reduzir risco. Embora o componente se comporte visualmente como Modal/Drawer, eventual renomeação será reavaliada apenas em Cleanup se houver benefício real; a ausência da renomeação não impede o fechamento da Fase 5.
+* `mobile/src/features/profile/services/profileService.ts` permanece a abstração justificada da Fase 5 e centraliza somente GET `/auth/me`, PUT `/auth/me`, POST `/auth/me/foto` e DELETE `/auth/me`.
+* As quatro operações próprias de Profile não permanecem diretamente em ProfileDetailScreen.
+* profileService usa o cliente HTTP existente, não conhece UI ou Zustand, não realiza Alerts, não captura ou converte erros, não prepara payload de formulário e não utiliza ImagePicker.
+* GET `/ocorrencias/minhas` permanece diretamente em ProfileDetailScreen. A operação pertence conceitualmente a Occurrences e será reavaliada na Fase 7; essa dependência temporária não impede o fechamento de Profile.
+* `profile.types.ts` contém somente ProfileUpdateResult, UserProfile e ProfileUpdatePayload, todos justificados por reuso concreto e com definição única.
+* ProfileUpdateResult é consumido por ProfileDetailScreen, FeedNoticias e MapScreen.
+* UserProfile é consumido por ProfileDetailScreen e profileService.
+* ProfileUpdatePayload é consumido por ProfileDetailScreen e profileService.
+* RegistrarPet continua renderizado por ProfileDetailScreen e permanece inalterado em `mobile/src/screens/RegistrarPet.tsx`; a dependência temporária Profile -> RegistrarPet será resolvida na Fase 6 — Pets.
+* ProfileQuickMenu permanece autocontido, consumido por Feed e Map, com logout e contratos preservados; nenhuma organização adicional foi justificada.
+* expo-image-picker permanece diretamente em ProfileDetailScreen e sua organização tecnológica continua reservada para a Fase 10 — Infrastructure.
+* useAuthStore permanece em `mobile/src/store/useAuthStore.ts` como dependência transversal preservada.
+* As pendências preexistentes AppStack, createNativeStackNavigator, ActivityIndicator e import de ProfileDetailScreen em App.tsx foram preservadas para fases posteriores, especialmente Cleanup/App.
+* `npx tsc --noEmit` foi concluído com 0 erros como validação técnica final da Fase 5.
+* `git diff --check` global retornou exit code 2 exclusivamente por 98 ocorrências atuais de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
+* Os registros históricos da Fase 4 que mencionam 82 ocorrências não foram reescritos.
+* Nenhum arquivo funcional, backend, dependência, contrato de API, configuração funcional, comportamento ou RF foi alterado durante a Fase 5D.
+
+Checklist final da Fase 5:
+[X] ProfileQuickMenu reside em features/profile/components/
+[X] ProfileDetailScreen reside em features/profile/components/
+[X] nomes preservados durante movimentações
+[X] ProfileUpdateResult preservado
+[X] ProfileDetailProps preservado
+[X] profileService criado com fronteira real
+[X] quatro operações próprias de Profile centralizadas
+[X] /ocorrencias/minhas mantido fora do profileService
+[X] profile.types.ts criado somente por reuso concreto
+[X] UserProfile possui definição única
+[X] ProfileUpdatePayload possui definição única
+[X] ProfileUpdateResult possui definição única
+[X] preparação dos payloads permanece na UI
+[X] ImagePicker permanece na UI
+[X] FormData permanece na UI
+[X] axios/tratamento de erro permanece na UI
+[X] ProfileQuickMenu preservado
+[X] componentes internos avaliados
+[X] nenhuma extração visual adicional justificada
+[X] dependência de RegistrarPet registrada para Fase 6
+[X] dependência de /ocorrencias/minhas registrada para Fase 7
+[X] App.tsx não limpo prematuramente
+[X] services/api.ts preservado
+[X] useAuthStore preservado
+[X] theme preservado
+[X] backend não alterado
+[X] dependências não alteradas
+[X] nenhum RF novo implementado
+[X] nenhuma abstração sem uso real criada
+[X] nenhuma pasta vazia criada
+[X] nenhum .gitkeep criado
+[X] TypeScript com 0 erros
+[X] smoke tests 5A, 5B e 5C aprovados
+[X] organização interna de Profile concluída
+[X] validação final da Fase 5 concluída
+[X] Fase 5 concluída
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -837,6 +907,10 @@ ETAPAS CONCLUÍDAS
 [X] Fase 5B — ProfileDetailScreen movido para `features/profile/components/`
 [X] Smoke test manual da Fase 5B aprovado pelo usuário
 [X] Fase 5C — operações HTTP próprias de Profile extraídas para profileService
+[X] Smoke test manual da Fase 5C aprovado pelo usuário
+[X] Organização interna de Profile avaliada
+[X] Fase 5D — avaliação final e fechamento formal da Fase 5 — Profile
+[X] Fase 5 — Profile concluída
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1048,12 +1122,18 @@ DECISÕES TOMADAS
 * A dependência direta de ProfileDetailScreen com RegistrarPet foi preservada temporariamente e será tratada somente na Fase 6 — Pets.
 * profileService concentra somente as quatro operações `/auth/me`; `/ocorrencias/minhas` permanece fora do service de Profile por pertencer ao domínio Occurrences.
 * profile.types.ts contém somente ProfileUpdateResult, UserProfile e ProfileUpdatePayload, todos com reuso concreto.
+* Avatar, TabBar, InfoRow, PetSwitch e OcorrenciaCard permanecem internos a ProfileDetailScreen porque não possuem consumidores externos e nenhuma extração visual adicional demonstrou ganho arquitetural real.
+* ProfileDetailScreen mantém o nome atual durante a Fase 5; eventual renomeação para Drawer será reavaliada somente em Cleanup se houver benefício real.
+* RegistrarPet permanece como dependência temporária de Profile até a Fase 6 — Pets.
+* `/ocorrencias/minhas` permanece diretamente em ProfileDetailScreen até a Fase 7 — Occurrences.
+* expo-image-picker permanece diretamente em ProfileDetailScreen até a Fase 10 — Infrastructure.
+* As pendências preexistentes de App.tsx permanecem reservadas para fases posteriores, especialmente Cleanup/App.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 5C antes de avaliar a organização interna de Profile.
+Iniciar o planejamento e a revisão da Fase 6 — Pets em tarefa separada. A Fase 6 permanece não iniciada neste fechamento.
 
 ======================================================================
 FASES
@@ -1064,7 +1144,7 @@ FASES
 [X] Fase 2  — Estrutura modular base — CONCLUÍDA
 [X] Fase 3  — Auth — CONCLUÍDA
 [X] Fase 4  — Feed — CONCLUÍDA
-[ ] Fase 5  — Profile — EM ANDAMENTO
+[X] Fase 5  — Profile — CONCLUÍDA
 [ ] Fase 6  — Pets — NÃO INICIADA
 [ ] Fase 7  — Occurrences
 [ ] Fase 8  — Map
@@ -1078,10 +1158,10 @@ FASES
 [ ] Fase 16 — Limpeza final
 
 Última fase concluída:
-Fase 4 — Feed.
+Fase 5 — Profile.
 
 Fase atual:
-Fase 5 — Profile — EM ANDAMENTO.
+Fase 5 — Profile — CONCLUÍDA.
 
 Próxima fase:
 Fase 6 — Pets — NÃO INICIADA.
@@ -1109,6 +1189,7 @@ Subetapas concluídas:
 * Fase 5A — movimentação de ProfileQuickMenu.tsx para `features/profile/components/`.
 * Fase 5B — movimentação de ProfileDetailScreen.tsx para `features/profile/components/`.
 * Fase 5C — extração das quatro operações HTTP próprias de Profile para `features/profile/services/profileService.ts` e dos três tipos reutilizados para `features/profile/types/profile.types.ts`.
+* Fase 5D — avaliação final da organização interna e fechamento formal da Fase 5 — Profile, sem alteração de código funcional.
 
 Último arquivo alterado pela refatoração:
 `mobile/src/features/profile/components/ProfileDetailScreen.tsx`, `mobile/src/features/profile/services/profileService.ts`, `mobile/src/features/profile/types/profile.types.ts` e os consumidores de tipo `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/screens/MapScreen.tsx`.
@@ -1120,7 +1201,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar smoke test manual da Fase 5C antes de avaliar a organização interna de Profile.
+Iniciar o planejamento e a revisão da Fase 6 — Pets em tarefa separada, sem iniciar Pets automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
