@@ -30,6 +30,7 @@ import AnimalTypeSelector, {
   type AnimalTypeOption,
 } from "../components/form/AnimalTypeSelector";
 import ChoiceButton from "../components/form/ChoiceButton";
+import OccurrenceFormSection from "../components/form/OccurrenceFormSection";
 import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
@@ -1046,30 +1047,28 @@ export default function CadastroOcorrenciaScreen({
           {/* 1. SOBRE A OCORRÊNCIA */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="1"
-              title="Sobre a ocorrência"
-              subtitle="O que aconteceu?"
-            />
+          <OccurrenceFormSection
+            number="1"
+            title="Sobre a ocorrência"
+            subtitle="O que aconteceu?"
+          >
 
             <OccurrenceTypeSection
               options={tiposOcorrencia}
               selectedType={tipoOcorrencia}
               onSelect={selecionarTipoOcorrencia}
             />
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 2. SOBRE O ANIMAL */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="2"
-              title="Sobre o animal"
-              subtitle="Informe apenas o que você conseguiu observar."
-            />
+          <OccurrenceFormSection
+            number="2"
+            title="Sobre o animal"
+            subtitle="Informe apenas o que você conseguiu observar."
+          >
 
             <Text style={styles.fieldLabel}>Tipo de animal</Text>
 
@@ -1195,18 +1194,17 @@ export default function CadastroOcorrenciaScreen({
               selectedValue={idade}
               onSelect={setIdade}
             />
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 3. LOCALIZAÇÃO E TEMPO */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="3"
-              title="Localização e tempo"
-              subtitle="Onde e quando o animal foi visto?"
-            />
+          <OccurrenceFormSection
+            number="3"
+            title="Localização e tempo"
+            subtitle="Onde e quando o animal foi visto?"
+          >
 
             <Text style={styles.fieldLabel}>
               Endereço visto pela última vez *
@@ -1415,18 +1413,17 @@ export default function CadastroOcorrenciaScreen({
                 )}
               </Pressable>
             </View>
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 4. CONDIÇÕES DE SAÚDE */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="4"
-              title="Condições de saúde"
-              subtitle="Informe sinais de saúde crítica ou deficiência aparente."
-            />
+          <OccurrenceFormSection
+            number="4"
+            title="Condições de saúde"
+            subtitle="Informe sinais de saúde crítica ou deficiência aparente."
+          >
 
             <Text style={styles.fieldLabel}>Saúde crítica?</Text>
 
@@ -1500,18 +1497,17 @@ export default function CadastroOcorrenciaScreen({
                 />
               </View>
             )}
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 5. NÍVEL DE URGÊNCIA */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="5"
-              title="Nível de urgência"
-              subtitle="Qual a prioridade que essa ocorrência precisa?"
-            />
+          <OccurrenceFormSection
+            number="5"
+            title="Nível de urgência"
+            subtitle="Qual a prioridade que essa ocorrência precisa?"
+          >
 
             <View style={styles.urgencyList}>
               {urgencias.map((urgencia) => {
@@ -1570,18 +1566,17 @@ export default function CadastroOcorrenciaScreen({
                 );
               })}
             </View>
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 6. CUIDADOS INICIAIS */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="6"
-              title="Cuidados iniciais"
-              subtitle="Registre se você ofereceu água ou comida ao animal."
-            />
+          <OccurrenceFormSection
+            number="6"
+            title="Cuidados iniciais"
+            subtitle="Registre se você ofereceu água ou comida ao animal."
+          >
 
             <View style={styles.careRow}>
               <CareButton
@@ -1638,18 +1633,17 @@ export default function CadastroOcorrenciaScreen({
                 Toque novamente para desmarcar um cuidado.
               </Text>
             </View>
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 7. FOTO */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="7"
-              title="Foto obrigatória"
-              subtitle="Visualização da foto • toque para trocar/adicionar."
-            />
+          <OccurrenceFormSection
+            number="7"
+            title="Foto obrigatória"
+            subtitle="Visualização da foto • toque para trocar/adicionar."
+          >
 
             <Pressable
               accessibilityRole="button"
@@ -1701,18 +1695,17 @@ export default function CadastroOcorrenciaScreen({
                 </>
               )}
             </Pressable>
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 8. OBSERVAÇÃO */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="8"
-              title="Observação"
-              subtitle="Existe algo importante que não foi informado acima?"
-            />
+          <OccurrenceFormSection
+            number="8"
+            title="Observação"
+            subtitle="Existe algo importante que não foi informado acima?"
+          >
 
             <View style={[styles.inputContainer, styles.textAreaContainer]}>
               <TextInput
@@ -1728,18 +1721,17 @@ export default function CadastroOcorrenciaScreen({
             </View>
 
             <Text style={styles.characterCount}>{observacao.length}/1000</Text>
-          </View>
+          </OccurrenceFormSection>
 
           {/* ===================================================== */}
           {/* 9. REVISÃO */}
           {/* ===================================================== */}
 
-          <View style={styles.section}>
-            <SectionHeader
-              number="9"
-              title="Revisão"
-              subtitle="Confira as informações antes de registrar a ocorrência."
-            />
+          <OccurrenceFormSection
+            number="9"
+            title="Revisão"
+            subtitle="Confira as informações antes de registrar a ocorrência."
+          >
 
             <View style={styles.reviewCard}>
               <View style={styles.reviewHeader}>
@@ -1824,7 +1816,7 @@ export default function CadastroOcorrenciaScreen({
               {observacao.trim() &&
                 renderResumo("Observação", observacao.trim())}
             </View>
-          </View>
+          </OccurrenceFormSection>
 
           <View style={styles.footerNote}>
             <Ionicons
@@ -2033,30 +2025,6 @@ export default function CadastroOcorrenciaScreen({
   );
 }
 
-function SectionHeader({
-  number,
-  title,
-  subtitle,
-}: {
-  number: string;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionNumber}>
-        <Text style={styles.sectionNumberText}>{number}</Text>
-      </View>
-
-      <View style={styles.sectionHeaderContent}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-
-        <Text style={styles.sectionSubtitle}>{subtitle}</Text>
-      </View>
-    </View>
-  );
-}
-
 function CareButton({
   icon,
   label,
@@ -2258,56 +2226,6 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 3,
     backgroundColor: theme.colors.action,
-  },
-
-  section: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 22,
-    padding: 18,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.06)",
-    ...theme.shadows.elevation1,
-  },
-
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 18,
-  },
-
-  sectionNumber: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: "rgba(31, 92, 77, 0.10)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  sectionNumberText: {
-    color: theme.colors.brand,
-    fontSize: 13,
-    fontWeight: "800",
-  },
-
-  sectionHeaderContent: {
-    flex: 1,
-  },
-
-  sectionTitle: {
-    color: theme.colors.textTitle,
-    fontSize: 18,
-    fontWeight: "800",
-    letterSpacing: -0.2,
-  },
-
-  sectionSubtitle: {
-    color: theme.colors.textBody,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 3,
   },
 
   ...occurrenceFormSharedStyles,
