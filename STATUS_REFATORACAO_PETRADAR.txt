@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7F — OccurrenceTypeSection.
+FASE 7G — AnimalTypeSelector.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1120,7 +1120,11 @@ Subetapas:
 [X] OccurrenceTypeSection extraído para components/form
 [X] TipoOcorrencia compartilhado via occurrence.types
 [X] validação técnica da Fase 7F
-[ ] smoke test manual da Fase 7F
+[X] smoke test manual da Fase 7F
+[X] AnimalTypeSelector extraído para components/form
+[X] TipoAnimal compartilhado via occurrence.types
+[X] validação técnica da Fase 7G
+[ ] smoke test manual da Fase 7G
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1257,6 +1261,26 @@ Subetapa Fase 7F — OccurrenceTypeSection:
 * `git diff --check` restrito aos arquivos da Fase 7F foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7F:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7G — AnimalTypeSelector:
+* Criado `mobile/src/features/occurrences/components/form/AnimalTypeSelector.tsx` somente para receber o grid visual real de seleção Cachorro, Gato e Outro da seção 2 — Sobre o animal.
+* O componente stateless recebe `options`, `selectedType` e `onSelect`; nenhum hook, estado, regra de negócio, chamada HTTP ou integração foi introduzido.
+* `TipoAnimal` foi movido sem alteração para `mobile/src/features/occurrences/types/occurrence.types.ts`; `TipoOcorrencia` e `OcorrenciaResumo` permaneceram intactos.
+* `tiposAnimais` continua definido uma única vez em CadastroOcorrenciaScreen e passou somente a usar a tipagem `AnimalTypeOption[]` exportada pelo novo componente.
+* O tipo genérico local `Opcao` foi removido após pesquisa objetiva confirmar que `tiposAnimais` era seu único consumidor restante.
+* JSX, ordem, textos, ícones, accessibilityRole, accessibilityState, seleção ativa e estado pressed dos três cards foram preservados no novo componente.
+* O campo "Qual animal?", seu estado e sua renderização condicional permaneceram integralmente na Screen.
+* `ehPet`, raça conhecida, raça e a regra de limpeza ao marcar "Não" permaneceram integralmente na Screen.
+* Sexo, Cor, Porte, Idade, `renderOpcoes`, `sexos`, `portes` e `idades` permaneceram na Screen e inalterados.
+* Somente os sete styles exclusivos do grid foram movidos; `pressed` permaneceu na Screen para os demais consumidores e foi reproduzido localmente no novo componente.
+* `fieldLabel`, `fieldLabelSpacing`, `otherAnimalField`, controles de input, `binaryRow`, ChoiceButton, `optionsGrid` e demais styles compartilhados permaneceram na Screen.
+* Nenhuma lógica de runtime, outro bloco do formulário, OccurrenceTypeSection, occurrenceService, OccurrenceDetailDrawer, Feed, Map, Profile, Pets, navegação, Mapbox, backend, dependência ou contrato de API foi alterado.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7G foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7G:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1333,7 +1357,11 @@ ETAPAS CONCLUÍDAS
 [X] Fase 7F — OccurrenceTypeSection extraído para `features/occurrences/components/form/`
 [X] TipoOcorrencia compartilhado via `features/occurrences/types/occurrence.types.ts`
 [X] Validação técnica da Fase 7F concluída
-[ ] Smoke test manual da Fase 7F
+[X] Smoke test manual da Fase 7F aprovado pelo usuário
+[X] Fase 7G — AnimalTypeSelector extraído para `features/occurrences/components/form/`
+[X] TipoAnimal compartilhado via `features/occurrences/types/occurrence.types.ts`
+[X] Validação técnica da Fase 7G concluída
+[ ] Smoke test manual da Fase 7G
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1571,7 +1599,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7F.
+Aguardar aprovação manual do smoke test da Fase 7G.
 
 ======================================================================
 FASES
@@ -1602,7 +1630,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Smoke test manual da Fase 7F — PENDENTE.
+Smoke test manual da Fase 7G — PENDENTE.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1640,10 +1668,11 @@ Subetapas concluídas:
 * Fase 7C — extração do tipo-base compartilhado `OcorrenciaResumo` para `features/occurrences/types/occurrence.types.ts`, aprovada manualmente pelo usuário.
 * Fase 7D — centralização das três operações compartilhadas de leitura em `features/occurrences/services/occurrenceService.ts`, aprovada manualmente pelo usuário.
 * Fase 7E — centralização das operações nucleares de criação, atualização e exclusão em `features/occurrences/services/occurrenceService.ts`, aprovada manualmente pelo usuário.
-* Fase 7F — extração do corpo interativo da seção de tipo de ocorrência para `features/occurrences/components/form/OccurrenceTypeSection.tsx`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7F — extração do corpo interativo da seção de tipo de ocorrência para `features/occurrences/components/form/OccurrenceTypeSection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7G — extração do grid visual de tipo do animal para `features/occurrences/components/form/AnimalTypeSelector.tsx`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/form/OccurrenceTypeSection.tsx`, `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/features/occurrences/types/occurrence.types.ts`.
+`mobile/src/features/occurrences/components/form/AnimalTypeSelector.tsx`, `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/features/occurrences/types/occurrence.types.ts`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1652,7 +1681,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7F; não iniciar nova subetapa automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7G; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

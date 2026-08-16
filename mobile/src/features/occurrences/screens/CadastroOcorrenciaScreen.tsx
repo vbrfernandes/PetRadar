@@ -26,11 +26,17 @@ import { useAuthStore } from "../../../store/useAuthStore";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import type { AppTabParamList } from "../../../navigation/navigation.types";
+import AnimalTypeSelector, {
+  type AnimalTypeOption,
+} from "../components/form/AnimalTypeSelector";
 import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
 import { occurrenceService } from "../services/occurrenceService";
-import type { TipoOcorrencia } from "../types/occurrence.types";
+import type {
+  TipoAnimal,
+  TipoOcorrencia,
+} from "../types/occurrence.types";
 
 type CadastroOcorrenciaScreenProps = BottomTabScreenProps<
   AppTabParamList,
@@ -38,15 +44,6 @@ type CadastroOcorrenciaScreenProps = BottomTabScreenProps<
 >;
 
 const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
-
-type TipoAnimal = "CACHORRO" | "GATO" | "OUTRO";
-
-type Opcao = {
-  valor: string;
-  titulo: string;
-  descricao?: string;
-  icone: string;
-};
 
 const tiposOcorrencia: OccurrenceTypeOption[] = [
   {
@@ -69,7 +66,7 @@ const tiposOcorrencia: OccurrenceTypeOption[] = [
   },
 ];
 
-const tiposAnimais: Opcao[] = [
+const tiposAnimais: AnimalTypeOption[] = [
   {
     valor: "CACHORRO",
     titulo: "Cachorro",
@@ -1159,51 +1156,11 @@ export default function CadastroOcorrenciaScreen({
 
             <Text style={styles.fieldLabel}>Tipo de animal</Text>
 
-            <View style={styles.animalGrid}>
-              {tiposAnimais.map((opcao) => {
-                const ativo = tipoAnimal === opcao.valor;
-
-                return (
-                  <Pressable
-                    key={opcao.valor}
-                    accessibilityRole="radio"
-                    accessibilityState={{
-                      selected: ativo,
-                    }}
-                    onPress={() => setTipoAnimal(opcao.valor as TipoAnimal)}
-                    style={({ pressed }) => [
-                      styles.animalCard,
-                      ativo && styles.animalCardActive,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.animalIcon,
-                        ativo && styles.animalIconActive,
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name={opcao.icone as any}
-                        size={24}
-                        color={
-                          ativo ? theme.colors.surface : theme.colors.brand
-                        }
-                      />
-                    </View>
-
-                    <Text
-                      style={[
-                        styles.animalTitle,
-                        ativo && styles.animalTitleActive,
-                      ]}
-                    >
-                      {opcao.titulo}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <AnimalTypeSelector
+              options={tiposAnimais}
+              selectedType={tipoAnimal}
+              onSelect={setTipoAnimal}
+            />
 
             {tipoAnimal === "OUTRO" && (
               <View style={styles.otherAnimalField}>
@@ -2473,53 +2430,6 @@ const styles = StyleSheet.create({
 
   fieldLabelSpacing: {
     marginTop: 16,
-  },
-
-  animalGrid: {
-    flexDirection: "row",
-    gap: 9,
-    marginBottom: 4,
-  },
-
-  animalCard: {
-    flex: 1,
-    minHeight: 92,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.10)",
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 6,
-  },
-
-  animalCardActive: {
-    borderColor: theme.colors.brand,
-    backgroundColor: "rgba(31, 92, 77, 0.07)",
-  },
-
-  animalIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: theme.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 7,
-  },
-
-  animalIconActive: {
-    backgroundColor: theme.colors.brand,
-  },
-
-  animalTitle: {
-    color: theme.colors.textBody,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  animalTitleActive: {
-    color: theme.colors.brand,
   },
 
   otherAnimalField: {
