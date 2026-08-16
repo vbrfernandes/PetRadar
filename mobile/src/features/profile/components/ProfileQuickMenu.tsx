@@ -14,8 +14,8 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../theme/colors";
-import { useAuthStore } from "../store/useAuthStore";
+import { theme } from "../../../theme/colors";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 // ============================================================
 // DIMENSÕES

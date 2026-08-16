@@ -55,7 +55,7 @@ import AppNavigationDrawer
   from "../../../components/AppNavigationDrawer";
 
 import ProfileQuickMenu
-  from "../../../components/ProfileQuickMenu";
+  from "../../profile/components/ProfileQuickMenu";
 
 import FeedBannerCarousel
   from "../components/FeedBannerCarousel";

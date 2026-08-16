@@ -33,7 +33,7 @@ import ProfileDetailScreen, {
 } from "./ProfileDetailScreen";
 import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
 import AppNavigationDrawer from "../components/AppNavigationDrawer";
-import ProfileQuickMenu from "../components/ProfileQuickMenu";
+import ProfileQuickMenu from "../features/profile/components/ProfileQuickMenu";
 import api from "../services/api";
 
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
