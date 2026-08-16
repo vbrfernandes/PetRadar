@@ -15,8 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
-import api from "../services/api";
-import { useAuthStore } from "../store/useAuthStore";
+import api from "../../../services/api";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const COLORS = {
   primary: "#1F5C4D",
@@ -85,7 +85,7 @@ const handleLogin = async () => {
           {/* Header com a Logo da aplicação */}
           <View style={styles.header}>
             <Image
-              source={require("../../assets/logo/logo.png")}
+              source={require("../../../../assets/logo/logo.png")}
               style={styles.logoImage}
               resizeMode="contain"
             />
