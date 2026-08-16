@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 4A — FeedBannerCarousel movido para o domínio Feed.
+FASE 4B — FeedNoticias movida para o domínio Feed; smoke test manual pendente.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -435,7 +435,7 @@ EM ANDAMENTO
 
 Subetapas:
 [X] FeedBannerCarousel migrado
-[ ] FeedNoticias migrada
+[X] FeedNoticias migrada
 [ ] organização interna do Feed avaliada
 [ ] validação final da Fase 4
 
@@ -458,9 +458,9 @@ Subetapa Fase 4A — FeedBannerCarousel:
 * `npx tsc --noEmit` concluído com 0 erros.
 
 Smoke test Fase 4A:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
 
-Validação manual necessária:
+Validação manual aprovada contemplou:
 * Login funciona.
 * Feed abre.
 * Carrossel de banners e banner inicial aparecem corretamente.
@@ -469,6 +469,48 @@ Validação manual necessária:
 * Autoplay continua trocando os banners.
 * Interação manual não causa comportamento estranho.
 * Restante do Feed continua aparecendo.
+* Nenhum erro ou crash ocorre.
+
+Subetapa Fase 4B — FeedNoticias:
+* Movido `mobile/src/screens/FeedNoticias.tsx` para `mobile/src/features/feed/screens/FeedNoticias.tsx`.
+* `mobile/src/features/feed/screens/` foi criado somente ao receber o código real de FeedNoticias.tsx.
+* Nome do arquivo, nome do componente e export default de FeedNoticias preservados.
+* AppNavigator foi o único consumidor executável encontrado e teve somente o caminho do import atualizado de `../screens/FeedNoticias` para `../features/feed/screens/FeedNoticias`.
+* Rota Feed, componente registrado, ordem das rotas, tabBar, screenOptions e AppTabParamList não foram alterados.
+* Imports relativos de navigation.types.ts, api.ts, OccurrenceDetailDrawer.tsx, AppNavigationDrawer.tsx, ProfileQuickMenu.tsx, FeedBannerCarousel.tsx, ProfileDetailScreen.tsx, theme/colors.ts e useAuthStore.ts foram ajustados exclusivamente por necessidade física da movimentação.
+* Todos os imports ajustados continuam resolvendo para os mesmos módulos reais anteriores.
+* As duas referências ao asset ECO foram ajustadas de `../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png` para `../../../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png` e continuam resolvendo para o mesmo arquivo físico `mobile/assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png`.
+* FeedBannerCarousel permanece intacto em `mobile/src/features/feed/components/FeedBannerCarousel.tsx` e continua sendo consumido diretamente por FeedNoticias.
+* ProfileDetailScreen.tsx, ProfileQuickMenu.tsx, OccurrenceDetailDrawer.tsx e AppNavigationDrawer.tsx não foram movidos ou alterados.
+* services/api.ts, store/useAuthStore.ts e theme/colors.ts não foram movidos ou alterados.
+* Endpoints `/auth/me`, `/ocorrencias/proximas`, `/ocorrencias/${occurrenceId}/forca` e `/ocorrencias/${denunciaOccurrenceId}/denuncias` foram preservados.
+* Tipos locais OcorrenciaFeed, ForcaResponse, RecarregarListaOcorrencias, FiltroFeed, ModoFeed, FiltroConfig, StatusVisual e OccurrenceCardProps foram preservados no mesmo arquivo.
+* JSX, estados, hooks, handlers, navegação, estilos, textos, accessibility e comportamento foram preservados.
+* Comparação normalizada da tela antes/depois, desconsiderando somente comentário de caminho, imports relativos e as duas referências relativas ao asset ECO, confirmou conteúdo idêntico.
+* Nenhum feedService, hook, types, componente adicional, index.ts, .gitkeep ou abstração interna de Feed foi criado.
+* A organização interna do Feed permanece adiada até a aprovação manual desta movimentação.
+* `npx tsc --noEmit` concluído com 0 erros.
+
+Smoke test Fase 4B:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+Validação manual necessária:
+* Login funciona.
+* Feed abre.
+* Header aparece normalmente.
+* Carrossel de banners continua funcionando.
+* Busca continua funcionando.
+* Alternância PROXIMIDADE/ECO continua funcionando.
+* Swipe do seletor de modo continua funcionando.
+* Filtros continuam funcionando.
+* Refresh continua funcionando.
+* Cards continuam aparecendo.
+* Abrir detalhes de ocorrência continua funcionando.
+* ECO/força continua funcionando.
+* Menu principal continua abrindo.
+* Perfil rápido continua abrindo.
+* Registrar ocorrência continua navegando.
+* Ícones ECO continuam aparecendo a partir do mesmo asset físico.
 * Nenhum erro ou crash ocorre.
 
 ======================================================================
@@ -491,6 +533,8 @@ ETAPAS CONCLUÍDAS
 [X] Fase 0 concluída sem refatoração estrutural
 [X] Fase 3 — Auth concluída após validação técnica e smoke tests manuais
 [X] Fase 4A — FeedBannerCarousel movido para o domínio Feed
+[X] Smoke test manual da Fase 4A aprovado pelo usuário
+[X] Fase 4B — FeedNoticias movida para o domínio Feed
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -677,14 +721,17 @@ DECISÕES TOMADAS
 * api.ts permanece em `mobile/src/services/` até a Fase 10 — Infrastructure.
 * `features/feed/components/` foi criado somente ao receber FeedBannerCarousel.tsx como primeiro código real do domínio Feed.
 * FeedBannerCarousel foi movido antes de FeedNoticias por possuir superfície de dependências menor e um único consumidor executável.
-* FeedNoticias permanece em `mobile/src/screens/` até subetapa específica posterior.
+* `features/feed/screens/` foi criado somente ao receber FeedNoticias.tsx como código real.
+* FeedNoticias foi movida primeiro sem organização interna para isolar e validar a mudança física antes de qualquer extração adicional.
+* feedService, hooks, types e novos componentes não foram criados nesta subetapa porque as responsabilidades atuais continuam misturadas e sua separação exige análise e validação próprias.
+* A organização interna do Feed somente será avaliada após aprovação do smoke test manual da Fase 4B.
 * AppNavigationDrawer permanece candidato a Shared na Fase 11; ProfileQuickMenu e OccurrenceDetailDrawer permanecem reservados aos seus respectivos domínios.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 4A antes da próxima movimentação.
+Aguardar smoke test manual da Fase 4B antes de avaliar a organização interna do Feed.
 
 ======================================================================
 FASES
@@ -731,9 +778,10 @@ Subetapas concluídas:
 * Fase 3F — extração das cinco operações HTTP de Auth para `features/auth/services/authService.ts`.
 * Fase 3G — fechamento formal da Fase 3 — Auth, sem alteração de código funcional.
 * Fase 4A — movimentação de FeedBannerCarousel.tsx para `features/feed/components/`.
+* Fase 4B — movimentação de FeedNoticias.tsx para `features/feed/screens/`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/feed/components/FeedBannerCarousel.tsx` e o import consumidor em `mobile/src/screens/FeedNoticias.tsx`.
+`mobile/src/features/feed/screens/FeedNoticias.tsx` e o import consumidor em `mobile/src/navigation/AppNavigator.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -742,7 +790,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar smoke test manual da Fase 4A antes da próxima movimentação.
+Aguardar smoke test manual da Fase 4B antes de avaliar a organização interna do Feed.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

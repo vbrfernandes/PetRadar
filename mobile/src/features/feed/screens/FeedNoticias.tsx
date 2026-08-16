@@ -1,5 +1,5 @@
 // ============================================================
-// D:\PetRadar\src\mobile\src\screens\FeedNoticias.tsx
+// D:\PetRadar\src\mobile\src\features\feed\screens\FeedNoticias.tsx
 // ============================================================
 
 import React, {
@@ -50,33 +50,33 @@ import type {
 
 import type {
   AppTabParamList,
-} from "../navigation/navigation.types";
+} from "../../../navigation/navigation.types";
 
-import api from "../services/api";
+import api from "../../../services/api";
 
 import OccurrenceDetailDrawer
-  from "../components/OccurrenceDetailDrawer";
+  from "../../../components/OccurrenceDetailDrawer";
 
 import AppNavigationDrawer
-  from "../components/AppNavigationDrawer";
+  from "../../../components/AppNavigationDrawer";
 
 import ProfileQuickMenu
-  from "../components/ProfileQuickMenu";
+  from "../../../components/ProfileQuickMenu";
 
 import FeedBannerCarousel
-  from "../features/feed/components/FeedBannerCarousel";
+  from "../components/FeedBannerCarousel";
 
 import ProfileDetailScreen, {
   type ProfileUpdateResult,
-} from "./ProfileDetailScreen";
+} from "../../../screens/ProfileDetailScreen";
 
 import {
   theme,
-} from "../theme/colors";
+} from "../../../theme/colors";
 
 import {
   useAuthStore,
-} from "../store/useAuthStore";
+} from "../../../store/useAuthStore";
 
 // ============================================================
 // CONSTANTES
@@ -1168,7 +1168,7 @@ function OccurrenceCard({
           >
             <Animated.Image
               source={require(
-                "../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
+                "../../../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
               )}
               resizeMode="contain"
               style={[
@@ -3070,7 +3070,7 @@ onPress={() => {
                     >
                       <Image
                         source={require(
-                          "../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
+                          "../../../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
                         )}
                         resizeMode="contain"
                         style={[

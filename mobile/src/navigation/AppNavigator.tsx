@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
 
 import MapScreen from '../screens/MapScreen';
-import FeedNoticias from '../screens/FeedNoticias';
+import FeedNoticias from '../features/feed/screens/FeedNoticias';
 import CadastroOcorrenciaScreen from '../screens/CadastroOcorrenciaScreen';
 import type { AppTabParamList } from './navigation.types';
 
