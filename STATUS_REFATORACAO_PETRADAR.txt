@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7M — AnimalSection.
+FASE 7N — HealthSection.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1142,7 +1142,10 @@ Subetapas:
 [X] smoke test manual da Fase 7L
 [X] AnimalSection extraído para components/form
 [X] validação técnica da Fase 7M
-[ ] smoke test manual da Fase 7M
+[X] smoke test manual da Fase 7M
+[X] HealthSection extraído para components/form
+[X] validação técnica da Fase 7N
+[ ] smoke test manual da Fase 7N
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1414,6 +1417,28 @@ Subetapa Fase 7M — AnimalSection:
 * `git diff --check` restrito aos arquivos da Fase 7M foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7M:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7N — HealthSection:
+* Criado `mobile/src/features/occurrences/components/form/HealthSection.tsx` somente para receber a subseção controlada Saúde crítica da seção 4 — Condições de saúde.
+* O componente é stateless e controlado pelas props saudeCritica, onSaudeCriticaChange, problemasSelecionados e onProblemaSelect; nenhum hook, estado, regra de carregamento, chamada HTTP ou integração foi introduzido.
+* Os estados saudeCritica e problemasSelecionados permaneceram integralmente na CadastroOcorrenciaScreen.
+* O callback simples selecionarSaudeCritica foi criado na Screen para preservar a regra existente de limpar problemasSelecionados somente quando Saúde crítica recebe false, sem useCallback e sem alteração de semântica.
+* A constante exclusiva problemasSaude foi movida para HealthSection com textos, ordem, capitalização e pontuação preservados.
+* ChoiceButton e SelectionChipGroup foram reutilizados diretamente e permaneceram intactos.
+* Criado o export separado occurrenceConditionStyles em occurrenceForm.styles.ts, contendo exclusivamente conditionalBox e conditionalTitle com seus valores anteriores.
+* O objeto occurrenceFormSharedStyles original permaneceu intacto com os mesmos seis styles; Screen e HealthSection passaram a incorporar occurrenceConditionStyles separadamente.
+* As definições locais conditionalBox e conditionalTitle foram removidas da Screen, enquanto seus usos na subseção Deficiência permaneceram inalterados.
+* sectionDivider permaneceu definido e renderizado na CadastroOcorrenciaScreen entre HealthSection e Deficiência.
+* Deficiência, seus estados, constante, ChoiceButtons, SelectionChipGroup e comportamento permaneceram integralmente na Screen.
+* O carregamento do modo edição, o reset e a construção do FormData de Saúde permaneceram nos mesmos pontos da Screen e inalterados.
+* AnimalSection, AnimalTypeSelector, OccurrenceFormSection, OccurrenceTypeSection, ChoiceButton, SelectionChip e SelectionChipGroup permaneceram intactos.
+* As demais seções do formulário, occurrenceService, OccurrenceDetailDrawer, criação, edição, exclusão, prefill de Pet, Location, ImagePicker, Mapbox/geocoding, Feed, Map, Profile, Pets, navegação, backend, endpoints, payloads e Alerts permaneceram intactos.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7N foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7N:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1512,7 +1537,10 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7L aprovado pelo usuário
 [X] Fase 7M — AnimalSection extraído para `features/occurrences/components/form/`
 [X] Validação técnica da Fase 7M concluída
-[ ] Smoke test manual da Fase 7M
+[X] Smoke test manual da Fase 7M aprovado pelo usuário
+[X] Fase 7N — HealthSection extraído para `features/occurrences/components/form/`
+[X] Validação técnica da Fase 7N concluída
+[ ] Smoke test manual da Fase 7N
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1750,7 +1778,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7M.
+Aguardar aprovação manual do smoke test da Fase 7N.
 
 ======================================================================
 FASES
@@ -1781,7 +1809,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Smoke test manual da Fase 7M — PENDENTE.
+Smoke test manual da Fase 7N — PENDENTE.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1826,10 +1854,11 @@ Subetapas concluídas:
 * Fase 7J — extração do componente de grupo SelectionChipGroup para `features/occurrences/components/form/SelectionChipGroup.tsx`, aprovada manualmente pelo usuário.
 * Fase 7K — centralização dos seis styles compartilhados do formulário em `features/occurrences/components/form/occurrenceForm.styles.ts`, aprovada manualmente pelo usuário.
 * Fase 7L — extração do shell visual compartilhado das nove seções para `features/occurrences/components/form/OccurrenceFormSection.tsx`, aprovada manualmente pelo usuário.
-* Fase 7M — extração do conteúdo controlado da seção Sobre o animal para `features/occurrences/components/form/AnimalSection.tsx`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7M — extração do conteúdo controlado da seção Sobre o animal para `features/occurrences/components/form/AnimalSection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7N — extração da subseção controlada Saúde crítica para `features/occurrences/components/form/HealthSection.tsx` e centralização dos styles condicionais compartilhados, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/form/AnimalSection.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+`mobile/src/features/occurrences/components/form/HealthSection.tsx`, `mobile/src/features/occurrences/components/form/occurrenceForm.styles.ts` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1838,7 +1867,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7M; não iniciar nova subetapa automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7N; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

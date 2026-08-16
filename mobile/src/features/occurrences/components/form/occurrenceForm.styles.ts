@@ -44,3 +44,21 @@ export const occurrenceFormSharedStyles = {
     marginBottom: 4,
   },
 } as const;
+
+export const occurrenceConditionStyles = {
+  conditionalBox: {
+    marginTop: 14,
+    padding: 13,
+    borderRadius: 16,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: "rgba(31, 92, 77, 0.07)",
+  },
+
+  conditionalTitle: {
+    color: theme.colors.textTitle,
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+} as const;

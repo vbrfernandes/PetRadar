@@ -28,12 +28,16 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { AppTabParamList } from "../../../navigation/navigation.types";
 import AnimalSection from "../components/form/AnimalSection";
 import ChoiceButton from "../components/form/ChoiceButton";
+import HealthSection from "../components/form/HealthSection";
 import OccurrenceFormSection from "../components/form/OccurrenceFormSection";
 import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
 import SelectionChipGroup from "../components/form/SelectionChipGroup";
-import { occurrenceFormSharedStyles } from "../components/form/occurrenceForm.styles";
+import {
+  occurrenceConditionStyles,
+  occurrenceFormSharedStyles,
+} from "../components/form/occurrenceForm.styles";
 import { occurrenceService } from "../services/occurrenceService";
 import type {
   TipoAnimal,
@@ -69,15 +73,6 @@ const tiposOcorrencia: OccurrenceTypeOption[] = [
 ];
 
 const urgencias = ["Crítico", "Moderado", "Baixo"];
-
-const problemasSaude = [
-  "Ferido / machucado",
-  "Desnutrido",
-  "Desidratado",
-  "Ingestão de corpo estranho",
-  "Atropelado",
-  "Problemas dermatológicos",
-];
 
 const deficiencias = [
   "Paralisia de membros",
@@ -494,6 +489,14 @@ export default function CadastroOcorrenciaScreen({
 
     if (!conhecida) {
       setRaca("");
+    }
+  };
+
+  const selecionarSaudeCritica = (critica: boolean) => {
+    setSaudeCritica(critica);
+
+    if (!critica) {
+      setProblemasSelecionados([]);
     }
   };
 
@@ -1300,43 +1303,14 @@ export default function CadastroOcorrenciaScreen({
             title="Condições de saúde"
             subtitle="Informe sinais de saúde crítica ou deficiência aparente."
           >
-
-            <Text style={styles.fieldLabel}>Saúde crítica?</Text>
-
-            <View style={styles.binaryRow}>
-              <ChoiceButton
-                label="Sim"
-                active={saudeCritica}
-                danger={saudeCritica}
-                onPress={() => setSaudeCritica(true)}
-              />
-
-              <ChoiceButton
-                label="Não"
-                active={!saudeCritica}
-                onPress={() => {
-                  setSaudeCritica(false);
-                  setProblemasSelecionados([]);
-                }}
-              />
-            </View>
-
-            {saudeCritica && (
-              <View style={styles.conditionalBox}>
-                <Text style={styles.conditionalTitle}>
-                  O que você identificou?
-                </Text>
-
-                <SelectionChipGroup
-                  options={problemasSaude}
-                  mode="multiple"
-                  selectedValues={problemasSelecionados}
-                  onSelect={(opcao) =>
-                    alternarItem(opcao, setProblemasSelecionados)
-                  }
-                />
-              </View>
-            )}
+            <HealthSection
+              saudeCritica={saudeCritica}
+              onSaudeCriticaChange={selecionarSaudeCritica}
+              problemasSelecionados={problemasSelecionados}
+              onProblemaSelect={(opcao) =>
+                alternarItem(opcao, setProblemasSelecionados)
+              }
+            />
 
             <View style={styles.sectionDivider} />
 
@@ -2105,6 +2079,7 @@ const styles = StyleSheet.create({
   },
 
   ...occurrenceFormSharedStyles,
+  ...occurrenceConditionStyles,
 
   addressInput: {
     alignItems: "flex-start",
@@ -2168,22 +2143,6 @@ const styles = StyleSheet.create({
     height: 1,
     marginLeft: 58,
     backgroundColor: "rgba(31, 92, 77, 0.08)",
-  },
-
-  conditionalBox: {
-    marginTop: 14,
-    padding: 13,
-    borderRadius: 16,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.07)",
-  },
-
-  conditionalTitle: {
-    color: theme.colors.textTitle,
-    fontSize: 12,
-    fontWeight: "800",
-    marginBottom: 10,
   },
 
   sectionDivider: {
