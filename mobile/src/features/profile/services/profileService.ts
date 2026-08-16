@@ -1,0 +1,36 @@
+import api from "../../../services/api";
+
+import type {
+  ProfileUpdatePayload,
+  UserProfile,
+} from "../types/profile.types";
+
+interface DeleteProfilePayload {
+  senha: string;
+}
+
+export const profileService = {
+  getProfile: () =>
+    api.get<UserProfile>("/auth/me"),
+
+  updateProfile: (
+    payload: ProfileUpdatePayload,
+  ) =>
+    api.put<UserProfile>("/auth/me", payload),
+
+  uploadProfilePhoto: (
+    formData: FormData,
+  ) =>
+    api.post("/auth/me/foto", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }),
+
+  deleteProfile: (
+    payload: DeleteProfilePayload,
+  ) =>
+    api.delete("/auth/me", {
+      data: payload,
+    }),
+};

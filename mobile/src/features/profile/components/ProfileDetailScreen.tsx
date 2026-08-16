@@ -40,6 +40,14 @@ import { useAuthStore } from "../../../store/useAuthStore";
 
 import RegistrarPet from "../../../screens/RegistrarPet";
 
+import { profileService } from "../services/profileService";
+
+import type {
+  ProfileUpdatePayload,
+  ProfileUpdateResult,
+  UserProfile,
+} from "../types/profile.types";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.88;
@@ -74,12 +82,6 @@ const MIN_PROFILE_RADIUS = 1;
 // TIPAGEM
 // ============================================================
 
-export interface ProfileUpdateResult {
-  raio_pesquisa_km?: number;
-  tem_pet?: boolean;
-  foto_perfil?: string | null;
-}
-
 interface ProfileDetailProps {
   visible: boolean;
   onClose: () => void;
@@ -88,35 +90,6 @@ interface ProfileDetailProps {
     occurrenceId: number,
     onChanged: () => void | Promise<void>,
   ) => void;
-}
-
-interface UserProfile {
-  id_conta: number;
-  email: string;
-  tipo_conta: "PESSOA_FISICA" | "ONG";
-
-  telefone: string | null;
-  foto_perfil: string | null;
-
-  nome_completo?: string;
-  nome_fantasia?: string;
-
-  razao_social?: string;
-  cnpj?: string;
-
-  raio_pesquisa_km?: number;
-  tem_pet?: boolean;
-
-  endereco_completo?: string;
-  nome_gestor?: string;
-}
-
-interface ProfileUpdatePayload {
-  nome?: string;
-  telefone?: string;
-  raio_pesquisa_km?: number;
-  endereco_completo?: string;
-  tem_pet?: boolean;
 }
 
 interface Ocorrencia {
@@ -553,7 +526,7 @@ export default function ProfileDetailScreen({
       // Se /ocorrencias/minhas falhar, o perfil continua carregando.
 
       try {
-        const resPerfil = await api.get("/auth/me");
+        const resPerfil = await profileService.getProfile();
 
         const data = resPerfil.data as UserProfile;
 
@@ -649,7 +622,7 @@ export default function ProfileDetailScreen({
         payload.endereco_completo = endereco.trim();
       }
 
-      const response = await api.put("/auth/me", payload);
+      const response = await profileService.updateProfile(payload);
 
       const updatedProfile = response.data as UserProfile;
 
@@ -734,11 +707,7 @@ export default function ProfileDetailScreen({
         type,
       } as any);
 
-      const response = await api.post("/auth/me/foto", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await profileService.uploadProfilePhoto(formData);
 
       const novaFoto = response.data?.foto_perfil;
 
@@ -818,10 +787,8 @@ export default function ProfileDetailScreen({
     setDeletingAccount(true);
 
     try {
-      await api.delete("/auth/me", {
-        data: {
-          senha: deletePassword,
-        },
+      await profileService.deleteProfile({
+        senha: deletePassword,
       });
 
       setDeleteAccountVisible(false);

@@ -28,9 +28,11 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { theme } from "../theme/colors";
 import { useAuthStore } from "../store/useAuthStore";
-import ProfileDetailScreen, {
-  type ProfileUpdateResult,
-} from "../features/profile/components/ProfileDetailScreen";
+import ProfileDetailScreen
+  from "../features/profile/components/ProfileDetailScreen";
+import type {
+  ProfileUpdateResult,
+} from "../features/profile/types/profile.types";
 import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
 import AppNavigationDrawer from "../components/AppNavigationDrawer";
 import ProfileQuickMenu from "../features/profile/components/ProfileQuickMenu";

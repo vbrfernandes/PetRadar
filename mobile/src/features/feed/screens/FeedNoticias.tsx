@@ -81,9 +81,12 @@ import {
   feedButtonPressedStyle,
 } from "../styles/feed.styles";
 
-import ProfileDetailScreen, {
-  type ProfileUpdateResult,
-} from "../../profile/components/ProfileDetailScreen";
+import ProfileDetailScreen
+  from "../../profile/components/ProfileDetailScreen";
+
+import type {
+  ProfileUpdateResult,
+} from "../../profile/types/profile.types";
 
 import {
   theme,
