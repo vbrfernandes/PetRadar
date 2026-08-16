@@ -18,7 +18,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 
-import api from '../services/api';
+import api from '../../../services/api';
 
 const COLORS = {
   primary: '#1F5C4D',

@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 3D — CadastroUserScreen movida para o domínio Auth.
+FASE 3E — CadastroONGScreen movida para o domínio Auth.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -200,7 +200,7 @@ Subetapas:
 [X] EsqueceuSenhaScreen migrada
 [X] LoginScreen migrada
 [X] CadastroUserScreen migrada
-[ ] CadastroONGScreen migrada
+[X] CadastroONGScreen migrada
 [ ] organização interna de Auth avaliada
 [ ] validação final da Fase 3
 
@@ -306,9 +306,9 @@ Subetapa Fase 3D — CadastroUserScreen:
 * Nenhuma pasta vazia ou arquivo `.gitkeep` criado.
 
 Smoke test Fase 3D:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
 
-Validação manual necessária:
+Validação manual aprovada contemplou:
 * Login abre.
 * “Cadastre-se” abre TipoCadastroScreen.
 * A opção de cadastro de usuário abre CadastroUserScreen.
@@ -316,6 +316,44 @@ Validação manual necessária:
 * Avançar e voltar entre etapas funciona.
 * Validações obrigatórias continuam funcionando.
 * Switch de possui pet continua funcionando.
+* Voltar funciona.
+* Nenhum erro ou crash ocorre.
+
+Subetapa Fase 3E — CadastroONGScreen:
+* Movido `mobile/src/screens/CadastroONGScreen.tsx` para `mobile/src/features/auth/screens/CadastroONGScreen.tsx`.
+* Última tela exclusivamente Auth movida para `mobile/src/features/auth/screens/`; nenhuma tela Auth permanece em `mobile/src/screens/`.
+* Nome do arquivo e do componente CadastroONGScreen preservados.
+* JSX, formulário, fluxo de três etapas, estados, validações, dados institucionais, capacidade, gestor, acesso, localização, comprovante, loading, Alerts, payload, tratamento de erro, navegação, textos, estilos, cores, accessibility e comportamento preservados.
+* Import relativo de API ajustado de `../services/api` para `../../../services/api` exclusivamente por necessidade física da movimentação.
+* O novo import continua resolvendo para o mesmo módulo real `mobile/src/services/api.ts`.
+* Imports diretos de `expo-location` e `expo-image-picker` preservados.
+* `Location.requestForegroundPermissionsAsync()`, `Location.getCurrentPositionAsync()` e `Location.Accuracy.Balanced` preservados sem alteração de permissão, precisão, localização opcional ou fallback nulo.
+* `ImagePicker.launchImageLibraryAsync()` preservado com `ImagePicker.MediaTypeOptions.Images`, `allowsEditing: true` e `quality: 0.8`.
+* `comprovanteUri`, `setComprovanteUri` e `selecionarComprovante` preservados conforme o comportamento atual; nenhum upload ou campo de payload foi adicionado.
+* Endpoint `/auth/registro/ong` e payload real não foram alterados.
+* Conversões `parseInt`, chamadas `trim`, valores nulos e fallbacks foram preservados.
+* Navegação para a rota Login após sucesso preservada.
+* Os `navigation: any` e `catch (error: any)` preexistentes foram preservados por estarem fora do escopo.
+* AuthNavigator teve somente o caminho do import de CadastroONGScreen atualizado; todas as cinco telas agora são importadas de `features/auth/screens/`.
+* Nomes e ordem das rotas, screenOptions e AuthStackParamList não foram alterados.
+* LoginScreen, TipoCadastroScreen, EsqueceuSenhaScreen e CadastroUserScreen permaneceram intactas.
+* services/api.ts não foi movido ou alterado.
+* Nenhuma organização interna de Auth foi realizada.
+* Nenhuma pasta vazia ou arquivo `.gitkeep` criado.
+
+Smoke test Fase 3E:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+Validação manual necessária:
+* Login abre.
+* “Cadastre-se” abre TipoCadastroScreen.
+* A opção CadastroONG abre CadastroONGScreen.
+* CadastroONGScreen aparece normalmente.
+* Avançar e voltar entre as três etapas funciona.
+* Validações obrigatórias continuam funcionando.
+* Switches continuam funcionando.
+* Botão de selecionar comprovante abre o seletor normalmente.
+* Cancelar o seletor não causa erro.
 * Voltar funciona.
 * Nenhum erro ou crash ocorre.
 
@@ -513,12 +551,14 @@ DECISÕES TOMADAS
 * Os caminhos relativos de api.ts, useAuthStore.ts e logo.png foram ajustados sem mover ou alterar esses arquivos.
 * CadastroUserScreen foi movida sem renomear o arquivo ou o componente interno CadastroUsuarioScreen na Fase 3D.
 * O import relativo de api.ts foi ajustado sem mover ou alterar o módulo; o uso direto de expo-location foi preservado.
+* CadastroONGScreen foi movida sem renomeação na Fase 3E, concluindo a movimentação física das cinco telas Auth.
+* O import relativo de api.ts foi ajustado sem mover o módulo; expo-location, expo-image-picker e o comprovante foram preservados sem organização interna adicional.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 3D antes de mover outra tela Auth.
+Aguardar smoke test manual da Fase 3E antes de avaliar a organização interna de Auth e a validação final da Fase 3.
 
 ======================================================================
 FASES
@@ -561,15 +601,16 @@ Subetapas concluídas:
 * Fase 3B — movimentação de EsqueceuSenhaScreen.tsx para `features/auth/screens/`.
 * Fase 3C — movimentação de LoginScreen.tsx para `features/auth/screens/`.
 * Fase 3D — movimentação de CadastroUserScreen.tsx para `features/auth/screens/`.
+* Fase 3E — movimentação de CadastroONGScreen.tsx para `features/auth/screens/`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/auth/screens/CadastroUserScreen.tsx` e `mobile/src/navigation/AuthNavigator.tsx`.
+`mobile/src/features/auth/screens/CadastroONGScreen.tsx` e `mobile/src/navigation/AuthNavigator.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar smoke test manual da Fase 3D antes de mover outra tela Auth.
+Aguardar smoke test manual da Fase 3E antes de avaliar a organização interna de Auth e a validação final da Fase 3.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
