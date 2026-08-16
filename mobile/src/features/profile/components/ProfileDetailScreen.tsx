@@ -38,6 +38,7 @@ import { theme } from "../../../theme/colors";
 import api from "../../../services/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 
+import type { OcorrenciaResumo } from "../../occurrences/types/occurrence.types";
 import PetsTab from "../../pets/components/PetsTab";
 
 import { profileService } from "../services/profileService";
@@ -90,17 +91,6 @@ interface ProfileDetailProps {
     occurrenceId: number,
     onChanged: () => void | Promise<void>,
   ) => void;
-}
-
-interface Ocorrencia {
-  id_ocorrencia: number;
-  tipo_ocorrencia: string;
-  status_badge: string;
-  tipo_animal: string;
-  foto: string;
-  nivel_urgencia: string;
-  data_ocorrencia: string;
-  endereco_localizacao?: string;
 }
 
 // ============================================================
@@ -367,7 +357,7 @@ const PetSwitch = React.memo(({ value, onChange }: PetSwitchProps) => {
 // ============================================================
 
 interface OcorrenciaCardProps {
-  item: Ocorrencia;
+  item: OcorrenciaResumo;
   onPress: (occurrenceId: number) => void;
 }
 
@@ -482,7 +472,7 @@ export default function ProfileDetailScreen({
   const [endereco, setEndereco] = useState("");
   const [temPet, setTemPet] = useState(false);
 
-  const [minhasOcorrencias, setMinhasOcorrencias] = useState<Ocorrencia[]>([]);
+  const [minhasOcorrencias, setMinhasOcorrencias] = useState<OcorrenciaResumo[]>([]);
 
   const translateX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
 

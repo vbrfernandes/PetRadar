@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7B — movimentação estrutural de CadastroOcorrenciaScreen.
+FASE 7C — occurrence.types / tipo-base compartilhado.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1107,7 +1107,10 @@ Subetapas:
 [X] smoke test manual da Fase 7A
 [X] CadastroOcorrenciaScreen movida para o domínio Occurrences
 [X] validação técnica da Fase 7B
-[ ] smoke test manual da Fase 7B
+[X] smoke test manual da Fase 7B
+[X] OcorrenciaResumo extraído para occurrence.types
+[X] validação técnica da Fase 7C
+[ ] smoke test manual da Fase 7C
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1154,6 +1157,28 @@ Subetapa Fase 7B — movimentação estrutural de CadastroOcorrenciaScreen:
 * `git diff --check` restrito aos arquivos da Fase 7B foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7B:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7C — occurrence.types / tipo-base compartilhado:
+* Criado `mobile/src/features/occurrences/types/occurrence.types.ts` somente para receber o contrato compartilhado real `OcorrenciaResumo`.
+* OcorrenciaResumo contém exclusivamente os oito campos comuns confirmados nas três representações atuais: id_ocorrencia, tipo_ocorrencia, status_badge, tipo_animal, foto, nivel_urgencia, data_ocorrencia e endereco_localizacao.
+* `endereco_localizacao?: string | null` preserva o formato mais completo já aceito pelo código executável, sem conversão, normalização ou mudança de runtime.
+* Os três consumidores conceituais confirmados são OcorrenciaFeed, OcorrenciaMapa e a lista de ocorrências de ProfileDetailScreen.
+* OcorrenciaFeed passou a estender OcorrenciaResumo e manteve localmente id_conta, observacao, latitude, longitude, distancia_km, autor_nome, autor_foto, total_forca, total_comentarios e usuario_deu_forca, com nomes e tipos preservados.
+* FiltroFeed e ModoFeed permaneceram inalterados; FeedNoticias continuou consumindo OcorrenciaFeed sem modificação.
+* OcorrenciaMapa passou a estender OcorrenciaResumo e manteve localmente id_conta, latitude e longitude, com nomes e tipos preservados.
+* ProfileDetailScreen removeu somente a interface local duplicada Ocorrencia; OcorrenciaCardProps e o estado minhasOcorrencias passaram a usar OcorrenciaResumo.
+* OcorrenciaDetalhe permaneceu local em OccurrenceDetailDrawer e OcorrenciaEdicao permaneceu local em CadastroOcorrenciaScreen.
+* Nenhum tipo de cuidado, Mapbox/geocoding ou formulário foi movido; nenhum supertipo artificial foi criado.
+* As alterações em Feed, Map e Profile foram exclusivamente de tipagem; lógica, JSX, callbacks, FlatList, styles e renderização permaneceram inalterados.
+* GET `/ocorrencias/minhas` e todos os demais endpoints, payloads e contratos de runtime permaneceram intactos.
+* Mapbox, backend, dependências e funcionalidades existentes não foram alterados.
+* Nenhum RF novo, hook, service, util, constant, style compartilhado, pasta vazia, index.ts ou `.gitkeep` foi criado.
+* occurrenceService ainda NÃO foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7C foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7C:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1217,7 +1242,10 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7A aprovado pelo usuário
 [X] Fase 7B — CadastroOcorrenciaScreen movida para `features/occurrences/screens/`
 [X] Validação técnica da Fase 7B concluída
-[ ] Smoke test manual da Fase 7B
+[X] Smoke test manual da Fase 7B aprovado pelo usuário
+[X] Fase 7C — OcorrenciaResumo extraído para `features/occurrences/types/occurrence.types.ts`
+[X] Validação técnica da Fase 7C concluída
+[ ] Smoke test manual da Fase 7C
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1455,7 +1483,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7B.
+Aguardar aprovação manual do smoke test da Fase 7C.
 
 ======================================================================
 FASES
@@ -1486,7 +1514,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Fase 7C — NÃO INICIADA.
+Fase 7D — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1520,10 +1548,11 @@ Subetapas concluídas:
 * Fase 6F — renomeação semântica de `RegistrarPet.tsx` para `PetsTab.tsx`, aprovada manualmente pelo usuário.
 * Fase 6G — fechamento formal da Fase 6 — Pets, sem alteração de código-fonte.
 * Fase 7A — movimentação estrutural de `OccurrenceDetailDrawer.tsx` para `features/occurrences/components/`, aprovada manualmente pelo usuário.
-* Fase 7B — movimentação estrutural de `CadastroOcorrenciaScreen.tsx` para `features/occurrences/screens/`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7B — movimentação estrutural de `CadastroOcorrenciaScreen.tsx` para `features/occurrences/screens/`, aprovada manualmente pelo usuário.
+* Fase 7C — extração do tipo-base compartilhado `OcorrenciaResumo` para `features/occurrences/types/occurrence.types.ts`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/navigation/AppNavigator.tsx`.
+`mobile/src/features/occurrences/types/occurrence.types.ts`, `mobile/src/features/feed/types/feed.types.ts`, `mobile/src/screens/MapScreen.tsx` e `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1532,7 +1561,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7B; não iniciar a Fase 7C automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7C; não iniciar a Fase 7D automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

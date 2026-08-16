@@ -34,6 +34,7 @@ import type {
   ProfileUpdateResult,
 } from "../features/profile/types/profile.types";
 import OccurrenceDetailDrawer from "../features/occurrences/components/OccurrenceDetailDrawer";
+import type { OcorrenciaResumo } from "../features/occurrences/types/occurrence.types";
 import AppNavigationDrawer from "../components/AppNavigationDrawer";
 import ProfileQuickMenu from "../features/profile/components/ProfileQuickMenu";
 import api from "../services/api";
@@ -102,16 +103,8 @@ const normalizarRaioPesquisaKm = (valor: unknown): number => {
  * ============================================================
  */
 
-interface OcorrenciaMapa {
-  id_ocorrencia: number;
+interface OcorrenciaMapa extends OcorrenciaResumo {
   id_conta: number;
-  tipo_ocorrencia: string;
-  status_badge: string;
-  tipo_animal: string;
-  foto: string;
-  nivel_urgencia: string;
-  data_ocorrencia: string;
-  endereco_localizacao?: string | null;
   latitude: number;
   longitude: number;
 }
