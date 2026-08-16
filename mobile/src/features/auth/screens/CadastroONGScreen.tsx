@@ -18,7 +18,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 
-import api from '../../../services/api';
+import authService from '../services/authService';
 
 const COLORS = {
   primary: '#1F5C4D',
@@ -128,7 +128,7 @@ export default function CadastroONGScreen({ navigation }: any) {
         localizacao_lng: lng,
       };
 
-      await api.post('/auth/registro/ong', payload);
+      await authService.registerOng(payload);
 
       Alert.alert('Sucesso', 'Instituição cadastrada com sucesso!', [
         { text: 'Ir para Login', onPress: () => navigation.navigate('Login') },

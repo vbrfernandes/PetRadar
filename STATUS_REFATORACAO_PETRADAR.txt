@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 3E — CadastroONGScreen movida para o domínio Auth.
+FASE 3F — acesso HTTP específico de Auth extraído; aguardando validação manual.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -201,7 +201,9 @@ Subetapas:
 [X] LoginScreen migrada
 [X] CadastroUserScreen migrada
 [X] CadastroONGScreen migrada
-[ ] organização interna de Auth avaliada
+[X] necessidade de authService confirmada no código real
+[ ] authService validado manualmente
+[ ] organização interna de Auth concluída
 [ ] validação final da Fase 3
 
 Subetapa Fase 3A — TipoCadastroScreen:
@@ -342,9 +344,9 @@ Subetapa Fase 3E — CadastroONGScreen:
 * Nenhuma pasta vazia ou arquivo `.gitkeep` criado.
 
 Smoke test Fase 3E:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
 
-Validação manual necessária:
+Validação manual aprovada contemplou:
 * Login abre.
 * “Cadastre-se” abre TipoCadastroScreen.
 * A opção CadastroONG abre CadastroONGScreen.
@@ -355,6 +357,33 @@ Validação manual necessária:
 * Botão de selecionar comprovante abre o seletor normalmente.
 * Cancelar o seletor não causa erro.
 * Voltar funciona.
+* Nenhum erro ou crash ocorre.
+
+Subetapa Fase 3F — authService:
+* Criado `mobile/src/features/auth/services/authService.ts` com código real para as cinco operações HTTP existentes do domínio Auth.
+* A criação do serviço foi justificada no código real por quatro Screens que acessavam diretamente o cliente HTTP para cinco operações do domínio.
+* LoginScreen, EsqueceuSenhaScreen, CadastroUserScreen e CadastroONGScreen deixaram de importar diretamente `mobile/src/services/api.ts`.
+* O authService utiliza o cliente HTTP existente por meio do caminho relativo `../../../services/api`; api.ts, baseURL, timeout, headers e interceptors não foram alterados.
+* Endpoints `/auth/login`, `/auth/esqueceu-senha`, `/auth/redefinir-senha`, `/auth/registro/usuario` e `/auth/registro/ong` foram centralizados sem alteração.
+* Payloads específicos foram tipados no próprio authService, sem `any`, sem `Record<string, any>` e sem criar auth.types.ts sem reuso concreto.
+* As Screens continuam responsáveis pela preparação dos payloads, trim, toLowerCase, parseInt, fallbacks nulos, validações, Alerts, loading, navegação e estado visual.
+* LoginScreen continua lendo `access_token` e `user` da resposta e chamando `setAuth` diretamente; o serviço não conhece Zustand.
+* expo-location permaneceu diretamente nos cadastros de usuário e ONG, sem alteração de permissão, precisão ou fallback.
+* expo-image-picker, comprovanteUri e o fluxo de seleção de comprovante permaneceram na CadastroONGScreen; o comprovante não foi adicionado ao payload.
+* TipoCadastroScreen, AuthNavigator, useAuthStore.ts, rotas, nomes de Screens, backend, dependências e contratos de API não foram alterados.
+* Hooks de Auth e renomeações de Screens não foram introduzidos nesta subetapa.
+* `npx tsc --noEmit` concluído com 0 erros.
+
+Smoke test Fase 3F:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+Validação manual necessária:
+* Login abre e suas validações continuam funcionando.
+* Login real funciona e abre a aplicação após autenticação.
+* Logout retorna para Login normalmente.
+* “Esqueceu a senha?” abre e as validações de recuperação continuam funcionando.
+* Cadastro de usuário abre e permite navegar entre as etapas.
+* Cadastro de ONG abre e permite navegar entre as etapas.
 * Nenhum erro ou crash ocorre.
 
 ======================================================================
@@ -553,12 +582,18 @@ DECISÕES TOMADAS
 * O import relativo de api.ts foi ajustado sem mover ou alterar o módulo; o uso direto de expo-location foi preservado.
 * CadastroONGScreen foi movida sem renomeação na Fase 3E, concluindo a movimentação física das cinco telas Auth.
 * O import relativo de api.ts foi ajustado sem mover o módulo; expo-location, expo-image-picker e o comprovante foram preservados sem organização interna adicional.
+* authService foi criado porque quatro Screens repetiam acesso direto ao cliente HTTP para cinco operações do domínio Auth.
+* useLogin, useRegister e demais hooks de Auth não foram criados porque não há justificativa suficiente neste momento.
+* auth.types.ts não foi criado separadamente porque os novos tipos possuem uso específico dentro de authService.ts e não há reuso real entre arquivos.
+* useAuthStore permanece no local atual porque possui consumidores transversais e sua movimentação está fora do escopo desta subetapa.
+* Renomeações de Screens continuam adiadas.
+* api.ts permanece em `mobile/src/services/` até a Fase 10 — Infrastructure.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 3E antes de avaliar a organização interna de Auth e a validação final da Fase 3.
+Aguardar smoke test manual da Fase 3F antes de concluir a organização interna de Auth e realizar a validação final da Fase 3.
 
 ======================================================================
 FASES
@@ -602,15 +637,16 @@ Subetapas concluídas:
 * Fase 3C — movimentação de LoginScreen.tsx para `features/auth/screens/`.
 * Fase 3D — movimentação de CadastroUserScreen.tsx para `features/auth/screens/`.
 * Fase 3E — movimentação de CadastroONGScreen.tsx para `features/auth/screens/`.
+* Fase 3F — extração das cinco operações HTTP de Auth para `features/auth/services/authService.ts`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/auth/screens/CadastroONGScreen.tsx` e `mobile/src/navigation/AuthNavigator.tsx`.
+`mobile/src/features/auth/services/authService.ts` e as quatro Screens Auth consumidoras.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar smoke test manual da Fase 3E antes de avaliar a organização interna de Auth e a validação final da Fase 3.
+Aguardar smoke test manual da Fase 3F antes de concluir a organização interna de Auth e realizar a validação final da Fase 3.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

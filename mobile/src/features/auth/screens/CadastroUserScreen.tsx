@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 
-import api from '../../../services/api';
+import authService from '../services/authService';
 
 const COLORS = {
   primary: '#1F5C4D',
@@ -89,7 +89,7 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
         localizacao_lng: lng,
       };
 
-      await api.post('/auth/registro/usuario', payload);
+      await authService.registerUser(payload);
 
       Alert.alert('Sucesso', 'Conta criada com sucesso!', [
         { text: 'Ir para Login', onPress: () => navigation.navigate('Login') },

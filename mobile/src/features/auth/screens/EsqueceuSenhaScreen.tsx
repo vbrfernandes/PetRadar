@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../../../services/api';
+import authService from '../services/authService';
 
 const COLORS = {
   primary: '#1F5C4D',
@@ -44,7 +44,7 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      await api.post('/auth/esqueceu-senha', { email: email.trim().toLowerCase() });
+      await authService.requestPasswordReset({ email: email.trim().toLowerCase() });
       Alert.alert('Código Enviado', 'Verifique seu e-mail/console para obter o código de recuperação.');
       setEtapa(2);
     } catch (error: any) {
@@ -67,7 +67,7 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      await api.post('/auth/redefinir-senha', {
+      await authService.resetPassword({
         email: email.trim().toLowerCase(),
         codigo_verificacao: codigo.trim(),
         nova_senha: novaSenha.trim(),

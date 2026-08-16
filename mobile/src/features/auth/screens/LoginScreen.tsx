@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
-import api from "../../../services/api";
+import authService from "../services/authService";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 const COLORS = {
@@ -46,7 +46,7 @@ const handleLogin = async () => {
 
     setIsLoading(true);
     try {
-      const response = await api.post("/auth/login", {
+      const response = await authService.login({
         email: email.trim().toLowerCase(),
         senha: password,
       });
