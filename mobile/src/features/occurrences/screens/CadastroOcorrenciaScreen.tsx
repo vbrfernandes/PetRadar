@@ -26,7 +26,11 @@ import { useAuthStore } from "../../../store/useAuthStore";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import type { AppTabParamList } from "../../../navigation/navigation.types";
+import OccurrenceTypeSection, {
+  type OccurrenceTypeOption,
+} from "../components/form/OccurrenceTypeSection";
 import { occurrenceService } from "../services/occurrenceService";
+import type { TipoOcorrencia } from "../types/occurrence.types";
 
 type CadastroOcorrenciaScreenProps = BottomTabScreenProps<
   AppTabParamList,
@@ -34,8 +38,6 @@ type CadastroOcorrenciaScreenProps = BottomTabScreenProps<
 >;
 
 const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
-
-type TipoOcorrencia = "PET_PERDIDO" | "PET_AVISTADO" | "ANIMAL_DE_RUA";
 
 type TipoAnimal = "CACHORRO" | "GATO" | "OUTRO";
 
@@ -46,7 +48,7 @@ type Opcao = {
   icone: string;
 };
 
-const tiposOcorrencia: Opcao[] = [
+const tiposOcorrencia: OccurrenceTypeOption[] = [
   {
     valor: "PET_PERDIDO",
     titulo: "Pet perdido",
@@ -1137,65 +1139,11 @@ export default function CadastroOcorrenciaScreen({
               subtitle="O que aconteceu?"
             />
 
-            <View style={styles.typeList}>
-              {tiposOcorrencia.map((opcao) => {
-                const ativo = tipoOcorrencia === opcao.valor;
-
-                return (
-                  <Pressable
-                    key={opcao.valor}
-                    accessibilityRole="radio"
-                    accessibilityState={{
-                      selected: ativo,
-                    }}
-                    onPress={() =>
-                      selecionarTipoOcorrencia(opcao.valor as TipoOcorrencia)
-                    }
-                    style={({ pressed }) => [
-                      styles.typeCard,
-                      ativo && styles.typeCardActive,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <View
-                      style={[styles.typeIcon, ativo && styles.typeIconActive]}
-                    >
-                      <MaterialCommunityIcons
-                        name={opcao.icone as any}
-                        size={23}
-                        color={
-                          ativo ? theme.colors.surface : theme.colors.brand
-                        }
-                      />
-                    </View>
-
-                    <View style={styles.typeContent}>
-                      <Text
-                        style={[
-                          styles.typeTitle,
-                          ativo && styles.typeTitleActive,
-                        ]}
-                      >
-                        {opcao.titulo}
-                      </Text>
-
-                      <Text style={styles.typeDescription}>
-                        {opcao.descricao}
-                      </Text>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.radioOuter,
-                        ativo && styles.radioOuterActive,
-                      ]}
-                    >
-                      {ativo && <View style={styles.radioInner} />}
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <OccurrenceTypeSection
+              options={tiposOcorrencia}
+              selectedType={tipoOcorrencia}
+              onSelect={selecionarTipoOcorrencia}
+            />
           </View>
 
           {/* ===================================================== */}
@@ -2513,83 +2461,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginTop: 3,
-  },
-
-  typeList: {
-    gap: 10,
-  },
-
-  typeCard: {
-    minHeight: 72,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.10)",
-    backgroundColor: theme.colors.background,
-  },
-
-  typeCardActive: {
-    borderColor: theme.colors.brand,
-    backgroundColor: "rgba(31, 92, 77, 0.06)",
-  },
-
-  typeIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: theme.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  typeIconActive: {
-    backgroundColor: theme.colors.brand,
-  },
-
-  typeContent: {
-    flex: 1,
-  },
-
-  typeTitle: {
-    color: theme.colors.textTitle,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  typeTitleActive: {
-    color: theme.colors.brand,
-  },
-
-  typeDescription: {
-    color: theme.colors.textBody,
-    fontSize: 12,
-    marginTop: 3,
-    lineHeight: 16,
-  },
-
-  radioOuter: {
-    width: 21,
-    height: 21,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: "rgba(31, 92, 77, 0.20)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-  },
-
-  radioOuterActive: {
-    borderColor: theme.colors.brand,
-  },
-
-  radioInner: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: theme.colors.brand,
   },
 
   fieldLabel: {

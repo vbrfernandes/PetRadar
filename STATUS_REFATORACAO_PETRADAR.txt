@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7E — occurrenceService / escritas nucleares.
+FASE 7F — OccurrenceTypeSection.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1116,7 +1116,11 @@ Subetapas:
 [X] smoke test manual da Fase 7D
 [X] escritas nucleares de Occurrences centralizadas em occurrenceService
 [X] validação técnica da Fase 7E
-[ ] smoke test manual da Fase 7E
+[X] smoke test manual da Fase 7E
+[X] OccurrenceTypeSection extraído para components/form
+[X] TipoOcorrencia compartilhado via occurrence.types
+[X] validação técnica da Fase 7F
+[ ] smoke test manual da Fase 7F
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1236,6 +1240,23 @@ Subetapa Fase 7E — occurrenceService / escritas nucleares:
 * `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
 
 Smoke test Fase 7E:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7F — OccurrenceTypeSection:
+* Criado `mobile/src/features/occurrences/components/form/OccurrenceTypeSection.tsx` somente para receber o corpo interativo real da seção 1 — Sobre a ocorrência.
+* O componente stateless recebe `options`, `selectedType` e `onSelect`; nenhum hook, estado, regra de negócio, chamada HTTP ou integração foi introduzido.
+* `TipoOcorrencia` foi movido sem alteração para `mobile/src/features/occurrences/types/occurrence.types.ts`; `OcorrenciaResumo` permaneceu intacto.
+* `tiposOcorrencia` continua definido uma única vez em CadastroOcorrenciaScreen e passou somente a usar a tipagem `OccurrenceTypeOption[]` exportada pelo novo componente.
+* `selecionarTipoOcorrencia` permaneceu intacto na Screen, incluindo a regra que limpa raça conhecida e raça ao selecionar um tipo diferente de PET_PERDIDO ou PET_AVISTADO.
+* O `SectionHeader` e o `<View style={styles.section}>` da seção 1 permaneceram na Screen.
+* JSX, ordem, textos, ícones, accessibilityRole, accessibilityState, indicador radio, estado pressed e comportamento dos três cards foram preservados no novo componente.
+* Somente os styles exclusivos do corpo interativo foram movidos; o style `pressed` permaneceu na Screen para os demais consumidores e foi reproduzido localmente no novo componente.
+* Nenhum outro bloco do formulário, occurrenceService, OccurrenceDetailDrawer, Feed, Map, Profile, Pets, navegação, Mapbox, backend, dependência ou contrato de API foi alterado.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7F foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7F:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1308,7 +1329,11 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7D aprovado pelo usuário
 [X] Fase 7E — operações de escrita nucleares centralizadas em `features/occurrences/services/occurrenceService.ts`
 [X] Validação técnica da Fase 7E concluída
-[ ] Smoke test manual da Fase 7E
+[X] Smoke test manual da Fase 7E aprovado pelo usuário
+[X] Fase 7F — OccurrenceTypeSection extraído para `features/occurrences/components/form/`
+[X] TipoOcorrencia compartilhado via `features/occurrences/types/occurrence.types.ts`
+[X] Validação técnica da Fase 7F concluída
+[ ] Smoke test manual da Fase 7F
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1546,7 +1571,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7E.
+Aguardar aprovação manual do smoke test da Fase 7F.
 
 ======================================================================
 FASES
@@ -1577,7 +1602,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Próxima subetapa da Fase 7 — NÃO INICIADA.
+Smoke test manual da Fase 7F — PENDENTE.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1614,10 +1639,11 @@ Subetapas concluídas:
 * Fase 7B — movimentação estrutural de `CadastroOcorrenciaScreen.tsx` para `features/occurrences/screens/`, aprovada manualmente pelo usuário.
 * Fase 7C — extração do tipo-base compartilhado `OcorrenciaResumo` para `features/occurrences/types/occurrence.types.ts`, aprovada manualmente pelo usuário.
 * Fase 7D — centralização das três operações compartilhadas de leitura em `features/occurrences/services/occurrenceService.ts`, aprovada manualmente pelo usuário.
-* Fase 7E — centralização das operações nucleares de criação, atualização e exclusão em `features/occurrences/services/occurrenceService.ts`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7E — centralização das operações nucleares de criação, atualização e exclusão em `features/occurrences/services/occurrenceService.ts`, aprovada manualmente pelo usuário.
+* Fase 7F — extração do corpo interativo da seção de tipo de ocorrência para `features/occurrences/components/form/OccurrenceTypeSection.tsx`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/services/occurrenceService.ts`, `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx`.
+`mobile/src/features/occurrences/components/form/OccurrenceTypeSection.tsx`, `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/features/occurrences/types/occurrence.types.ts`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1626,7 +1652,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7E; não iniciar nova subetapa automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7F; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

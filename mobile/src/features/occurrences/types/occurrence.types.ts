@@ -1,3 +1,8 @@
+export type TipoOcorrencia =
+  | "PET_PERDIDO"
+  | "PET_AVISTADO"
+  | "ANIMAL_DE_RUA";
+
 export interface OcorrenciaResumo {
   id_ocorrencia: number;
   tipo_ocorrencia: string;
