@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7H — ChoiceButton.
+FASE 7I — SelectionChip.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1127,7 +1127,10 @@ Subetapas:
 [X] smoke test manual da Fase 7G
 [X] ChoiceButton extraído para components/form
 [X] validação técnica da Fase 7H
-[ ] smoke test manual da Fase 7H
+[X] smoke test manual da Fase 7H
+[X] SelectionChip extraído para components/form
+[X] validação técnica da Fase 7I
+[ ] smoke test manual da Fase 7I
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1304,6 +1307,26 @@ Subetapa Fase 7H — ChoiceButton:
 * `git diff --check` restrito aos arquivos da Fase 7H foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7H:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7I — SelectionChip:
+* Criado `mobile/src/features/occurrences/components/form/SelectionChip.tsx` somente para receber o elemento visual/interativo compartilhado por `renderOpcoes` e `renderMultiOpcoes`.
+* O componente stateless recebe exclusivamente `label`, `active`, `mode` e `onPress`; `mode` aceita somente `single` ou `multiple`.
+* O modo single preserva o Pressable sem checkCircle, accessibilityRole `radio`, accessibilityState `selected`, estado ativo e pressed.
+* O modo multiple preserva accessibilityRole `checkbox`, accessibilityState `checked`, checkCircle, checkCircle ativo e Ionicons `checkmark` com tamanho 13 e cor `theme.colors.surface`.
+* `renderOpcoes` permaneceu na Screen com assinatura, `optionsGrid`, map, cálculo de ativo e callback `onChange(opcao)` preservados; somente o Pressable interno passou a usar SelectionChip em modo single.
+* `renderMultiOpcoes` permaneceu na Screen com assinatura, `optionsGrid`, map, cálculo de ativo e callback `alternarItem(opcao, setSelecionados)` preservados; somente o Pressable interno passou a usar SelectionChip em modo multiple.
+* `alternarItem` permaneceu na Screen e inalterado.
+* Sexo, Porte, Idade e seus três consumidores de `renderOpcoes` permaneceram intactos.
+* Saúde crítica, Deficiência e seus dois consumidores de `renderMultiOpcoes` permaneceram intactos.
+* Somente os seis styles exclusivos do chip foram movidos; `optionsGrid` e `pressed` permaneceram na Screen, e `pressed` foi reproduzido localmente no novo componente.
+* ChoiceButton, AnimalTypeSelector, OccurrenceTypeSection, occurrence.types, occurrenceService e OccurrenceDetailDrawer permaneceram intactos.
+* Nenhuma lógica de seleção, runtime, FormData, criação, edição, exclusão, prefill de Pet, Location, ImagePicker, Mapbox/geocoding, Feed, Map, Profile, Pets, navegação, backend, endpoint, payload, Alert ou validação foi alterada.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7I foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7I:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1387,7 +1410,10 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7G aprovado pelo usuário
 [X] Fase 7H — ChoiceButton extraído para `features/occurrences/components/form/`
 [X] Validação técnica da Fase 7H concluída
-[ ] Smoke test manual da Fase 7H
+[X] Smoke test manual da Fase 7H aprovado pelo usuário
+[X] Fase 7I — SelectionChip extraído para `features/occurrences/components/form/`
+[X] Validação técnica da Fase 7I concluída
+[ ] Smoke test manual da Fase 7I
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1625,7 +1651,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7H.
+Aguardar aprovação manual do smoke test da Fase 7I.
 
 ======================================================================
 FASES
@@ -1656,7 +1682,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Smoke test manual da Fase 7H — PENDENTE.
+Smoke test manual da Fase 7I — PENDENTE.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1696,10 +1722,11 @@ Subetapas concluídas:
 * Fase 7E — centralização das operações nucleares de criação, atualização e exclusão em `features/occurrences/services/occurrenceService.ts`, aprovada manualmente pelo usuário.
 * Fase 7F — extração do corpo interativo da seção de tipo de ocorrência para `features/occurrences/components/form/OccurrenceTypeSection.tsx`, aprovada manualmente pelo usuário.
 * Fase 7G — extração do grid visual de tipo do animal para `features/occurrences/components/form/AnimalTypeSelector.tsx`, aprovada manualmente pelo usuário.
-* Fase 7H — extração do componente reutilizável ChoiceButton para `features/occurrences/components/form/ChoiceButton.tsx`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7H — extração do componente reutilizável ChoiceButton para `features/occurrences/components/form/ChoiceButton.tsx`, aprovada manualmente pelo usuário.
+* Fase 7I — extração do elemento visual/interativo SelectionChip para `features/occurrences/components/form/SelectionChip.tsx`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/form/ChoiceButton.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+`mobile/src/features/occurrences/components/form/SelectionChip.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1708,7 +1735,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7H; não iniciar nova subetapa automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7I; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

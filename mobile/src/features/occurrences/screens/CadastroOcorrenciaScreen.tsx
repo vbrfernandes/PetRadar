@@ -33,6 +33,7 @@ import ChoiceButton from "../components/form/ChoiceButton";
 import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
+import SelectionChip from "../components/form/SelectionChip";
 import { occurrenceService } from "../services/occurrenceService";
 import type {
   TipoAnimal,
@@ -965,28 +966,13 @@ export default function CadastroOcorrenciaScreen({
         const ativo = valor === opcao;
 
         return (
-          <Pressable
+          <SelectionChip
             key={opcao}
-            accessibilityRole="radio"
-            accessibilityState={{
-              selected: ativo,
-            }}
+            label={opcao}
+            active={ativo}
+            mode="single"
             onPress={() => onChange(opcao)}
-            style={({ pressed }) => [
-              styles.optionChip,
-              ativo && styles.optionChipActive,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text
-              style={[
-                styles.optionChipText,
-                ativo && styles.optionChipTextActive,
-              ]}
-            >
-              {opcao}
-            </Text>
-          </Pressable>
+          />
         );
       })}
     </View>
@@ -1002,40 +988,13 @@ export default function CadastroOcorrenciaScreen({
         const ativo = selecionados.includes(opcao);
 
         return (
-          <Pressable
+          <SelectionChip
             key={opcao}
-            accessibilityRole="checkbox"
-            accessibilityState={{
-              checked: ativo,
-            }}
+            label={opcao}
+            active={ativo}
+            mode="multiple"
             onPress={() => alternarItem(opcao, setSelecionados)}
-            style={({ pressed }) => [
-              styles.optionChip,
-              ativo && styles.optionChipActive,
-              pressed && styles.pressed,
-            ]}
-          >
-            <View
-              style={[styles.checkCircle, ativo && styles.checkCircleActive]}
-            >
-              {ativo && (
-                <Ionicons
-                  name="checkmark"
-                  size={13}
-                  color={theme.colors.surface}
-                />
-              )}
-            </View>
-
-            <Text
-              style={[
-                styles.optionChipText,
-                ativo && styles.optionChipTextActive,
-              ]}
-            >
-              {opcao}
-            </Text>
-          </Pressable>
+          />
         );
       })}
     </View>
@@ -2489,49 +2448,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 13,
-  },
-
-  optionChip: {
-    minHeight: 42,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 13,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.10)",
-    backgroundColor: theme.colors.background,
-  },
-
-  optionChipActive: {
-    borderColor: theme.colors.brand,
-    backgroundColor: "rgba(31, 92, 77, 0.08)",
-  },
-
-  optionChipText: {
-    color: theme.colors.textBody,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
-  optionChipTextActive: {
-    color: theme.colors.brand,
-    fontWeight: "700",
-  },
-
-  checkCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
-    borderColor: "rgba(31, 92, 77, 0.20)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 7,
-  },
-
-  checkCircleActive: {
-    backgroundColor: theme.colors.brand,
-    borderColor: theme.colors.brand,
   },
 
   binaryRow: {
