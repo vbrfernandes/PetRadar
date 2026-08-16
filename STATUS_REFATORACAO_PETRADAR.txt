@@ -27,10 +27,10 @@ FASE ATUAL
 FASE 3 — AUTH
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapa atual:
-FASE 3F — acesso HTTP específico de Auth extraído; aguardando validação manual.
+FASE 3G — fechamento formal da Fase 3 — Auth.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -193,7 +193,7 @@ FASE 3 — AUTH
 =============
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapas:
 [X] TipoCadastroScreen migrada
@@ -202,9 +202,9 @@ Subetapas:
 [X] CadastroUserScreen migrada
 [X] CadastroONGScreen migrada
 [X] necessidade de authService confirmada no código real
-[ ] authService validado manualmente
-[ ] organização interna de Auth concluída
-[ ] validação final da Fase 3
+[X] authService validado manualmente
+[X] organização interna de Auth concluída
+[X] validação final da Fase 3
 
 Subetapa Fase 3A — TipoCadastroScreen:
 * Movido `mobile/src/screens/TipoCadastroScreen.tsx` para `mobile/src/features/auth/screens/TipoCadastroScreen.tsx`.
@@ -375,9 +375,9 @@ Subetapa Fase 3F — authService:
 * `npx tsc --noEmit` concluído com 0 erros.
 
 Smoke test Fase 3F:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
 
-Validação manual necessária:
+Validação manual aprovada contemplou:
 * Login abre e suas validações continuam funcionando.
 * Login real funciona e abre a aplicação após autenticação.
 * Logout retorna para Login normalmente.
@@ -385,6 +385,46 @@ Validação manual necessária:
 * Cadastro de usuário abre e permite navegar entre as etapas.
 * Cadastro de ONG abre e permite navegar entre as etapas.
 * Nenhum erro ou crash ocorre.
+
+Subetapa Fase 3G — fechamento formal da Fase 3 — Auth:
+
+Decisão final de organização interna:
+* authService.ts é mantido porque possui uso real e centraliza cinco operações HTTP do domínio Auth.
+* auth.types.ts não foi criado porque os tipos atuais possuem uso específico dentro de authService.ts e não existe reuso concreto suficiente para justificar arquivo separado.
+* useLogin.ts, useRegister.ts e outros hooks Auth não foram criados porque a lógica restante é específica das Screens e seu deslocamento não produziria benefício arquitetural comprovado.
+* useAuthStore.ts permanece em `mobile/src/store/useAuthStore.ts` porque possui consumidores transversais e sua movimentação não pertence ao escopo desta fase.
+* services/api.ts permanece em `mobile/src/services/api.ts`; sua eventual organização tecnológica continua reservada para a Fase 10 — Infrastructure.
+* Renomeações de arquivos e componentes Auth permanecem adiadas.
+* Nenhuma alteração adicional de código foi justificada ou realizada no fechamento formal.
+
+Fechamento formal da Fase 3 — Auth:
+[X] cinco Screens Auth residem em features/auth/screens/
+[X] authService reside em features/auth/services/
+[X] cinco endpoints Auth centralizados
+[X] Screens não acessam diretamente api.ts para operações Auth
+[X] contratos HTTP preservados
+[X] payloads preservados
+[X] navegação preservada
+[X] AuthNavigator preservado
+[X] useAuthStore preservado
+[X] expo-location preservado
+[X] expo-image-picker preservado
+[X] nenhuma dependência alterada
+[X] nenhum backend alterado
+[X] nenhum RF novo implementado
+[X] TypeScript com 0 erros
+[X] smoke tests 3A, 3B, 3C, 3D, 3E e 3F aprovados
+[X] nenhuma abstração sem uso real criada
+[X] nenhuma pasta vazia criada
+[X] nenhum .gitkeep criado
+[X] organização interna de Auth concluída
+[X] Fase 3 concluída
+
+Validações técnicas finais da Fase 3:
+* `npx tsc --noEmit` concluído com 0 erros.
+* Os cinco endpoints Auth aparecem no código executável somente em `mobile/src/features/auth/services/authService.ts`.
+* Nenhuma Screen em `mobile/src/features/auth/screens/` importa diretamente services/api.
+* `git diff --check` global retornou exit code 2 exclusivamente pelo trailing whitespace preexistente em codigo_frontend_consolidado.txt e codigo_projeto_consolidado.txt; essa condição não representa falha da Fase 3.
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -404,6 +444,7 @@ ETAPAS CONCLUÍDAS
 [X] TypeScript validado novamente no encerramento da Fase 0
 [X] Estado Git e diff revisados antes do fechamento
 [X] Fase 0 concluída sem refatoração estrutural
+[X] Fase 3 — Auth concluída após validação técnica e smoke tests manuais
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -593,7 +634,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 3F antes de concluir a organização interna de Auth e realizar a validação final da Fase 3.
+Iniciar planejamento e revisão da Fase 4 — Feed em tarefa separada. Não iniciar a Fase 4 automaticamente.
 
 ======================================================================
 FASES
@@ -602,8 +643,8 @@ FASES
 [X] Fase 0  — Baseline / branch — CONCLUÍDA
 [X] Fase 1  — Navigation — CONCLUÍDA
 [X] Fase 2  — Estrutura modular base — CONCLUÍDA
-[ ] Fase 3  — Auth — EM ANDAMENTO
-[ ] Fase 4  — Feed
+[X] Fase 3  — Auth — CONCLUÍDA
+[ ] Fase 4  — Feed — NÃO INICIADA
 [ ] Fase 5  — Profile
 [ ] Fase 6  — Pets
 [ ] Fase 7  — Occurrences
@@ -618,10 +659,10 @@ FASES
 [ ] Fase 16 — Limpeza final
 
 Última fase concluída:
-Fase 2 — Estrutura modular base.
+Fase 3 — Auth.
 
 Fase atual:
-Fase 3 — Auth — EM ANDAMENTO.
+Fase 3 — Auth — CONCLUÍDA.
 
 Próxima fase:
 Fase 4 — Feed — NÃO INICIADA.
@@ -638,6 +679,7 @@ Subetapas concluídas:
 * Fase 3D — movimentação de CadastroUserScreen.tsx para `features/auth/screens/`.
 * Fase 3E — movimentação de CadastroONGScreen.tsx para `features/auth/screens/`.
 * Fase 3F — extração das cinco operações HTTP de Auth para `features/auth/services/authService.ts`.
+* Fase 3G — fechamento formal da Fase 3 — Auth, sem alteração de código funcional.
 
 Último arquivo alterado pela refatoração:
 `mobile/src/features/auth/services/authService.ts` e as quatro Screens Auth consumidoras.
@@ -645,8 +687,11 @@ Subetapas concluídas:
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
+Último arquivo alterado nesta etapa documental:
+STATUS_REFATORACAO_PETRADAR.txt
+
 Próximo passo:
-Aguardar smoke test manual da Fase 3F antes de concluir a organização interna de Auth e realizar a validação final da Fase 3.
+Iniciar planejamento e revisão da Fase 4 — Feed em tarefa separada. Não iniciar a Fase 4 automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
