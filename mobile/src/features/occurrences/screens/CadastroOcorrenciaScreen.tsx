@@ -27,17 +27,13 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import type { AppTabParamList } from "../../../navigation/navigation.types";
 import AnimalSection from "../components/form/AnimalSection";
-import ChoiceButton from "../components/form/ChoiceButton";
+import DisabilitySection from "../components/form/DisabilitySection";
 import HealthSection from "../components/form/HealthSection";
 import OccurrenceFormSection from "../components/form/OccurrenceFormSection";
 import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
-import SelectionChipGroup from "../components/form/SelectionChipGroup";
-import {
-  occurrenceConditionStyles,
-  occurrenceFormSharedStyles,
-} from "../components/form/occurrenceForm.styles";
+import { occurrenceFormSharedStyles } from "../components/form/occurrenceForm.styles";
 import { occurrenceService } from "../services/occurrenceService";
 import type {
   TipoAnimal,
@@ -73,15 +69,6 @@ const tiposOcorrencia: OccurrenceTypeOption[] = [
 ];
 
 const urgencias = ["Crítico", "Moderado", "Baixo"];
-
-const deficiencias = [
-  "Paralisia de membros",
-  "Amputado",
-  "Cegueira",
-  "Surdez",
-  "Incontinência urinária",
-  "Incontinência fecal",
-];
 
 const formatarHora = (data: Date) =>
   data.toLocaleTimeString("pt-BR", {
@@ -497,6 +484,14 @@ export default function CadastroOcorrenciaScreen({
 
     if (!critica) {
       setProblemasSelecionados([]);
+    }
+  };
+
+  const selecionarDeficiencia = (possuiDeficiencia: boolean) => {
+    setDeficiencia(possuiDeficiencia);
+
+    if (!possuiDeficiencia) {
+      setDeficienciasSelecionadas([]);
     }
   };
 
@@ -1314,39 +1309,14 @@ export default function CadastroOcorrenciaScreen({
 
             <View style={styles.sectionDivider} />
 
-            <Text style={styles.fieldLabel}>Deficiência?</Text>
-
-            <View style={styles.binaryRow}>
-              <ChoiceButton
-                label="Sim"
-                active={deficiencia}
-                onPress={() => setDeficiencia(true)}
-              />
-
-              <ChoiceButton
-                label="Não"
-                active={!deficiencia}
-                onPress={() => {
-                  setDeficiencia(false);
-                  setDeficienciasSelecionadas([]);
-                }}
-              />
-            </View>
-
-            {deficiencia && (
-              <View style={styles.conditionalBox}>
-                <Text style={styles.conditionalTitle}>Quais?</Text>
-
-                <SelectionChipGroup
-                  options={deficiencias}
-                  mode="multiple"
-                  selectedValues={deficienciasSelecionadas}
-                  onSelect={(opcao) =>
-                    alternarItem(opcao, setDeficienciasSelecionadas)
-                  }
-                />
-              </View>
-            )}
+            <DisabilitySection
+              deficiencia={deficiencia}
+              onDeficienciaChange={selecionarDeficiencia}
+              deficienciasSelecionadas={deficienciasSelecionadas}
+              onDeficienciaSelect={(opcao) =>
+                alternarItem(opcao, setDeficienciasSelecionadas)
+              }
+            />
           </OccurrenceFormSection>
 
           {/* ===================================================== */}
@@ -2079,7 +2049,6 @@ const styles = StyleSheet.create({
   },
 
   ...occurrenceFormSharedStyles,
-  ...occurrenceConditionStyles,
 
   addressInput: {
     alignItems: "flex-start",
