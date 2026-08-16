@@ -38,7 +38,7 @@ import api from "../services/api";
 
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
-import type { AppTabParamList } from "../../App";
+import type { AppTabParamList } from "../navigation/navigation.types";
 
 import Mapbox from "@rnmapbox/maps";
 

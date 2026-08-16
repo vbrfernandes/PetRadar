@@ -50,7 +50,7 @@ import type {
 
 import type {
   AppTabParamList,
-} from "../../App";
+} from "../navigation/navigation.types";
 
 import api from "../services/api";
 

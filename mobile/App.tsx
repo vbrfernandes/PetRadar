@@ -21,44 +21,10 @@ import CadastroUserScreen from './src/screens/CadastroUserScreen';
 import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
 import CadastroONGScreen from './src/screens/CadastroONGScreen';
 import CadastroOcorrenciaScreen from './src/screens/CadastroOcorrenciaScreen';
-
-// Tipagem das Rotas do Autenticação
-export type AuthStackParamList = {
-  Login: undefined;
-  TipoCadastro: undefined;
-  CadastroUser: undefined;
-  CadastroONG: undefined;
-  EsqueceuSenha: undefined;
-};
-
-export interface PetOcorrenciaPrefill {
-  id_pet: number;
-
-  nome: string;
-  especie: string;
-
-  raca: string | null;
-  sexo: string | null;
-  cor: string | null;
-  porte: string | null;
-  idade: string | null;
-
-  foto: string | null;
-}
-
-// Tipagem das Rotas da Aplicação Principal
-export type AppTabParamList = {
-  Mapa: undefined;
-  Feed: undefined;
-  SOS: undefined;
-  Perfil: undefined;
-  CadastroOcorrencia:
-  | {
-    pet?: PetOcorrenciaPrefill;
-    ocorrenciaId?: number;
-  }
-  | undefined;
-};
+import type {
+  AppTabParamList,
+  AuthStackParamList,
+} from './src/navigation/navigation.types';
 
 
 // Telas Temporárias

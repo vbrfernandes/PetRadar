@@ -24,18 +24,35 @@ commit Inicial de refatoração de codigo
 FASE ATUAL
 ==========
 
-FASE 0 — CONCLUÍDA
-
-Escopo concluído:
-Baseline / branch
-
-Status:
-CONCLUÍDA
-
-Próxima fase:
 FASE 1 — NAVIGATION
 
-A Fase 1 ainda não foi iniciada.
+Status:
+EM ANDAMENTO
+
+Subetapa concluída:
+[X] Extração dos tipos de navegação para `src/navigation/navigation.types.ts`
+
+Tipos extraídos sem alteração de contrato:
+* AuthStackParamList
+* PetOcorrenciaPrefill
+* AppTabParamList
+
+Os navegadores permanecem no App.tsx.
+
+Ainda pendente:
+[ ] AuthNavigator.tsx
+[ ] AppNavigator.tsx
+[ ] RootNavigator.tsx
+[ ] decisão autenticado/não autenticado fora de App.tsx
+[ ] validação final da Fase 1
+
+Validações da subetapa:
+[X] Contratos de navegação preservados integralmente
+[X] Nenhuma Screen ou componente importa esses tipos do App.tsx
+[X] `npx tsc --noEmit` concluído com 0 erros
+[X] `git diff --check` concluído sem erros
+[X] Nenhuma rota, parâmetro ou comportamento alterado
+[X] Mapbox, backend, dependências e contratos de API não alterados
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -173,6 +190,12 @@ Nenhum arquivo de aplicação, backend, dependência, contrato de API ou configu
 O único novo arquivo de acompanhamento deverá ser:
 `STATUS_REFATORACAO_PETRADAR.txt`
 
+Subetapa Fase 1A — Tipos de navegação:
+* Criado `mobile/src/navigation/navigation.types.ts`.
+* Movidos `AuthStackParamList`, `PetOcorrenciaPrefill` e `AppTabParamList` sem alteração de contrato.
+* Atualizados apenas os imports de tipagem no App.tsx e nas Screens dependentes.
+* Nenhum navegador foi movido ou criado.
+
 ======================================================================
 DECISÕES TOMADAS
 ================
@@ -186,23 +209,22 @@ DECISÕES TOMADAS
 * Trabalhar em passos pequenos e verificáveis.
 * Cada alteração deverá passar por validação antes do próximo passo.
 * A branch `refactor/frontend-modularization` será utilizada para a refatoração.
-* A Fase 1 será iniciada somente em tarefa posterior e mediante orientação explícita.
+* A Fase 1 será executada incrementalmente, uma subetapa por vez.
+* Os tipos de navegação passam a ser importados de `src/navigation/navigation.types.ts`.
+* AuthNavigator, AppNavigator e a decisão autenticado/não autenticado permanecem no App.tsx nesta subetapa.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Próxima fase planejada:
-FASE 1 — NAVIGATION
-
-Iniciar a Fase 1 somente em uma tarefa posterior, sem alterar rotas ou comportamento e seguindo os passos incrementais definidos no Plano Mestre.
+Extrair o próximo elemento de Navigation somente após revisão desta subetapa pelo ChatGPT e orientação explícita do usuário.
 
 ======================================================================
 FASES
 =====
 
 [X] Fase 0  — Baseline / branch — CONCLUÍDA
-[ ] Fase 1  — Navigation
+[ ] Fase 1  — Navigation — EM ANDAMENTO
 [ ] Fase 2  — Estrutura modular base
 [ ] Fase 3  — Auth
 [ ] Fase 4  — Feed
@@ -223,18 +245,18 @@ FASES
 Fase 0 — Baseline / branch.
 
 Fase atual:
-Fase 0 — Baseline / branch — CONCLUÍDA.
+Fase 1 — Navigation — EM ANDAMENTO.
 
-Próxima fase:
-Fase 1 — Navigation.
+Subetapa concluída:
+Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
 
 Último arquivo alterado pela refatoração:
-Nenhum arquivo de aplicação.
+`mobile/src/navigation/navigation.types.ts` e imports de tipagem dependentes.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Iniciar a Fase 1 — Navigation somente em tarefa posterior.
+Extrair o próximo elemento de Navigation somente após revisão e orientação explícita.
 
 ======================================================================

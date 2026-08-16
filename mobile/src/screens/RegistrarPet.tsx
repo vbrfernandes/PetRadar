@@ -29,7 +29,7 @@ import type {
 
 import type {
     AppTabParamList,
-} from '../../App';
+} from '../navigation/navigation.types';
 
 interface Pet {
     id_pet: number;
