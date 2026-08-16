@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7O — DisabilitySection.
+FASE 7P — InitialCareSection.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1148,7 +1148,10 @@ Subetapas:
 [X] smoke test manual da Fase 7N
 [X] DisabilitySection extraído para components/form
 [X] validação técnica da Fase 7O
-[ ] smoke test manual da Fase 7O
+[X] smoke test manual da Fase 7O
+[X] InitialCareSection extraído para components/form
+[X] validação técnica da Fase 7P
+[ ] smoke test manual da Fase 7P
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1464,6 +1467,28 @@ Subetapa Fase 7O — DisabilitySection:
 * `git diff --check` restrito aos arquivos da Fase 7O foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7O:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7P — InitialCareSection:
+* Criado `mobile/src/features/occurrences/components/form/InitialCareSection.tsx` somente para receber o conteúdo controlado da seção 6 — Cuidados iniciais.
+* O componente é stateless e controlado pelas props aguaRegistrada, comidaRegistrada, aguaTexto, comidaTexto, onAguaPress e onComidaPress; nenhum hook, Date, estado, regra de toggle, FormData ou integração foi introduzido.
+* Os estados aguaRegistrada, comidaRegistrada e cuidadosIniciaisAlterados permaneceram integralmente na CadastroOcorrenciaScreen.
+* A função registrarCuidado permaneceu intacta na Screen, incluindo Date, marcação de alteração e regras de toggle de água e comida.
+* formatarHora, formatarDataCurta e cuidadosFormatados permaneceram intactos na Screen para uso da Revisão e do payload existente.
+* Foram criados na Screen somente aguaRegistradaTexto e comidaRegistradaTexto para fornecer ao componente os textos já formatados, com fallback "Não registrada" preservado.
+* CareButton e CareInfo foram movidos integralmente para InitialCareSection, preservando props, accessibilityState, ícones, tamanhos, textos e comportamento visual.
+* O conteúdo interno da seção Cuidados iniciais passou a renderizar exatamente um InitialCareSection; o shell OccurrenceFormSection número 6 permaneceu na Screen.
+* Os styles careRow, careButton, careButtonActive, careIcon, careIconActive, careButtonText, careButtonTextActive, careCheck, caregiverCard, careInfoRow, careInfo, careInfoHeader, careInfoLabel, careInfoValue, careHint e careHintText foram movidos com valores idênticos.
+* O style local pressed com opacity 0.82 foi adicionado ao novo componente; o styles.pressed da Screen permaneceu intacto para seus demais consumidores.
+* Ionicons, MaterialCommunityIcons, Pressable, Text, View e theme permaneceram importados na Screen por possuírem outros usos reais.
+* Reset, carregamento de edição, FormData, Revisão e cuidadosFormatados permaneceram inalterados.
+* HealthSection, DisabilitySection, AnimalSection e as demais seções do formulário permaneceram intactas.
+* occurrenceService, OccurrenceDetailDrawer, criação, edição, exclusão, prefill de Pet, Location, ImagePicker, Mapbox/geocoding, Feed, Map, Profile, Pets, navegação, backend, endpoints, payloads e Alerts permaneceram intactos.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7P foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7P:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1568,7 +1593,10 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7N aprovado pelo usuário
 [X] Fase 7O — DisabilitySection extraído para `features/occurrences/components/form/`
 [X] Validação técnica da Fase 7O concluída
-[ ] Smoke test manual da Fase 7O
+[X] Smoke test manual da Fase 7O aprovado pelo usuário
+[X] Fase 7P — InitialCareSection extraído para `features/occurrences/components/form/`
+[X] Validação técnica da Fase 7P concluída
+[ ] Smoke test manual da Fase 7P
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1806,7 +1834,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7O.
+Aguardar aprovação manual do smoke test da Fase 7P.
 
 ======================================================================
 FASES
@@ -1837,7 +1865,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Smoke test manual da Fase 7O — PENDENTE.
+Smoke test manual da Fase 7P — PENDENTE.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1884,10 +1912,11 @@ Subetapas concluídas:
 * Fase 7L — extração do shell visual compartilhado das nove seções para `features/occurrences/components/form/OccurrenceFormSection.tsx`, aprovada manualmente pelo usuário.
 * Fase 7M — extração do conteúdo controlado da seção Sobre o animal para `features/occurrences/components/form/AnimalSection.tsx`, aprovada manualmente pelo usuário.
 * Fase 7N — extração da subseção controlada Saúde crítica para `features/occurrences/components/form/HealthSection.tsx` e centralização dos styles condicionais compartilhados, aprovada manualmente pelo usuário.
-* Fase 7O — extração da subseção controlada Deficiência para `features/occurrences/components/form/DisabilitySection.tsx`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7O — extração da subseção controlada Deficiência para `features/occurrences/components/form/DisabilitySection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7P — extração do conteúdo controlado da seção Cuidados iniciais para `features/occurrences/components/form/InitialCareSection.tsx`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/form/DisabilitySection.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+`mobile/src/features/occurrences/components/form/InitialCareSection.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1896,7 +1925,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7O; não iniciar nova subetapa automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7P; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
