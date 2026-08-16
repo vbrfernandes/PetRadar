@@ -27,10 +27,10 @@ FASE ATUAL
 FASE 4 — FEED
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapa atual:
-FASE 4F — consolidação técnica de 4D + 4E.
+FASE 4G — fechamento formal da Fase 4 — Feed.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -431,13 +431,13 @@ FASE 4 — FEED
 =============
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapas:
 [X] FeedBannerCarousel migrado
 [X] FeedNoticias migrada
 [X] organização interna do Feed avaliada
-[ ] validação final da Fase 4
+[X] validação final da Fase 4
 
 Subetapa Fase 4A — FeedBannerCarousel:
 * Movido `mobile/src/components/FeedBannerCarousel.tsx` para `mobile/src/features/feed/components/FeedBannerCarousel.tsx`.
@@ -653,8 +653,66 @@ Subetapa Fase 4F — consolidação técnica de 4D + 4E:
 * A única falha global de `git diff --check` permanece constituída pelos 82 trailing whitespaces preexistentes nos dois arquivos consolidados, que continuam fora do escopo e fora do commit.
 * A estrutura atual de `features/feed/`, os tipos compartilhados, os três consumidores do style, os quatro endpoints e as responsabilidades mantidas em FeedNoticias foram revisados no código real.
 * Nenhuma outra extração interna do Feed está atualmente justificada.
-* A Fase 4 permanece EM ANDAMENTO e sua validação final continua pendente.
-* A Fase 5 — Profile permanece NÃO INICIADA.
+* No checkpoint da Fase 4F, a Fase 4 permaneceu EM ANDAMENTO e sua validação final continuou pendente até o fechamento formal separado.
+* No checkpoint da Fase 4F, a Fase 5 — Profile permaneceu NÃO INICIADA.
+
+Subetapa Fase 4G — fechamento formal da Fase 4 — Feed:
+* A estrutura final de `mobile/src/features/feed/` foi revisada no código real sem alteração de arquivos funcionais.
+* FeedNoticias permanece a Screen/orquestradora responsável por estado principal, carregamento, perfil/raio, localização, lista de ocorrências, busca filtrada, refresh, ECO/força, denúncia, drawers e navegação.
+* FeedControls permanece responsável somente pela UI de busca, limpeza, seletor/carrossel de modos, PROXIMIDADE/ECO, filtros e contador.
+* OccurrenceCard permanece responsável pela UI individual de autor, foto, status, urgência, descrição, distância, tempo, contadores, ECO visual/animação e callbacks de interação.
+* FeedBannerCarousel permanece um componente independente do domínio Feed.
+* feed.types.ts contém somente os tipos compartilhados reais OcorrenciaFeed, FiltroFeed e ModoFeed, todos com reuso concreto.
+* feed.utils.ts mantém normalizarTexto e ehUrgente por possuírem consumidores reais compartilhados.
+* feed.styles.ts mantém uma única definição de feedButtonPressedStyle com `opacity: 0.78`, consumida por OccurrenceCard, FeedControls e FeedNoticias.
+* O buttonPressed de RegistrarPet pertence ao domínio Pets, possui configuração diferente e não é consumidor do style do Feed.
+* As operações GET `/auth/me`, GET `/ocorrencias/proximas`, POST `/ocorrencias/${occurrenceId}/forca` e POST `/ocorrencias/${denunciaOccurrenceId}/denuncias` permanecem em FeedNoticias, com endpoints, payloads e parâmetros preservados.
+* ProfileQuickMenu e ProfileDetailScreen permanecem reservados à Fase 5 — Profile.
+* OccurrenceDetailDrawer permanece reservado à Fase 7 — Occurrences.
+* AppNavigationDrawer permanece reservado para avaliação definitiva na Fase 11 — Shared.
+* services/api.ts permanece reservado à Fase 10 — Infrastructure; expo-location permanece sem reorganização nesta fase; theme/colors.ts permanece reservado à Fase 12.
+* A decisão definitiva da Fase 4 é não criar atualmente FeedHeader, FeedEmptyState, FeedList, FeedFooter, FeedSearchBar, useFeed, useFeedSearch, useFeedFilters, useEco, feedService, occurrenceService, engagementService, reportService ou profileService.
+* A análise do código real não demonstrou benefício arquitetural suficiente para novas extrações no escopo atual do Feed; carregarFeed permanece na Screen por coordenar múltiplas dependências, ECO/força poderá ser reavaliado na Fase 9 e denúncia poderá ser reavaliada em Reports quando aplicável.
+* `npx tsc --noEmit` foi concluído com 0 erros como validação técnica final da Fase 4.
+* `git diff --check` global retornou exit code 2 exclusivamente pelos 82 trailing whitespaces preexistentes nos dois arquivos consolidados, que permaneceram inalterados e fora do escopo.
+* Os smoke tests das Fases 4A, 4B, 4C, 4D e 4E foram aprovados manualmente pelo usuário; o smoke 4E constituiu a validação funcional abrangente final da organização interna do Feed.
+* Nenhum RF novo, backend, dependência, contrato de API ou comportamento foi alterado durante o fechamento formal.
+
+Checklist final da Fase 4:
+[X] FeedBannerCarousel reside em features/feed/components/
+[X] FeedNoticias reside em features/feed/screens/
+[X] OccurrenceCard extraído com fronteira real
+[X] FeedControls extraído com fronteira visual real
+[X] tipos compartilhados possuem reuso concreto
+[X] utils compartilhados possuem reuso concreto
+[X] feedButtonPressedStyle possui definição única
+[X] FeedNoticias permanece Screen/orquestradora
+[X] quatro operações HTTP preservadas
+[X] payloads e parâmetros preservados
+[X] localização preservada
+[X] busca preservada
+[X] filtros preservados
+[X] PROXIMIDADE/ECO preservados
+[X] ECO/força preservado
+[X] denúncia preservada
+[X] refresh preservado
+[X] navegação preservada
+[X] rota Feed preservada
+[X] asset ECO preservado
+[X] animação ECO preservada
+[X] FeedBannerCarousel preservado
+[X] componentes de outros domínios não movidos
+[X] backend não alterado
+[X] dependências não alteradas
+[X] nenhum RF novo implementado
+[X] nenhuma abstração sem uso real criada
+[X] nenhuma pasta vazia criada
+[X] nenhum .gitkeep criado
+[X] TypeScript com 0 erros
+[X] smoke tests 4A, 4B, 4C, 4D e 4E aprovados
+[X] organização interna do Feed concluída
+[X] validação final da Fase 4 concluída
+[X] Fase 4 concluída
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -687,6 +745,8 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 4E aprovado pelo usuário
 [X] Organização interna atual do Feed avaliada
 [X] Fase 4F — checkpoint técnico de consolidação de 4D + 4E
+[X] Fase 4G — fechamento formal da Fase 4 — Feed
+[X] Fase 4 — Feed concluída
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -891,13 +951,14 @@ DECISÕES TOMADAS
 * A avaliação restante da organização interna do Feed continuou somente após a aprovação do smoke test manual da Fase 4D.
 * A organização interna atual do Feed foi avaliada no código real; após a aprovação manual da Fase 4E, não há outra extração interna atualmente justificada.
 * As Fases 4D e 4E são consolidadas em um único commit técnico porque foram implementadas sequencialmente no mesmo working tree antes de qualquer commit intermediário, sem reconstrução artificial de estado.
+* A Fase 4 foi encerrada sem criar novas abstrações porque a análise do código real não demonstrou benefício arquitetural suficiente para extrações adicionais no escopo atual do Feed.
 * AppNavigationDrawer permanece candidato a Shared na Fase 11; ProfileQuickMenu e OccurrenceDetailDrawer permanecem reservados aos seus respectivos domínios.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Executar o fechamento formal da Fase 4 — Feed em tarefa separada.
+Iniciar planejamento/revisão da Fase 5 — Profile em tarefa separada.
 
 ======================================================================
 FASES
@@ -907,8 +968,8 @@ FASES
 [X] Fase 1  — Navigation — CONCLUÍDA
 [X] Fase 2  — Estrutura modular base — CONCLUÍDA
 [X] Fase 3  — Auth — CONCLUÍDA
-[ ] Fase 4  — Feed — EM ANDAMENTO
-[ ] Fase 5  — Profile
+[X] Fase 4  — Feed — CONCLUÍDA
+[ ] Fase 5  — Profile — NÃO INICIADA
 [ ] Fase 6  — Pets
 [ ] Fase 7  — Occurrences
 [ ] Fase 8  — Map
@@ -922,10 +983,10 @@ FASES
 [ ] Fase 16 — Limpeza final
 
 Última fase concluída:
-Fase 3 — Auth.
+Fase 4 — Feed.
 
 Fase atual:
-Fase 4 — Feed — EM ANDAMENTO.
+Fase 4 — Feed — CONCLUÍDA.
 
 Próxima fase:
 Fase 5 — Profile — NÃO INICIADA.
@@ -949,6 +1010,7 @@ Subetapas concluídas:
 * Fase 4D — extração de FeedControls.tsx e compartilhamento de FiltroFeed e ModoFeed em feed.types.ts.
 * Fase 4E — movimentação de feedButtonPressedStyle para `features/feed/styles/feed.styles.ts` e avaliação documental da organização interna restante.
 * Fase 4F — consolidação técnica das alterações validadas de 4D + 4E em um único checkpoint.
+* Fase 4G — fechamento formal da Fase 4 — Feed, sem alteração de código funcional.
 
 Último arquivo alterado pela refatoração:
 `mobile/src/features/feed/styles/feed.styles.ts` e os consumidores `mobile/src/features/feed/components/OccurrenceCard.tsx`, `mobile/src/features/feed/components/FeedControls.tsx` e `mobile/src/features/feed/screens/FeedNoticias.tsx`.
@@ -960,7 +1022,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Executar o fechamento formal da Fase 4 — Feed em tarefa separada.
+Iniciar planejamento/revisão da Fase 5 — Profile em tarefa separada.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
