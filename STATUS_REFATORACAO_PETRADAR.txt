@@ -24,13 +24,10 @@ commit Inicial de refatoração de codigo
 FASE ATUAL
 ==========
 
-FASE 6 — PETS
+FASE 7 — OCCURRENCES
 
 Status:
-EM ANDAMENTO
-
-Subetapa atual:
-FASE 6F — renomeação semântica PetsTab.
+NÃO INICIADA
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -874,7 +871,7 @@ FASE 6 — PETS
 =============
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapas:
 [X] RegistrarPet movido para o domínio Pets
@@ -888,9 +885,10 @@ Subetapas:
 [X] PetFormModal extraído
 [X] smoke test manual da Fase 6E
 [X] RegistrarPet renomeado semanticamente para PetsTab
-[ ] smoke test manual da Fase 6F
+[X] smoke test manual da Fase 6F
 [X] organização interna de Pets avaliada
-[ ] validação final da Fase 6
+[X] validação final da Fase 6
+[X] fechamento formal da Fase 6G
 
 Subetapa Fase 6A — movimentação estrutural de RegistrarPet:
 * Movido `mobile/src/screens/RegistrarPet.tsx` para `mobile/src/features/pets/components/RegistrarPet.tsx`.
@@ -1046,7 +1044,52 @@ Subetapa Fase 6F — renomeação semântica PetsTab:
 * `git diff --cached --check` concluído sem erros para o rename e os arquivos documental/Profile da Fase 6F; os consolidados permaneceram fora do staging.
 
 Smoke test Fase 6F:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 6G — fechamento formal da Fase 6:
+* A Fase 6 foi encerrada formalmente após a aprovação manual dos smoke tests 6A, 6B, 6C, 6D, 6E e 6F.
+* A estrutura final validada do domínio Pets é:
+  mobile/src/features/pets/
+  ├── components/
+  │   ├── PetCard.tsx
+  │   ├── PetDetailModal.tsx
+  │   ├── PetFormModal.tsx
+  │   └── PetsTab.tsx
+  ├── services/
+  │   └── petService.ts
+  └── types/
+      └── pet.types.ts
+* PetsTab coordena o carregamento e a lista de pets, o loading, a abertura do formulário, o pet selecionado, a composição de PetCard, PetFormModal e PetDetailModal e a integração pet perdido → CadastroOcorrencia.
+* PetCard permanece responsável exclusivamente pela apresentação do card.
+* PetDetailModal permanece responsável pela apresentação dos detalhes, fechamento e callback de informar pet perdido.
+* PetFormModal concentra estado, validações, foto, ImagePicker, FormData, criação, reset e saving do formulário.
+* petService concentra somente GET `/pets/meus` e POST `/pets/`.
+* pet.types contém o contrato compartilhado Pet.
+* PetList.tsx NÃO FOI CRIADO: PetsTab já coordena a lista e o FlatList não possui complexidade ou reuso suficiente para justificar outro wrapper.
+* PetPhotoPicker.tsx NÃO FOI CRIADO: a seleção de foto possui somente PetFormModal como consumidor; eventual abstração do expo-image-picker permanece reservada para a Fase 10 — Infrastructure.
+* usePets.ts NÃO FOI CRIADO: a lógica restante de PetsTab é pequena, específica da aba e sem reuso concreto.
+* PetDetailScreen.tsx NÃO FOI CRIADO: não existe rota independente de detalhes de Pet no comportamento atual.
+* A organização interna de Pets foi avaliada e nenhuma nova extração está justificada atualmente.
+* A edição de Pet não existe no comportamento/backend atual; sua ausência é preexistente, não constitui falha desta refatoração, não motivou RF novo e nenhum endpoint foi inventado.
+* Critérios finais confirmados:
+  [X] lista de pets preservada
+  [X] cadastro preservado
+  [X] fluxo de foto preservado
+  [X] integração “pet perdido” → ocorrência preservada
+  [X] GET `/pets/meus` preservado
+  [X] POST `/pets/` preservado
+  [X] multipart preservado
+  [X] payloads preservados
+  [X] CadastroOcorrencia prefill preservado
+  [X] backend não alterado
+  [X] Mapbox não alterado
+  [X] dependências não alteradas
+  [X] nenhum RF novo
+  [X] nenhuma abstração sem uso real criada
+  [X] nenhuma pasta vazia criada
+  [X] nenhum `.gitkeep` criado
+* Esta subetapa de fechamento alterou somente STATUS_REFATORACAO_PETRADAR.txt; nenhum arquivo de código-fonte foi alterado.
+* `npx tsc --noEmit` foi executado uma vez no fechamento e concluído com 0 erros.
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -1101,7 +1144,9 @@ ETAPAS CONCLUÍDAS
 [X] Fase 6E — PetFormModal extraído para `features/pets/components/`
 [X] Smoke test manual da Fase 6E aprovado pelo usuário
 [X] Fase 6F — RegistrarPet renomeado semanticamente para PetsTab
-[ ] Smoke test manual da Fase 6F
+[X] Smoke test manual da Fase 6F aprovado pelo usuário
+[X] Fase 6G — fechamento formal da Fase 6 — Pets
+[X] Fase 6 — Pets concluída
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1339,7 +1384,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 6F e então executar somente o fechamento formal da Fase 6.
+FASE 7 — OCCURRENCES — NÃO INICIADA.
 
 ======================================================================
 FASES
@@ -1351,7 +1396,7 @@ FASES
 [X] Fase 3  — Auth — CONCLUÍDA
 [X] Fase 4  — Feed — CONCLUÍDA
 [X] Fase 5  — Profile — CONCLUÍDA
-[ ] Fase 6  — Pets — EM ANDAMENTO
+[X] Fase 6  — Pets — CONCLUÍDA
 [ ] Fase 7  — Occurrences
 [ ] Fase 8  — Map
 [ ] Fase 9  — Care / Engagement / Reports quando aplicável
@@ -1364,10 +1409,10 @@ FASES
 [ ] Fase 16 — Limpeza final
 
 Última fase concluída:
-Fase 5 — Profile.
+Fase 6 — Pets.
 
 Fase atual:
-Fase 6 — Pets — EM ANDAMENTO.
+Fase 7 — Occurrences — NÃO INICIADA.
 
 Próxima fase:
 Fase 7 — Occurrences — NÃO INICIADA.
@@ -1401,7 +1446,8 @@ Subetapas concluídas:
 * Fase 6C — extração do componente visual PetCard para `features/pets/components/PetCard.tsx`, aprovada manualmente pelo usuário.
 * Fase 6D — extração do modal visual PetDetailModal para `features/pets/components/PetDetailModal.tsx`, aprovada manualmente pelo usuário.
 * Fase 6E — extração do formulário coeso PetFormModal para `features/pets/components/PetFormModal.tsx`, aprovada manualmente pelo usuário.
-* Fase 6F — renomeação semântica de `RegistrarPet.tsx` para `PetsTab.tsx`, com smoke test manual pendente.
+* Fase 6F — renomeação semântica de `RegistrarPet.tsx` para `PetsTab.tsx`, aprovada manualmente pelo usuário.
+* Fase 6G — fechamento formal da Fase 6 — Pets, sem alteração de código-fonte.
 
 Último arquivo alterado pela refatoração:
 `mobile/src/features/pets/components/PetsTab.tsx` e `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
@@ -1413,7 +1459,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 6F e então executar somente o fechamento formal da Fase 6.
+Iniciar a Fase 7 — Occurrences somente mediante solicitação específica; nenhuma atividade da Fase 7 foi iniciada.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
