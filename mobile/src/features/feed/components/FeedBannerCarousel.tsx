@@ -1,5 +1,5 @@
 // ============================================================
-// D:\PetRadar\src\mobile\src\components\FeedBannerCarousel.tsx
+// D:\PetRadar\src\mobile\src\features\feed\components\FeedBannerCarousel.tsx
 // ============================================================
 
 import React, {
@@ -25,7 +25,7 @@ import {
 
 import {
   theme,
-} from "../theme/colors";
+} from "../../../theme/colors";
 
 // ============================================================
 // CONSTANTES

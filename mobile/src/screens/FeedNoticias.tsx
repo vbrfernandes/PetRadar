@@ -64,7 +64,7 @@ import ProfileQuickMenu
   from "../components/ProfileQuickMenu";
 
 import FeedBannerCarousel
-  from "../components/FeedBannerCarousel";
+  from "../features/feed/components/FeedBannerCarousel";
 
 import ProfileDetailScreen, {
   type ProfileUpdateResult,

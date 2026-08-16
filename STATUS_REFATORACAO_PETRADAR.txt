@@ -24,13 +24,13 @@ commit Inicial de refatoração de codigo
 FASE ATUAL
 ==========
 
-FASE 3 — AUTH
+FASE 4 — FEED
 
 Status:
-CONCLUÍDA
+EM ANDAMENTO
 
 Subetapa atual:
-FASE 3G — fechamento formal da Fase 3 — Auth.
+FASE 4A — FeedBannerCarousel movido para o domínio Feed.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -427,6 +427,51 @@ Validações técnicas finais da Fase 3:
 * `git diff --check` global retornou exit code 2 exclusivamente pelo trailing whitespace preexistente em codigo_frontend_consolidado.txt e codigo_projeto_consolidado.txt; essa condição não representa falha da Fase 3.
 
 ======================================================================
+FASE 4 — FEED
+=============
+
+Status:
+EM ANDAMENTO
+
+Subetapas:
+[X] FeedBannerCarousel migrado
+[ ] FeedNoticias migrada
+[ ] organização interna do Feed avaliada
+[ ] validação final da Fase 4
+
+Subetapa Fase 4A — FeedBannerCarousel:
+* Movido `mobile/src/components/FeedBannerCarousel.tsx` para `mobile/src/features/feed/components/FeedBannerCarousel.tsx`.
+* O domínio físico `mobile/src/features/feed/` foi criado somente ao receber código real.
+* `mobile/src/features/feed/components/` é o único diretório criado para Feed nesta subetapa e contém somente FeedBannerCarousel.tsx.
+* Nome do arquivo e do componente FeedBannerCarousel preservados.
+* Comentário documental de caminho atualizado para o novo local físico.
+* Import relativo de theme ajustado de `../theme/colors` para `../../../theme/colors`, continuando a resolver para o mesmo módulo `mobile/src/theme/colors.ts`.
+* FeedNoticias foi o único consumidor executável encontrado e teve somente o caminho do import de FeedBannerCarousel atualizado.
+* FeedNoticias permanece em `mobile/src/screens/FeedNoticias.tsx`.
+* BANNERS, ids, tipos APP/SPONSORED, títulos, descrições e ícones foram preservados integralmente.
+* AUTO_PLAY_INTERVAL_MS permanece em 6000 ms.
+* React hooks, FlatList, dimensões, autoplay, activeIndex, refs, scrollToIndex, swipe manual, paginação, labels, JSX, estilos e accessibility foram preservados.
+* Comparação normalizada do componente antes/depois, desconsiderando somente o comentário de caminho e o import relativo do theme, confirmou conteúdo idêntico.
+* AppNavigationDrawer.tsx, ProfileQuickMenu.tsx e OccurrenceDetailDrawer.tsx não foram movidos ou alterados.
+* Nenhum endpoint, contrato de API, backend, dependência, comportamento visual ou RF foi alterado.
+* Nenhuma pasta vazia, index.ts, .gitkeep, Screen, hook, service, types ou abstração adicional de Feed foi criada.
+* `npx tsc --noEmit` concluído com 0 erros.
+
+Smoke test Fase 4A:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+Validação manual necessária:
+* Login funciona.
+* Feed abre.
+* Carrossel de banners e banner inicial aparecem corretamente.
+* Swipe entre banners funciona.
+* Indicadores acompanham o banner atual.
+* Autoplay continua trocando os banners.
+* Interação manual não causa comportamento estranho.
+* Restante do Feed continua aparecendo.
+* Nenhum erro ou crash ocorre.
+
+======================================================================
 ETAPAS CONCLUÍDAS
 =================
 
@@ -445,6 +490,7 @@ ETAPAS CONCLUÍDAS
 [X] Estado Git e diff revisados antes do fechamento
 [X] Fase 0 concluída sem refatoração estrutural
 [X] Fase 3 — Auth concluída após validação técnica e smoke tests manuais
+[X] Fase 4A — FeedBannerCarousel movido para o domínio Feed
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -629,12 +675,16 @@ DECISÕES TOMADAS
 * useAuthStore permanece no local atual porque possui consumidores transversais e sua movimentação está fora do escopo desta subetapa.
 * Renomeações de Screens continuam adiadas.
 * api.ts permanece em `mobile/src/services/` até a Fase 10 — Infrastructure.
+* `features/feed/components/` foi criado somente ao receber FeedBannerCarousel.tsx como primeiro código real do domínio Feed.
+* FeedBannerCarousel foi movido antes de FeedNoticias por possuir superfície de dependências menor e um único consumidor executável.
+* FeedNoticias permanece em `mobile/src/screens/` até subetapa específica posterior.
+* AppNavigationDrawer permanece candidato a Shared na Fase 11; ProfileQuickMenu e OccurrenceDetailDrawer permanecem reservados aos seus respectivos domínios.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Iniciar planejamento e revisão da Fase 4 — Feed em tarefa separada. Não iniciar a Fase 4 automaticamente.
+Aguardar smoke test manual da Fase 4A antes da próxima movimentação.
 
 ======================================================================
 FASES
@@ -644,7 +694,7 @@ FASES
 [X] Fase 1  — Navigation — CONCLUÍDA
 [X] Fase 2  — Estrutura modular base — CONCLUÍDA
 [X] Fase 3  — Auth — CONCLUÍDA
-[ ] Fase 4  — Feed — NÃO INICIADA
+[ ] Fase 4  — Feed — EM ANDAMENTO
 [ ] Fase 5  — Profile
 [ ] Fase 6  — Pets
 [ ] Fase 7  — Occurrences
@@ -662,10 +712,10 @@ FASES
 Fase 3 — Auth.
 
 Fase atual:
-Fase 3 — Auth — CONCLUÍDA.
+Fase 4 — Feed — EM ANDAMENTO.
 
 Próxima fase:
-Fase 4 — Feed — NÃO INICIADA.
+Fase 5 — Profile — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -680,9 +730,10 @@ Subetapas concluídas:
 * Fase 3E — movimentação de CadastroONGScreen.tsx para `features/auth/screens/`.
 * Fase 3F — extração das cinco operações HTTP de Auth para `features/auth/services/authService.ts`.
 * Fase 3G — fechamento formal da Fase 3 — Auth, sem alteração de código funcional.
+* Fase 4A — movimentação de FeedBannerCarousel.tsx para `features/feed/components/`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/auth/services/authService.ts` e as quatro Screens Auth consumidoras.
+`mobile/src/features/feed/components/FeedBannerCarousel.tsx` e o import consumidor em `mobile/src/screens/FeedNoticias.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -691,7 +742,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Iniciar planejamento e revisão da Fase 4 — Feed em tarefa separada. Não iniciar a Fase 4 automaticamente.
+Aguardar smoke test manual da Fase 4A antes da próxima movimentação.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
