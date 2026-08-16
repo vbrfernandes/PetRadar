@@ -47,7 +47,7 @@ const COLORS = {
     white: "#FFFFFF",
 };
 
-export default function RegistrarPet() {
+export default function PetsTab() {
     const navigation =
         useNavigation<
             BottomTabNavigationProp<AppTabParamList>

@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 6E — extração do formulário coeso PetFormModal.
+FASE 6F — renomeação semântica PetsTab.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -886,8 +886,10 @@ Subetapas:
 [X] PetDetailModal extraído
 [X] smoke test manual da Fase 6D
 [X] PetFormModal extraído
-[ ] smoke test manual da Fase 6E
-[ ] organização interna de Pets avaliada
+[X] smoke test manual da Fase 6E
+[X] RegistrarPet renomeado semanticamente para PetsTab
+[ ] smoke test manual da Fase 6F
+[X] organização interna de Pets avaliada
 [ ] validação final da Fase 6
 
 Subetapa Fase 6A — movimentação estrutural de RegistrarPet:
@@ -1018,6 +1020,32 @@ Subetapa Fase 6E — PetFormModal:
 * `git diff --cached --check` concluído sem erros para os três arquivos do checkpoint técnico da Fase 6E; os consolidados permaneceram fora do staging.
 
 Smoke test Fase 6E:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 6F — renomeação semântica PetsTab:
+* A renomeação foi justificada porque o componente deixou de representar somente o cadastro e atualmente coordena a aba de Pets dentro de Profile.
+* RegistrarPet não é uma Screen nem uma rota; o código real confirma que ele é renderizado exclusivamente como conteúdo da aba Pets de ProfileDetailScreen.
+* A pesquisa em todo o código executável encontrou um único consumidor real: `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
+* `mobile/src/features/pets/components/RegistrarPet.tsx` foi renomeado para `mobile/src/features/pets/components/PetsTab.tsx`, sem deixar arquivo antigo ou implementação duplicada.
+* O componente `export default function RegistrarPet()` foi renomeado para `export default function PetsTab()`.
+* ProfileDetailScreen passou a importar PetsTab de `../../pets/components/PetsTab` e a renderizar `<PetsTab />`.
+* A condição `activeTab === "pets" && mostrarAbaPets`, o KeyboardAvoidingView, perfilContent, minhasOcorrencias e todas as demais abas permaneceram intactos.
+* Comparação normalizada entre o RegistrarPet anterior e PetsTab confirmou conteúdo integralmente idêntico após desconsiderar somente o caminho do arquivo e `RegistrarPet` -> `PetsTab` no export.
+* Os prefixos históricos de log `[RegistrarPet]` foram preservados literalmente para manter o menor diff funcional possível.
+* Carregamento, estados, FlatList, cabeçalho, PetCard, PetFormModal, PetDetailModal, integração de pet perdido, navegação, nove campos de prefill, loading, Alerts, textos, accessibility, styles e COLORS permaneceram inalterados.
+* PetCard.tsx, PetDetailModal.tsx, PetFormModal.tsx, petService.ts e pet.types.ts permaneceram intactos.
+* GET `/pets/meus` e POST `/pets/`, métodos, multipart, payload e contratos permaneceram inalterados.
+* Backend, dependências, theme, navigation.types.ts e contratos de API permaneceram intactos.
+* Nenhum RF novo, edição, exclusão, update, endpoint ou migration foi criado.
+* PetList.tsx: NÃO CRIADO — RegistrarPet/PetsTab já representa a própria aba/lista e um wrapper do FlatList não apresentaria benefício arquitetural comprovado.
+* PetPhotoPicker.tsx: NÃO CRIADO — a seleção de foto possui somente PetFormModal como consumidor; sua abstração tecnológica permanece reservada para a Fase 10 — Infrastructure / media.
+* usePets.ts: NÃO CRIADO — a lógica restante do coordenador é pequena, específica da aba e sem reuso concreto.
+* Nenhum diretório hooks, styles, utils ou constants, nenhum index.ts, `.gitkeep`, wrapper ou barrel export foi criado.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt; a verificação restrita aos arquivos rastreados da Fase 6F concluiu sem erros.
+* `git diff --cached --check` concluído sem erros para o rename e os arquivos documental/Profile da Fase 6F; os consolidados permaneceram fora do staging.
+
+Smoke test Fase 6F:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1071,7 +1099,9 @@ ETAPAS CONCLUÍDAS
 [X] Fase 6D — PetDetailModal extraído para `features/pets/components/`
 [X] Smoke test manual da Fase 6D aprovado pelo usuário
 [X] Fase 6E — PetFormModal extraído para `features/pets/components/`
-[ ] Smoke test manual da Fase 6E
+[X] Smoke test manual da Fase 6E aprovado pelo usuário
+[X] Fase 6F — RegistrarPet renomeado semanticamente para PetsTab
+[ ] Smoke test manual da Fase 6F
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1302,12 +1332,14 @@ DECISÕES TOMADAS
 * PetFormModal concentra o estado coeso e as operações exclusivas do cadastro, enquanto RegistrarPet mantém visibilidade, lista, carregamento, seleção e integração com ocorrência.
 * TipoEspecie e FotoSelecionada permanecem internos a PetFormModal; nenhum tipo antecipado foi adicionado a pet.types.ts.
 * expo-image-picker permanece diretamente no componente do domínio que possui o fluxo e sua abstração tecnológica continua reservada para a Fase 10 — Infrastructure.
+* O coordenador da aba foi renomeado de RegistrarPet para PetsTab porque sua responsabilidade atual abrange toda a composição de Pets dentro de Profile.
+* PetList, PetPhotoPicker e usePets não foram criados porque o código real não demonstrou responsabilidade adicional ou reuso concreto suficiente; a árvore do Plano Mestre permanece conceitual e progressiva.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 6E e então realizar avaliação final da organização interna de Pets antes de decidir pelo fechamento da Fase 6.
+Aguardar aprovação manual do smoke test da Fase 6F e então executar somente o fechamento formal da Fase 6.
 
 ======================================================================
 FASES
@@ -1368,10 +1400,11 @@ Subetapas concluídas:
 * Fase 6B — extração do contrato Pet para `features/pets/types/pet.types.ts` e das duas operações HTTP para `features/pets/services/petService.ts`, aprovada manualmente pelo usuário.
 * Fase 6C — extração do componente visual PetCard para `features/pets/components/PetCard.tsx`, aprovada manualmente pelo usuário.
 * Fase 6D — extração do modal visual PetDetailModal para `features/pets/components/PetDetailModal.tsx`, aprovada manualmente pelo usuário.
-* Fase 6E — extração do formulário coeso PetFormModal para `features/pets/components/PetFormModal.tsx`, com smoke test manual pendente.
+* Fase 6E — extração do formulário coeso PetFormModal para `features/pets/components/PetFormModal.tsx`, aprovada manualmente pelo usuário.
+* Fase 6F — renomeação semântica de `RegistrarPet.tsx` para `PetsTab.tsx`, com smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/pets/components/RegistrarPet.tsx` e `mobile/src/features/pets/components/PetFormModal.tsx`.
+`mobile/src/features/pets/components/PetsTab.tsx` e `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1380,7 +1413,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 6E e então realizar avaliação final da organização interna de Pets antes de decidir pelo fechamento da Fase 6.
+Aguardar aprovação manual do smoke test da Fase 6F e então executar somente o fechamento formal da Fase 6.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

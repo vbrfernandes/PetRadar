@@ -38,7 +38,7 @@ import { theme } from "../../../theme/colors";
 import api from "../../../services/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 
-import RegistrarPet from "../../pets/components/RegistrarPet";
+import PetsTab from "../../pets/components/PetsTab";
 
 import { profileService } from "../services/profileService";
 
@@ -1452,7 +1452,7 @@ export default function ProfileDetailScreen({
                 {activeTab === "perfil" ? (
                   perfilContent
                 ) : activeTab === "pets" && mostrarAbaPets ? (
-                  <RegistrarPet /> //
+                  <PetsTab /> //
                 ) : (
                   <FlatList
                     data={minhasOcorrencias}
