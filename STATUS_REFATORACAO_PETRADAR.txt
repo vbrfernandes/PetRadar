@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 6C — extração do componente visual PetCard.
+FASE 6D — extração do modal visual PetDetailModal.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -882,7 +882,9 @@ Subetapas:
 [X] petService e pet.types extraídos
 [X] smoke test manual da Fase 6B
 [X] PetCard extraído
-[ ] smoke test manual da Fase 6C
+[X] smoke test manual da Fase 6C
+[X] PetDetailModal extraído
+[ ] smoke test manual da Fase 6D
 [ ] organização interna de Pets avaliada
 [ ] validação final da Fase 6
 
@@ -956,6 +958,32 @@ Subetapa Fase 6C — PetCard:
 * `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
 
 Smoke test Fase 6C:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 6D — PetDetailModal:
+* A extração foi justificada por uma fronteira visual autocontida dependente somente do Pet selecionado, da ação de fechar e da ação de informar aquele Pet como perdido.
+* Criado `mobile/src/features/pets/components/PetDetailModal.tsx` como componente apresentacional stateless.
+* PetDetailModal recebe somente as props `pet: Pet | null`, `onClose: () => void` e `onReportLost: (pet: Pet) => void`.
+* O contrato Pet existente em `features/pets/types/pet.types.ts` foi reutilizado sem alteração.
+* O JSX completo do Modal de detalhes foi removido de RegistrarPet e movido para PetDetailModal, preservando visible, transparência, animação, onRequestClose, botão de fechar, foto, placeholder, nome, linhas, fallbacks, botão de pet perdido, textos e accessibility.
+* Comparação normalizada do modal confirmou 130 linhas antes e depois e 0 diferenças após somente petSelecionado -> pet, callbacks de fechamento -> onClose e informarComoPerdido -> onReportLost.
+* DetailRow e DetailRowProps foram movidos para PetDetailModal como implementação interna não exportada.
+* Os styles exclusivos detailContainer, detailHeader, detailTitle, detailPhotoWrapper, detailPhoto, detailPlaceholder, detailPetName, detailCard, detailRow, detailLabel, detailValue, lostPetButton, lostPetButtonContent, lostPetButtonTitle e lostPetButtonSubtitle foram movidos literalmente.
+* A comparação individual dos 15 styles exclusivos e dos três styles compartilhados confirmou 0 diferenças.
+* modalBackdrop, closeButton e buttonPressed receberam definições locais equivalentes em PetDetailModal; suas definições originais permanecem em RegistrarPet porque o modal de formulário e o botão Adicionar pet continuam sendo consumidores reais.
+* RegistrarPet passou a renderizar `<PetDetailModal pet={petSelecionado} onClose={() => setPetSelecionado(null)} onReportLost={informarComoPerdido} />`.
+* petSelecionado e setPetSelecionado permanecem em RegistrarPet.
+* informarComoPerdido e navigation.navigate para CadastroOcorrencia permanecem integralmente em RegistrarPet, com id_pet, nome, especie, raca, sexo, cor, porte, idade e foto preservados.
+* PetDetailModal não possui estado de domínio, hooks, chamadas HTTP ou imports de navigation, CadastroOcorrencia, petService, api ou expo-image-picker.
+* O formulário, modal de cadastro, FormData, expo-image-picker, validações, setters e cadastrarPet permaneceram integralmente em RegistrarPet.
+* PetCard.tsx, petService.ts e pet.types.ts não foram alterados.
+* GET `/pets/meus`, POST `/pets/`, multipart e contratos HTTP permaneceram inalterados.
+* Backend, Profile, Feed, Map, Occurrences, Auth, navigation.types.ts, services/api.ts, theme/colors.ts, App.tsx, dependências e package.json não foram alterados.
+* Nenhum RF novo, componente adicional, hook, style compartilhado, utils, constants, index.ts ou `.gitkeep` foi criado.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
+
+Smoke test Fase 6D:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1005,6 +1033,8 @@ ETAPAS CONCLUÍDAS
 [X] Fase 6B — Pet compartilhado e operações HTTP de Pets extraídos para pet.types e petService
 [X] Smoke test manual da Fase 6B aprovado pelo usuário
 [X] Fase 6C — PetCard extraído para `features/pets/components/`
+[X] Smoke test manual da Fase 6C aprovado pelo usuário
+[X] Fase 6D — PetDetailModal extraído para `features/pets/components/`
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1230,12 +1260,14 @@ DECISÕES TOMADAS
 * petService centraliza somente getMyPets e createPet; FormData, ImagePicker, validação, UI e integração com CadastroOcorrencia permanecem no componente.
 * PetCard foi extraído por possuir fronteira visual própria e recebe somente Pet e onPress; estado, formulários, detalhes, API e navegação permanecem no pai.
 * buttonPressed permanece também em RegistrarPet porque Adicionar pet e INFORMAR COMO PERDIDO continuam sendo consumidores reais do mesmo efeito visual.
+* PetDetailModal foi extraído como componente apresentacional com Pet, onClose e onReportLost; estado selecionado, informarComoPerdido e navigation permanecem em RegistrarPet.
+* DetailRow permanece interno a PetDetailModal, e modalBackdrop, closeButton e buttonPressed não foram transformados em abstrações compartilhadas sem necessidade real.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 6C antes de avaliar qualquer nova extração de Pets.
+Aguardar aprovação manual do smoke test da Fase 6D antes de avaliar qualquer nova extração de Pets.
 
 ======================================================================
 FASES
@@ -1294,10 +1326,11 @@ Subetapas concluídas:
 * Fase 5D — avaliação final da organização interna e fechamento formal da Fase 5 — Profile, sem alteração de código funcional.
 * Fase 6A — movimentação estrutural de RegistrarPet.tsx para `features/pets/components/`, aprovada manualmente pelo usuário.
 * Fase 6B — extração do contrato Pet para `features/pets/types/pet.types.ts` e das duas operações HTTP para `features/pets/services/petService.ts`, aprovada manualmente pelo usuário.
-* Fase 6C — extração do componente visual PetCard para `features/pets/components/PetCard.tsx`, com smoke test manual pendente.
+* Fase 6C — extração do componente visual PetCard para `features/pets/components/PetCard.tsx`, aprovada manualmente pelo usuário.
+* Fase 6D — extração do modal visual PetDetailModal para `features/pets/components/PetDetailModal.tsx`, com smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/pets/components/RegistrarPet.tsx` e `mobile/src/features/pets/components/PetCard.tsx`.
+`mobile/src/features/pets/components/RegistrarPet.tsx` e `mobile/src/features/pets/components/PetDetailModal.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1306,7 +1339,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 6C antes de avaliar qualquer nova extração de Pets.
+Aguardar aprovação manual do smoke test da Fase 6D antes de avaliar qualquer nova extração de Pets.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

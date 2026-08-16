@@ -33,6 +33,7 @@ import type {
 import { petService } from "../services/petService";
 import type { Pet } from "../types/pet.types";
 import PetCard from "./PetCard";
+import PetDetailModal from "./PetDetailModal";
 
 type TipoEspecie = "Cachorro" | "Gato" | "Outro";
 interface FotoSelecionada {
@@ -704,163 +705,11 @@ export default function RegistrarPet() {
             {/* DETALHES DO PET */}
             {/* ===================================================== */}
 
-            <Modal
-                visible={petSelecionado !== null}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setPetSelecionado(null)}
-            >
-                <View style={styles.modalBackdrop}>
-                    <View style={styles.detailContainer}>
-                        <View style={styles.detailHeader}>
-                            <Text style={styles.detailTitle}>Detalhes do pet</Text>
-
-                            <Pressable
-                                onPress={() => setPetSelecionado(null)}
-                                style={styles.closeButton}
-                            >
-                                <Ionicons name="close" size={21} color={COLORS.textTitle} />
-                            </Pressable>
-                        </View>
-
-                        {petSelecionado && (
-                            <>
-                                <View style={styles.detailPhotoWrapper}>
-                                    {petSelecionado.foto ? (
-                                        <Image
-                                            source={{
-                                                uri: petSelecionado.foto,
-                                            }}
-                                            style={styles.detailPhoto}
-                                        />
-                                    ) : (
-                                        <View style={styles.detailPlaceholder}>
-                                            <MaterialCommunityIcons
-                                                name="paw"
-                                                size={48}
-                                                color={COLORS.primary}
-                                            />
-                                        </View>
-                                    )}
-                                </View>
-
-                                <Text style={styles.detailPetName}>{petSelecionado.nome}</Text>
-
-                                <View style={styles.detailCard}>
-                                    <Pressable
-                                        accessibilityRole="button"
-                                        accessibilityLabel={`Informar ${petSelecionado.nome} como perdido`}
-                                        accessibilityHint="Abre uma ocorrência de pet perdido já preenchida com os dados deste animal"
-                                        onPress={() =>
-                                            informarComoPerdido(
-                                                petSelecionado
-                                            )
-                                        }
-                                        style={({ pressed }) => [
-                                            styles.lostPetButton,
-                                            pressed &&
-                                            styles.buttonPressed,
-                                        ]}
-                                    >
-                                        <MaterialCommunityIcons
-                                            name="alert-circle-outline"
-                                            size={22}
-                                            color={COLORS.white}
-                                        />
-
-                                        <View
-                                            style={
-                                                styles.lostPetButtonContent
-                                            }
-                                        >
-                                            <Text
-                                                style={
-                                                    styles.lostPetButtonTitle
-                                                }
-                                            >
-                                                INFORMAR COMO PERDIDO
-                                            </Text>
-
-                                            <Text
-                                                style={
-                                                    styles.lostPetButtonSubtitle
-                                                }
-                                            >
-                                                Criar ocorrência usando estes dados
-                                            </Text>
-                                        </View>
-
-                                        <Ionicons
-                                            name="arrow-forward"
-                                            size={20}
-                                            color={COLORS.white}
-                                        />
-                                    </Pressable>
-                                    <DetailRow
-                                        label="Espécie"
-                                        value={petSelecionado.especie}
-                                    />
-
-                                    <DetailRow
-                                        label="Raça"
-                                        value={
-                                            petSelecionado.raca ||
-                                            'Não informada'
-                                        }
-                                    />
-
-                                    <DetailRow
-                                        label="Sexo"
-                                        value={
-                                            petSelecionado.sexo ||
-                                            'Não informado'
-                                        }
-                                    />
-
-                                    <DetailRow
-                                        label="Cor"
-                                        value={
-                                            petSelecionado.cor ||
-                                            'Não informada'
-                                        }
-                                    />
-
-                                    <DetailRow
-                                        label="Porte"
-                                        value={
-                                            petSelecionado.porte ||
-                                            'Não informado'
-                                        }
-                                    />
-
-                                    <DetailRow
-                                        label="Idade"
-                                        value={
-                                            petSelecionado.idade ||
-                                            'Não informada'
-                                        }
-                                    />
-                                </View>
-                            </>
-                        )}
-                    </View>
-                </View>
-            </Modal>
-        </View>
-    );
-}
-
-interface DetailRowProps {
-    label: string;
-    value: string;
-}
-
-function DetailRow({ label, value }: DetailRowProps) {
-    return (
-        <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>{label}</Text>
-
-            <Text style={styles.detailValue}>{value}</Text>
+            <PetDetailModal
+                pet={petSelecionado}
+                onClose={() => setPetSelecionado(null)}
+                onReportLost={informarComoPerdido}
+            />
         </View>
     );
 }
@@ -1023,15 +872,6 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.surface,
     },
 
-    detailContainer: {
-        padding: 20,
-
-        borderTopLeftRadius: 28,
-        borderTopRightRadius: 28,
-
-        backgroundColor: COLORS.surface,
-    },
-
     modalHeader: {
         flexDirection: "row",
         alignItems: "center",
@@ -1040,22 +880,8 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
 
-    detailHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-
-        marginBottom: 18,
-    },
-
     modalTitle: {
         fontSize: 20,
-        fontWeight: "800",
-        color: COLORS.textTitle,
-    },
-
-    detailTitle: {
-        fontSize: 18,
         fontWeight: "800",
         color: COLORS.textTitle,
     },
@@ -1243,84 +1069,6 @@ const styles = StyleSheet.create({
         color: COLORS.white,
     },
 
-    detailPhotoWrapper: {
-        width: 130,
-        height: 130,
-
-        alignSelf: "center",
-
-        marginBottom: 14,
-
-        borderRadius: 65,
-
-        overflow: "hidden",
-
-        backgroundColor: COLORS.successBg,
-    },
-
-    detailPhoto: {
-        width: "100%",
-        height: "100%",
-    },
-
-    detailPlaceholder: {
-        flex: 1,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    detailPetName: {
-        marginBottom: 18,
-
-        textAlign: "center",
-
-        fontSize: 22,
-        fontWeight: "800",
-
-        color: COLORS.textTitle,
-    },
-
-    detailCard: {
-        marginBottom: 16,
-
-        borderRadius: 18,
-
-        overflow: "hidden",
-
-        backgroundColor: COLORS.soft,
-    },
-
-    detailRow: {
-        minHeight: 54,
-
-        paddingHorizontal: 16,
-
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(15,23,42,0.06)",
-    },
-
-    detailLabel: {
-        fontSize: 12,
-        fontWeight: "600",
-        color: COLORS.textBody,
-    },
-
-    detailValue: {
-        maxWidth: "60%",
-
-        textAlign: "right",
-
-        fontSize: 13,
-        fontWeight: "700",
-
-        color: COLORS.textTitle,
-    },
-
     buttonPressed: {
         opacity: 0.85,
 
@@ -1331,43 +1079,4 @@ const styles = StyleSheet.create({
         ],
     },
 
-    lostPetButton: {
-        minHeight: 62,
-
-        marginTop: 4,
-
-        paddingHorizontal: 16,
-
-        borderRadius: 16,
-
-        flexDirection: 'row',
-        alignItems: 'center',
-
-        backgroundColor:
-            COLORS.danger,
-
-        ...theme.shadows.elevation1,
-    },
-
-    lostPetButtonContent: {
-        flex: 1,
-
-        marginLeft: 12,
-    },
-
-    lostPetButtonTitle: {
-        fontSize: 13,
-        fontWeight: '800',
-
-        color: COLORS.white,
-    },
-
-    lostPetButtonSubtitle: {
-        marginTop: 2,
-
-        fontSize: 10,
-
-        color:
-            'rgba(255,255,255,0.78)',
-    },
 });
