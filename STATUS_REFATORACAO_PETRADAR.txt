@@ -1,0 +1,240 @@
+======================================================================
+PETRADAR — STATUS DA REFATORAÇÃO DO FRONTEND
+============================================
+
+Data de início:
+16/08/2026
+
+Objetivo atual:
+Refatorar estruturalmente o frontend existente preservando funcionalidades e comportamento. Não implementar novos RFs enquanto o Plano Mestre estiver em execução.
+
+Branch base:
+main
+
+Branch de refatoração:
+refactor/frontend-modularization
+
+Commit de baseline:
+c38a9edeab3b5e3f48047515f150ff397560110f
+
+Mensagem da baseline:
+commit Inicial de refatoração de codigo
+
+======================================================================
+FASE ATUAL
+==========
+
+FASE 0 — CONCLUÍDA
+
+Escopo concluído:
+Baseline / branch
+
+Status:
+CONCLUÍDA
+
+Próxima fase:
+FASE 1 — NAVIGATION
+
+A Fase 1 ainda não foi iniciada.
+
+======================================================================
+ETAPAS CONCLUÍDAS
+=================
+
+[X] Código atual analisado antes da refatoração
+[X] Plano Mestre lido
+[X] AGENTS.md considerado
+[X] Nenhum RF novo iniciado
+[X] TypeScript validado antes da refatoração
+[X] Aplicativo Android compilou e iniciou
+[X] Working tree inicial confirmada limpa
+[X] Commit funcional de baseline identificado
+[X] Branch específica de refatoração criada
+[X] Quatro blocos de testes funcionais manuais aprovados
+[X] Nenhum bug funcional atual reproduzido durante a baseline
+[X] TypeScript validado novamente no encerramento da Fase 0
+[X] Estado Git e diff revisados antes do fechamento
+[X] Fase 0 concluída sem refatoração estrutural
+
+======================================================================
+VALIDAÇÕES DA BASELINE
+======================
+
+TypeScript:
+
+Comando:
+cd mobile
+npx tsc --noEmit
+
+Resultado:
+SUCESSO — 0 erros TypeScript.
+
+Validação final para encerramento da Fase 0:
+
+Comando:
+cd mobile
+npx tsc --noEmit
+
+Resultado:
+SUCESSO — 0 erros TypeScript em 16/08/2026.
+
+Android:
+
+Comando:
+cd mobile
+npx expo run:android
+
+Resultado:
+SUCESSO — aplicativo compilou e abriu normalmente.
+
+======================================================================
+TESTES FUNCIONAIS MÍNIMOS
+=========================
+
+[X] aplicativo compila sem erro TypeScript
+[X] aplicativo inicia no Android
+
+BLOCO 1 — AUTENTICAÇÃO + MAPA
+
+[X] Login
+[X] Mapa abre
+[X] Localização carrega
+[X] Ocorrências aparecem
+[X] Abrir detalhes de ocorrência
+[X] Voltar sem erro
+
+Resultado do bloco:
+APROVADO.
+
+BLOCO 2 — FEED
+
+[X] Abrir Feed
+[X] Proximidade
+[X] Eco
+[X] Busca
+[X] Filtros
+[X] Refresh
+[X] Abrir ocorrência pelo Feed
+[X] Voltar sem erro
+
+Resultado do bloco:
+APROVADO.
+
+BLOCO 3 — PERFIL / PETS
+
+[X] Abrir perfil
+[X] Visualizar dados
+[X] Visualizar pets
+[X] Testar raio de pesquisa
+[X] Editar perfil
+[X] Cadastrar pet
+[X] Editar pet
+[X] Voltar/navegar sem erro
+
+Resultado do bloco:
+APROVADO.
+
+BLOCO 4 — OCORRÊNCIA / CUIDADOS
+
+[X] Cadastrar ocorrência
+[X] Upload/foto da ocorrência
+[X] Abrir ocorrência cadastrada
+[X] Editar ocorrência
+[X] Atualizar água
+[X] Atualizar comida
+[X] Voltar/navegar sem erro
+
+Resultado do bloco:
+APROVADO.
+
+Resultado geral:
+Os quatro blocos funcionais da baseline foram aprovados pelo usuário.
+
+======================================================================
+PROBLEMAS PREEXISTENTES
+=======================
+
+Resultado dos testes funcionais:
+Nenhum bug funcional preexistente foi reproduzido durante a baseline.
+
+Registros históricos de logcat:
+Os crashes encontrados anteriormente no buffer do logcat permanecem registrados apenas como eventos históricos. Eles não foram reproduzidos durante os testes completos da baseline e não são classificados como bugs atuais.
+
+======================================================================
+ALTERAÇÕES DE CÓDIGO REALIZADAS PELA REFATORAÇÃO
+================================================
+
+Nenhuma.
+
+Nenhuma refatoração estrutural foi realizada durante a Fase 0.
+
+Nenhum arquivo de aplicação, backend, dependência, contrato de API ou configuração funcional foi alterado durante a Fase 0.
+
+O único novo arquivo de acompanhamento deverá ser:
+`STATUS_REFATORACAO_PETRADAR.txt`
+
+======================================================================
+DECISÕES TOMADAS
+================
+
+* Refatoração incremental.
+* Não implementar RF novo durante o Plano Mestre.
+* Não reescrever o projeto.
+* Não substituir Mapbox.
+* Preservar endpoints e contratos de API.
+* Preservar comportamento visual e funcional.
+* Trabalhar em passos pequenos e verificáveis.
+* Cada alteração deverá passar por validação antes do próximo passo.
+* A branch `refactor/frontend-modularization` será utilizada para a refatoração.
+* A Fase 1 será iniciada somente em tarefa posterior e mediante orientação explícita.
+
+======================================================================
+PRÓXIMO PASSO
+=============
+
+Próxima fase planejada:
+FASE 1 — NAVIGATION
+
+Iniciar a Fase 1 somente em uma tarefa posterior, sem alterar rotas ou comportamento e seguindo os passos incrementais definidos no Plano Mestre.
+
+======================================================================
+FASES
+=====
+
+[X] Fase 0  — Baseline / branch — CONCLUÍDA
+[ ] Fase 1  — Navigation
+[ ] Fase 2  — Estrutura modular base
+[ ] Fase 3  — Auth
+[ ] Fase 4  — Feed
+[ ] Fase 5  — Profile
+[ ] Fase 6  — Pets
+[ ] Fase 7  — Occurrences
+[ ] Fase 8  — Map
+[ ] Fase 9  — Care / Engagement / Reports quando aplicável
+[ ] Fase 10 — Infrastructure
+[ ] Fase 11 — Shared
+[ ] Fase 12 — Theme
+[ ] Fase 13 — App
+[ ] Fase 14 — Types
+[ ] Fase 15 — Tests
+[ ] Fase 16 — Limpeza final
+
+Última fase concluída:
+Fase 0 — Baseline / branch.
+
+Fase atual:
+Fase 0 — Baseline / branch — CONCLUÍDA.
+
+Próxima fase:
+Fase 1 — Navigation.
+
+Último arquivo alterado pela refatoração:
+Nenhum arquivo de aplicação.
+
+Arquivo de acompanhamento criado:
+STATUS_REFATORACAO_PETRADAR.txt
+
+Próximo passo:
+Iniciar a Fase 1 — Navigation somente em tarefa posterior.
+
+======================================================================
