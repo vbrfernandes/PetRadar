@@ -33,7 +33,7 @@ import ChoiceButton from "../components/form/ChoiceButton";
 import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
-import SelectionChip from "../components/form/SelectionChip";
+import SelectionChipGroup from "../components/form/SelectionChipGroup";
 import { occurrenceService } from "../services/occurrenceService";
 import type {
   TipoAnimal,
@@ -956,50 +956,6 @@ export default function CadastroOcorrenciaScreen({
     }
   };
 
-  const renderOpcoes = (
-    opcoes: string[],
-    valor: string,
-    onChange: (valor: string) => void,
-  ) => (
-    <View style={styles.optionsGrid}>
-      {opcoes.map((opcao) => {
-        const ativo = valor === opcao;
-
-        return (
-          <SelectionChip
-            key={opcao}
-            label={opcao}
-            active={ativo}
-            mode="single"
-            onPress={() => onChange(opcao)}
-          />
-        );
-      })}
-    </View>
-  );
-
-  const renderMultiOpcoes = (
-    opcoes: string[],
-    selecionados: string[],
-    setSelecionados: React.Dispatch<React.SetStateAction<string[]>>,
-  ) => (
-    <View style={styles.optionsGrid}>
-      {opcoes.map((opcao) => {
-        const ativo = selecionados.includes(opcao);
-
-        return (
-          <SelectionChip
-            key={opcao}
-            label={opcao}
-            active={ativo}
-            mode="multiple"
-            onPress={() => alternarItem(opcao, setSelecionados)}
-          />
-        );
-      })}
-    </View>
-  );
-
   const renderResumo = (label: string, value: string) => (
     <View style={styles.reviewItem}>
       <Text style={styles.reviewLabel}>{label}</Text>
@@ -1193,7 +1149,12 @@ export default function CadastroOcorrenciaScreen({
               Sexo
             </Text>
 
-            {renderOpcoes(sexos, sexo, setSexo)}
+            <SelectionChipGroup
+              options={sexos}
+              mode="single"
+              selectedValue={sexo}
+              onSelect={setSexo}
+            />
 
             <Text style={styles.fieldLabel}>Cor</Text>
 
@@ -1218,11 +1179,21 @@ export default function CadastroOcorrenciaScreen({
 
             <Text style={styles.fieldLabel}>Porte</Text>
 
-            {renderOpcoes(portes, porte, setPorte)}
+            <SelectionChipGroup
+              options={portes}
+              mode="single"
+              selectedValue={porte}
+              onSelect={setPorte}
+            />
 
             <Text style={styles.fieldLabel}>Idade</Text>
 
-            {renderOpcoes(idades, idade, setIdade)}
+            <SelectionChipGroup
+              options={idades}
+              mode="single"
+              selectedValue={idade}
+              onSelect={setIdade}
+            />
           </View>
 
           {/* ===================================================== */}
@@ -1482,11 +1453,14 @@ export default function CadastroOcorrenciaScreen({
                   O que você identificou?
                 </Text>
 
-                {renderMultiOpcoes(
-                  problemasSaude,
-                  problemasSelecionados,
-                  setProblemasSelecionados,
-                )}
+                <SelectionChipGroup
+                  options={problemasSaude}
+                  mode="multiple"
+                  selectedValues={problemasSelecionados}
+                  onSelect={(opcao) =>
+                    alternarItem(opcao, setProblemasSelecionados)
+                  }
+                />
               </View>
             )}
 
@@ -1515,11 +1489,14 @@ export default function CadastroOcorrenciaScreen({
               <View style={styles.conditionalBox}>
                 <Text style={styles.conditionalTitle}>Quais?</Text>
 
-                {renderMultiOpcoes(
-                  deficiencias,
-                  deficienciasSelecionadas,
-                  setDeficienciasSelecionadas,
-                )}
+                <SelectionChipGroup
+                  options={deficiencias}
+                  mode="multiple"
+                  selectedValues={deficienciasSelecionadas}
+                  onSelect={(opcao) =>
+                    alternarItem(opcao, setDeficienciasSelecionadas)
+                  }
+                />
               </View>
             )}
           </View>
@@ -2441,13 +2418,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textBody,
     fontSize: 10,
     fontWeight: "700",
-  },
-
-  optionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 13,
   },
 
   binaryRow: {
