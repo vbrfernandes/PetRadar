@@ -32,6 +32,7 @@ import type {
 
 import { petService } from "../services/petService";
 import type { Pet } from "../types/pet.types";
+import PetCard from "./PetCard";
 
 type TipoEspecie = "Cachorro" | "Gato" | "Outro";
 interface FotoSelecionada {
@@ -426,58 +427,10 @@ export default function RegistrarPet() {
                     </View>
                 }
                 renderItem={({ item }) => (
-                    <Pressable
+                    <PetCard
+                        pet={item}
                         onPress={() => setPetSelecionado(item)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Abrir detalhes de ${item.nome}`}
-                        style={({ pressed }) => [
-                            styles.petCard,
-                            pressed && styles.buttonPressed,
-                        ]}
-                    >
-                        <View style={styles.petImageWrapper}>
-                            {item.foto ? (
-                                <Image
-                                    source={{
-                                        uri: item.foto,
-                                    }}
-                                    style={styles.petImage}
-                                />
-                            ) : (
-                                <View style={styles.petPlaceholder}>
-                                    <MaterialCommunityIcons
-                                        name={
-                                            item.especie.toLowerCase() === "gato"
-                                                ? "cat"
-                                                : item.especie.toLowerCase() === "cachorro"
-                                                    ? "dog"
-                                                    : "paw-outline"
-                                        }
-                                        size={30}
-                                        color={COLORS.primary}
-                                    />
-                                </View>
-                            )}
-                        </View>
-
-                        <View style={styles.petInfo}>
-                            <Text style={styles.petName} numberOfLines={1}>
-                                {item.nome}
-                            </Text>
-
-                            <Text style={styles.petMeta} numberOfLines={1}>
-                                {item.especie}
-
-                                {item.raca ? ` • ${item.raca}` : ""}
-                            </Text>
-
-                            {item.porte ? (
-                                <Text style={styles.petSize}>Porte {item.porte}</Text>
-                            ) : null}
-                        </View>
-
-                        <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
-                    </Pressable>
+                    />
                 )}
             />
 
@@ -1000,70 +953,6 @@ const styles = StyleSheet.create({
         marginTop: 2,
         fontSize: 11,
         color: "rgba(255,255,255,0.78)",
-    },
-
-    petCard: {
-        minHeight: 84,
-
-        marginBottom: 10,
-        padding: 12,
-
-        borderRadius: 18,
-
-        flexDirection: "row",
-        alignItems: "center",
-
-        backgroundColor: COLORS.surface,
-
-        borderWidth: 1,
-        borderColor: "rgba(15,23,42,0.06)",
-
-        ...theme.shadows.elevation1,
-    },
-
-    petImageWrapper: {
-        width: 58,
-        height: 58,
-        borderRadius: 18,
-        overflow: "hidden",
-    },
-
-    petImage: {
-        width: "100%",
-        height: "100%",
-    },
-
-    petPlaceholder: {
-        flex: 1,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        backgroundColor: COLORS.successBg,
-    },
-
-    petInfo: {
-        flex: 1,
-        marginLeft: 12,
-    },
-
-    petName: {
-        fontSize: 15,
-        fontWeight: "800",
-        color: COLORS.textTitle,
-    },
-
-    petMeta: {
-        marginTop: 3,
-        fontSize: 12,
-        color: COLORS.textBody,
-    },
-
-    petSize: {
-        marginTop: 4,
-        fontSize: 11,
-        fontWeight: "600",
-        color: COLORS.primary,
     },
 
     stateContainer: {

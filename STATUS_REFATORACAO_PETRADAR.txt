@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 6B — extração de petService e pet.types.
+FASE 6C — extração do componente visual PetCard.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -880,7 +880,9 @@ Subetapas:
 [X] RegistrarPet movido para o domínio Pets
 [X] smoke test manual da Fase 6A
 [X] petService e pet.types extraídos
-[ ] smoke test manual da Fase 6B
+[X] smoke test manual da Fase 6B
+[X] PetCard extraído
+[ ] smoke test manual da Fase 6C
 [ ] organização interna de Pets avaliada
 [ ] validação final da Fase 6
 
@@ -931,6 +933,29 @@ Subetapa Fase 6B — petService e pet.types:
 * `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
 
 Smoke test Fase 6B:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 6C — PetCard:
+* A extração foi justificada por uma fronteira visual real: o renderItem representava exclusivamente um Pet e apenas abria os detalhes do item selecionado.
+* Criado `mobile/src/features/pets/components/PetCard.tsx` como componente visual stateless.
+* PetCard recebe somente as props `pet: Pet` e `onPress: () => void`.
+* O contrato Pet existente em `features/pets/types/pet.types.ts` foi reutilizado sem alteração.
+* O JSX do Pressable do card foi extraído de RegistrarPet, preservando foto, placeholder, escolha de ícone, nome, espécie, raça, porte, chevron, accessibility e ação de abertura dos detalhes.
+* Comparação normalizada do JSX confirmou 47 linhas antes e depois e 0 diferenças após somente `item` -> `pet` e substituição do callback do pai pela prop onPress.
+* Os styles exclusivos petCard, petImageWrapper, petImage, petPlaceholder, petInfo, petName, petMeta e petSize foram movidos literalmente para o StyleSheet local de PetCard.
+* O efeito buttonPressed foi definido localmente em PetCard com `opacity: 0.85` e `scale: 0.99`; a definição original permanece em RegistrarPet por ainda possuir dois consumidores reais: Adicionar pet e INFORMAR COMO PERDIDO.
+* RegistrarPet passou a renderizar `<PetCard pet={item} onPress={() => setPetSelecionado(item)} />`; petSelecionado e setPetSelecionado permanecem no componente pai.
+* PetCard não possui estado, hooks, chamadas HTTP ou imports de api, petService, navigation ou expo-image-picker.
+* O formulário, o modal de cadastro, FormData, expo-image-picker, seleção de foto, validações e cadastrarPet permaneceram integralmente em RegistrarPet.
+* O modal de detalhes, DetailRow, DetailRowProps, informarComoPerdido e a navegação para CadastroOcorrencia permaneceram integralmente em RegistrarPet.
+* petService.ts e pet.types.ts não foram alterados.
+* GET `/pets/meus`, POST `/pets/`, multipart e contratos HTTP permaneceram inalterados.
+* Backend, Profile, Feed, Map, Occurrences, Auth, navigation.types.ts, services/api.ts, theme/colors.ts, App.tsx, dependências e package.json não foram alterados.
+* Nenhum RF novo, componente visual adicional, hook, style compartilhado, utils, constants, index.ts ou `.gitkeep` foi criado.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
+
+Smoke test Fase 6C:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -978,6 +1003,8 @@ ETAPAS CONCLUÍDAS
 [X] Fase 6A — RegistrarPet movido para `features/pets/components/`
 [X] Smoke test manual da Fase 6A aprovado pelo usuário
 [X] Fase 6B — Pet compartilhado e operações HTTP de Pets extraídos para pet.types e petService
+[X] Smoke test manual da Fase 6B aprovado pelo usuário
+[X] Fase 6C — PetCard extraído para `features/pets/components/`
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1201,12 +1228,14 @@ DECISÕES TOMADAS
 * Pet foi extraído para `features/pets/types/pet.types.ts` somente após adquirir dois consumidores reais: RegistrarPet e petService.
 * TipoEspecie, FotoSelecionada e DetailRowProps permanecem internos porque não possuem reuso concreto fora de RegistrarPet.
 * petService centraliza somente getMyPets e createPet; FormData, ImagePicker, validação, UI e integração com CadastroOcorrencia permanecem no componente.
+* PetCard foi extraído por possuir fronteira visual própria e recebe somente Pet e onPress; estado, formulários, detalhes, API e navegação permanecem no pai.
+* buttonPressed permanece também em RegistrarPet porque Adicionar pet e INFORMAR COMO PERDIDO continuam sendo consumidores reais do mesmo efeito visual.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 6B antes de avaliar qualquer extração visual ou hook de Pets.
+Aguardar aprovação manual do smoke test da Fase 6C antes de avaliar qualquer nova extração de Pets.
 
 ======================================================================
 FASES
@@ -1264,10 +1293,11 @@ Subetapas concluídas:
 * Fase 5C — extração das quatro operações HTTP próprias de Profile para `features/profile/services/profileService.ts` e dos três tipos reutilizados para `features/profile/types/profile.types.ts`.
 * Fase 5D — avaliação final da organização interna e fechamento formal da Fase 5 — Profile, sem alteração de código funcional.
 * Fase 6A — movimentação estrutural de RegistrarPet.tsx para `features/pets/components/`, aprovada manualmente pelo usuário.
-* Fase 6B — extração do contrato Pet para `features/pets/types/pet.types.ts` e das duas operações HTTP para `features/pets/services/petService.ts`, com smoke test manual pendente.
+* Fase 6B — extração do contrato Pet para `features/pets/types/pet.types.ts` e das duas operações HTTP para `features/pets/services/petService.ts`, aprovada manualmente pelo usuário.
+* Fase 6C — extração do componente visual PetCard para `features/pets/components/PetCard.tsx`, com smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/pets/components/RegistrarPet.tsx`, `mobile/src/features/pets/services/petService.ts` e `mobile/src/features/pets/types/pet.types.ts`.
+`mobile/src/features/pets/components/RegistrarPet.tsx` e `mobile/src/features/pets/components/PetCard.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1276,7 +1306,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 6B antes de avaliar qualquer extração visual ou hook de Pets.
+Aguardar aprovação manual do smoke test da Fase 6C antes de avaliar qualquer nova extração de Pets.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
