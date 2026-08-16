@@ -6,25 +6,18 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
-import EsqueceuSenhaScreen from './src/screens/EsqueceuSenhaScreen';
 import ProfileDetailScreen from './src/screens/ProfileDetailScreen';
+import AuthNavigator from './src/navigation/AuthNavigator';
 
 
 // Store do Zustand (Caminho corrigido para 'store' no singular)
 import { useAuthStore } from './src/store/useAuthStore';
 
 // Telas Reais
-import LoginScreen from './src/screens/LoginScreen';
 import MapScreen from './src/screens/MapScreen';
 import FeedNoticias from './src/screens/FeedNoticias';
-import CadastroUserScreen from './src/screens/CadastroUserScreen';
-import TipoCadastroScreen from './src/screens/TipoCadastroScreen';
-import CadastroONGScreen from './src/screens/CadastroONGScreen';
 import CadastroOcorrenciaScreen from './src/screens/CadastroOcorrenciaScreen';
-import type {
-  AppTabParamList,
-  AuthStackParamList,
-} from './src/navigation/navigation.types';
+import type { AppTabParamList } from './src/navigation/navigation.types';
 
 
 // Telas Temporárias
@@ -42,20 +35,7 @@ const ProfileScreen = () => (
   </View>
 );
 
-const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const AppTabs = createBottomTabNavigator<AppTabParamList>();
-
-function AuthNavigator() {
-  return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-      <AuthStack.Screen name="Login" component={LoginScreen} />
-      <AuthStack.Screen name="TipoCadastro" component={TipoCadastroScreen} />
-      <AuthStack.Screen name="CadastroUser" component={CadastroUserScreen} />
-      <AuthStack.Screen name="CadastroONG" component={CadastroONGScreen} />
-      <AuthStack.Screen name="EsqueceuSenha" component={EsqueceuSenhaScreen} />
-    </AuthStack.Navigator>
-  );
-}
 
 function AppNavigator() {
   return (
