@@ -49,7 +49,7 @@ import type {
 import api from "../../../services/api";
 
 import OccurrenceDetailDrawer
-  from "../../../components/OccurrenceDetailDrawer";
+  from "../../occurrences/components/OccurrenceDetailDrawer";
 
 import AppNavigationDrawer
   from "../../../components/AppNavigationDrawer";

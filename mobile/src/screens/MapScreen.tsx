@@ -33,7 +33,7 @@ import ProfileDetailScreen
 import type {
   ProfileUpdateResult,
 } from "../features/profile/types/profile.types";
-import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
+import OccurrenceDetailDrawer from "../features/occurrences/components/OccurrenceDetailDrawer";
 import AppNavigationDrawer from "../components/AppNavigationDrawer";
 import ProfileQuickMenu from "../features/profile/components/ProfileQuickMenu";
 import api from "../services/api";

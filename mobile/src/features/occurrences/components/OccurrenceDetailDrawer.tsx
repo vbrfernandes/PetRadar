@@ -22,9 +22,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
-import api from "../services/api";
-import { useAuthStore } from "../store/useAuthStore";
-import { theme } from "../theme/colors";
+import api from "../../../services/api";
+import { useAuthStore } from "../../../store/useAuthStore";
+import { theme } from "../../../theme/colors";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 

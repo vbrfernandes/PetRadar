@@ -27,7 +27,10 @@ FASE ATUAL
 FASE 7 — OCCURRENCES
 
 Status:
-NÃO INICIADA
+EM ANDAMENTO
+
+Subetapa atual:
+FASE 7A — movimentação estrutural de OccurrenceDetailDrawer.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1092,6 +1095,41 @@ Subetapa Fase 6G — fechamento formal da Fase 6:
 * `npx tsc --noEmit` foi executado uma vez no fechamento e concluído com 0 erros.
 
 ======================================================================
+FASE 7 — OCCURRENCES
+====================
+
+Status:
+EM ANDAMENTO
+
+Subetapas:
+[X] OccurrenceDetailDrawer movido para o domínio Occurrences
+[X] validação técnica da Fase 7A
+[ ] smoke test manual da Fase 7A
+[ ] validação final da Fase 7
+
+Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
+* Movido `mobile/src/components/OccurrenceDetailDrawer.tsx` para `mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx`.
+* `mobile/src/features/occurrences/` e `mobile/src/features/occurrences/components/` foram criados somente para receber código real.
+* Nome do arquivo, nome do componente, export default, props, tipos locais, hooks, estados, JSX, styles, textos, accessibility, Alerts, animações e comportamento foram preservados.
+* A pesquisa no código executável confirmou exatamente dois consumidores reais: `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/screens/MapScreen.tsx`.
+* FeedNoticias passou a importar o drawer de `../../occurrences/components/OccurrenceDetailDrawer`.
+* MapScreen passou a importar o drawer de `../features/occurrences/components/OccurrenceDetailDrawer`.
+* Os imports internos de api, useAuthStore e theme foram ajustados exclusivamente por necessidade física para `../../../services/api`, `../../../store/useAuthStore` e `../../../theme/colors`, continuando a resolver os mesmos módulos reais.
+* Comparação normalizada confirmou 2.702 linhas e conteúdo integralmente idêntico após desconsiderar somente o caminho físico e os três imports relativos internos obrigatórios.
+* Chamadas HTTP, URLs, métodos, payloads, headers, tratamento de resposta, ordem das chamadas, edição, exclusão, cuidados e histórico permaneceram inalterados.
+* FeedNoticias teve somente o caminho do import alterado; Feed, filtros, ECO, denúncia, busca, cards, handlers, estados, endpoints e styles permaneceram intactos.
+* MapScreen teve somente o caminho do import alterado; lógica, integração e comportamento do Mapbox permaneceram intactos.
+* `mobile/src/screens/CadastroOcorrenciaScreen.tsx` permaneceu no local atual e não foi alterado.
+* ProfileDetailScreen e o acesso GET `/ocorrencias/minhas` não foram alterados.
+* Backend, dependências, contratos de API e funcionalidades existentes não foram alterados.
+* Nenhum RF novo, service, type, hook, util, constant, pasta vazia, index.ts ou `.gitkeep` foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7A foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7A:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+======================================================================
 ETAPAS CONCLUÍDAS
 =================
 
@@ -1147,6 +1185,9 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 6F aprovado pelo usuário
 [X] Fase 6G — fechamento formal da Fase 6 — Pets
 [X] Fase 6 — Pets concluída
+[X] Fase 7A — OccurrenceDetailDrawer movido para `features/occurrences/components/`
+[X] Validação técnica da Fase 7A concluída
+[ ] Smoke test manual da Fase 7A
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1384,7 +1425,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-FASE 7 — OCCURRENCES — NÃO INICIADA.
+Aguardar aprovação manual do smoke test da Fase 7A.
 
 ======================================================================
 FASES
@@ -1397,7 +1438,7 @@ FASES
 [X] Fase 4  — Feed — CONCLUÍDA
 [X] Fase 5  — Profile — CONCLUÍDA
 [X] Fase 6  — Pets — CONCLUÍDA
-[ ] Fase 7  — Occurrences
+[ ] Fase 7  — Occurrences — EM ANDAMENTO
 [ ] Fase 8  — Map
 [ ] Fase 9  — Care / Engagement / Reports quando aplicável
 [ ] Fase 10 — Infrastructure
@@ -1412,10 +1453,10 @@ FASES
 Fase 6 — Pets.
 
 Fase atual:
-Fase 7 — Occurrences — NÃO INICIADA.
+Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Fase 7 — Occurrences — NÃO INICIADA.
+Fase 7B — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1448,9 +1489,10 @@ Subetapas concluídas:
 * Fase 6E — extração do formulário coeso PetFormModal para `features/pets/components/PetFormModal.tsx`, aprovada manualmente pelo usuário.
 * Fase 6F — renomeação semântica de `RegistrarPet.tsx` para `PetsTab.tsx`, aprovada manualmente pelo usuário.
 * Fase 6G — fechamento formal da Fase 6 — Pets, sem alteração de código-fonte.
+* Fase 7A — movimentação estrutural de `OccurrenceDetailDrawer.tsx` para `features/occurrences/components/`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/pets/components/PetsTab.tsx` e `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
+`mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx`, `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/screens/MapScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1459,7 +1501,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Iniciar a Fase 7 — Occurrences somente mediante solicitação específica; nenhuma atividade da Fase 7 foi iniciada.
+Aguardar aprovação manual do smoke test da Fase 7A; não iniciar a Fase 7B automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
