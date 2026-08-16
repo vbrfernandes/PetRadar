@@ -26,9 +26,7 @@ import { useAuthStore } from "../../../store/useAuthStore";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import type { AppTabParamList } from "../../../navigation/navigation.types";
-import AnimalTypeSelector, {
-  type AnimalTypeOption,
-} from "../components/form/AnimalTypeSelector";
+import AnimalSection from "../components/form/AnimalSection";
 import ChoiceButton from "../components/form/ChoiceButton";
 import OccurrenceFormSection from "../components/form/OccurrenceFormSection";
 import OccurrenceTypeSection, {
@@ -70,30 +68,6 @@ const tiposOcorrencia: OccurrenceTypeOption[] = [
   },
 ];
 
-const tiposAnimais: AnimalTypeOption[] = [
-  {
-    valor: "CACHORRO",
-    titulo: "Cachorro",
-    descricao: "Cão",
-    icone: "dog-side",
-  },
-  {
-    valor: "GATO",
-    titulo: "Gato",
-    descricao: "Felino",
-    icone: "cat",
-  },
-  {
-    valor: "OUTRO",
-    titulo: "Outro",
-    descricao: "Outra espécie",
-    icone: "paw-outline",
-  },
-];
-
-const sexos = ["Masculino", "Feminino", "Não sei"];
-const portes = ["Pequeno", "Médio", "Grande"];
-const idades = ["Filhote", "Adulto", "Idoso"];
 const urgencias = ["Crítico", "Moderado", "Baixo"];
 
 const problemasSaude = [
@@ -511,6 +485,14 @@ export default function CadastroOcorrenciaScreen({
 
     if (tipo !== "PET_PERDIDO" && tipo !== "PET_AVISTADO") {
       setRacaConhecida(null);
+      setRaca("");
+    }
+  };
+
+  const selecionarRacaConhecida = (conhecida: boolean) => {
+    setRacaConhecida(conhecida);
+
+    if (!conhecida) {
       setRaca("");
     }
   };
@@ -1069,130 +1051,24 @@ export default function CadastroOcorrenciaScreen({
             title="Sobre o animal"
             subtitle="Informe apenas o que você conseguiu observar."
           >
-
-            <Text style={styles.fieldLabel}>Tipo de animal</Text>
-
-            <AnimalTypeSelector
-              options={tiposAnimais}
-              selectedType={tipoAnimal}
-              onSelect={setTipoAnimal}
-            />
-
-            {tipoAnimal === "OUTRO" && (
-              <View style={styles.otherAnimalField}>
-                <Text style={styles.fieldLabel}>Qual animal?</Text>
-                <View style={styles.inputContainer}>
-                  <MaterialCommunityIcons
-                    name="paw-outline"
-                    size={20}
-                    color={theme.colors.brand}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    value={tipoAnimalOutro}
-                    onChangeText={setTipoAnimalOutro}
-                    placeholder="Digite o tipo do animal..."
-                    placeholderTextColor={theme.colors.textBody}
-                    autoCapitalize="words"
-                    returnKeyType="done"
-                  />
-                </View>
-              </View>
-            )}
-
-            {ehPet && (
-              <>
-                <Text style={[styles.fieldLabel, styles.fieldLabelSpacing]}>
-                  Você sabe a raça?
-                </Text>
-
-                <View style={styles.binaryRow}>
-                  <ChoiceButton
-                    label="Sim"
-                    active={racaConhecida === true}
-                    onPress={() => setRacaConhecida(true)}
-                  />
-
-                  <ChoiceButton
-                    label="Não"
-                    active={racaConhecida === false}
-                    onPress={() => {
-                      setRacaConhecida(false);
-                      setRaca("");
-                    }}
-                  />
-                </View>
-
-                {racaConhecida === true && (
-                  <View style={styles.inputContainer}>
-                    <MaterialCommunityIcons
-                      name="dog"
-                      size={20}
-                      color={theme.colors.brand}
-                      style={styles.inputIcon}
-                    />
-
-                    <TextInput
-                      style={styles.input}
-                      value={raca}
-                      onChangeText={setRaca}
-                      placeholder="Ex.: Border Collie"
-                      placeholderTextColor={theme.colors.textBody}
-                    />
-                  </View>
-                )}
-              </>
-            )}
-
-            <Text style={[styles.fieldLabel, styles.fieldLabelSpacing]}>
-              Sexo
-            </Text>
-
-            <SelectionChipGroup
-              options={sexos}
-              mode="single"
-              selectedValue={sexo}
-              onSelect={setSexo}
-            />
-
-            <Text style={styles.fieldLabel}>Cor</Text>
-
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="palette-outline"
-                size={20}
-                color={theme.colors.brand}
-                style={styles.inputIcon}
-              />
-
-              <TextInput
-                style={styles.input}
-                value={cor}
-                onChangeText={setCor}
-                placeholder="Ex.: preto e branco"
-                placeholderTextColor={theme.colors.textBody}
-              />
-
-              <Text style={styles.optionalText}>Opcional</Text>
-            </View>
-
-            <Text style={styles.fieldLabel}>Porte</Text>
-
-            <SelectionChipGroup
-              options={portes}
-              mode="single"
-              selectedValue={porte}
-              onSelect={setPorte}
-            />
-
-            <Text style={styles.fieldLabel}>Idade</Text>
-
-            <SelectionChipGroup
-              options={idades}
-              mode="single"
-              selectedValue={idade}
-              onSelect={setIdade}
+            <AnimalSection
+              tipoAnimal={tipoAnimal}
+              onTipoAnimalChange={setTipoAnimal}
+              tipoAnimalOutro={tipoAnimalOutro}
+              onTipoAnimalOutroChange={setTipoAnimalOutro}
+              ehPet={ehPet}
+              racaConhecida={racaConhecida}
+              onRacaConhecidaChange={selecionarRacaConhecida}
+              raca={raca}
+              onRacaChange={setRaca}
+              sexo={sexo}
+              onSexoChange={setSexo}
+              cor={cor}
+              onCorChange={setCor}
+              porte={porte}
+              onPorteChange={setPorte}
+              idade={idade}
+              onIdadeChange={setIdade}
             />
           </OccurrenceFormSection>
 
@@ -2230,10 +2106,6 @@ const styles = StyleSheet.create({
 
   ...occurrenceFormSharedStyles,
 
-  otherAnimalField: {
-    marginTop: 14,
-  },
-
   addressInput: {
     alignItems: "flex-start",
     paddingTop: 3,
@@ -2296,12 +2168,6 @@ const styles = StyleSheet.create({
     height: 1,
     marginLeft: 58,
     backgroundColor: "rgba(31, 92, 77, 0.08)",
-  },
-
-  optionalText: {
-    color: theme.colors.textBody,
-    fontSize: 10,
-    fontWeight: "700",
   },
 
   conditionalBox: {

@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7L — OccurrenceFormSection.
+FASE 7M — AnimalSection.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1139,7 +1139,10 @@ Subetapas:
 [X] smoke test manual da Fase 7K
 [X] OccurrenceFormSection extraído para components/form
 [X] validação técnica da Fase 7L
-[ ] smoke test manual da Fase 7L
+[X] smoke test manual da Fase 7L
+[X] AnimalSection extraído para components/form
+[X] validação técnica da Fase 7M
+[ ] smoke test manual da Fase 7M
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1391,6 +1394,26 @@ Subetapa Fase 7L — OccurrenceFormSection:
 * `git diff --check` restrito aos arquivos da Fase 7L foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7L:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7M — AnimalSection:
+* Criado `mobile/src/features/occurrences/components/form/AnimalSection.tsx` somente para receber o conteúdo controlado da seção 2 — Sobre o animal.
+* O componente é stateless e controlado por props explícitas de valores e callbacks; nenhum hook, estado, regra de carregamento, chamada HTTP ou integração foi introduzido.
+* Os estados tipoAnimal, tipoAnimalOutro, sexo, cor, porte, idade, racaConhecida e raca permaneceram integralmente na CadastroOcorrenciaScreen.
+* O cálculo memoizado de ehPet permaneceu na Screen e somente seu resultado é fornecido ao AnimalSection.
+* A regra de limpar raca ao selecionar raça não conhecida permaneceu na Screen por meio do callback simples selecionarRacaConhecida, sem useCallback e sem alteração de semântica.
+* As constantes exclusivas tiposAnimais, sexos, portes e idades foram movidas para AnimalSection com dados, textos, ordem e ícones preservados.
+* Os styles exclusivos otherAnimalField e optionalText foram movidos com valores idênticos; occurrenceFormSharedStyles passou a ser reutilizado pelo novo componente e permaneceu intacto.
+* AnimalTypeSelector, ChoiceButton e SelectionChipGroup foram reutilizados diretamente e permaneceram intactos.
+* O shell OccurrenceFormSection número 2, com título e subtítulo existentes, permaneceu na CadastroOcorrenciaScreen; somente seu conteúdo interno passou a renderizar AnimalSection.
+* O prefill originado de Pet e o carregamento do modo edição continuam escrevendo nos mesmos estados da Screen e permaneceram intactos.
+* Saúde, Deficiência, Urgência, Cuidados, Foto, Observação, Revisão, Localização e as demais seções do formulário permaneceram intactas.
+* occurrenceService, OccurrenceDetailDrawer, FormData, criação, edição, exclusão, Location, ImagePicker, Mapbox/geocoding, Feed, Map, Profile, Pets, navegação, backend, endpoints, payloads e Alerts permaneceram intactos.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7M foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7M:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1486,7 +1509,10 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7K aprovado pelo usuário
 [X] Fase 7L — OccurrenceFormSection extraído para `features/occurrences/components/form/`
 [X] Validação técnica da Fase 7L concluída
-[ ] Smoke test manual da Fase 7L
+[X] Smoke test manual da Fase 7L aprovado pelo usuário
+[X] Fase 7M — AnimalSection extraído para `features/occurrences/components/form/`
+[X] Validação técnica da Fase 7M concluída
+[ ] Smoke test manual da Fase 7M
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1724,7 +1750,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7L.
+Aguardar aprovação manual do smoke test da Fase 7M.
 
 ======================================================================
 FASES
@@ -1755,7 +1781,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Smoke test manual da Fase 7L — PENDENTE.
+Smoke test manual da Fase 7M — PENDENTE.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1799,10 +1825,11 @@ Subetapas concluídas:
 * Fase 7I — extração do elemento visual/interativo SelectionChip para `features/occurrences/components/form/SelectionChip.tsx`, aprovada manualmente pelo usuário.
 * Fase 7J — extração do componente de grupo SelectionChipGroup para `features/occurrences/components/form/SelectionChipGroup.tsx`, aprovada manualmente pelo usuário.
 * Fase 7K — centralização dos seis styles compartilhados do formulário em `features/occurrences/components/form/occurrenceForm.styles.ts`, aprovada manualmente pelo usuário.
-* Fase 7L — extração do shell visual compartilhado das nove seções para `features/occurrences/components/form/OccurrenceFormSection.tsx`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7L — extração do shell visual compartilhado das nove seções para `features/occurrences/components/form/OccurrenceFormSection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7M — extração do conteúdo controlado da seção Sobre o animal para `features/occurrences/components/form/AnimalSection.tsx`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/form/OccurrenceFormSection.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+`mobile/src/features/occurrences/components/form/AnimalSection.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1811,7 +1838,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7L; não iniciar nova subetapa automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7M; não iniciar nova subetapa automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
