@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 3C — LoginScreen movida para o domínio Auth.
+FASE 3D — CadastroUserScreen movida para o domínio Auth.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -199,7 +199,7 @@ Subetapas:
 [X] TipoCadastroScreen migrada
 [X] EsqueceuSenhaScreen migrada
 [X] LoginScreen migrada
-[ ] CadastroUserScreen migrada
+[X] CadastroUserScreen migrada
 [ ] CadastroONGScreen migrada
 [ ] organização interna de Auth avaliada
 [ ] validação final da Fase 3
@@ -272,9 +272,9 @@ Subetapa Fase 3C — LoginScreen:
 * Nenhuma pasta vazia ou arquivo `.gitkeep` criado.
 
 Smoke test Fase 3C:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
 
-Validação manual necessária:
+Validação manual aprovada contemplou:
 * Aplicativo abre na tela Login quando deslogado.
 * LoginScreen aparece normalmente.
 * Validação de campos vazios funciona.
@@ -284,6 +284,39 @@ Validação manual necessária:
 * “Cadastre-se” abre TipoCadastroScreen.
 * Login real continua funcionando.
 * Após login, o aplicativo principal abre.
+* Nenhum erro ou crash ocorre.
+
+Subetapa Fase 3D — CadastroUserScreen:
+* Movido `mobile/src/screens/CadastroUserScreen.tsx` para `mobile/src/features/auth/screens/CadastroUserScreen.tsx`.
+* Nome do arquivo CadastroUserScreen.tsx preservado.
+* Nome interno exportado CadastroUsuarioScreen preservado.
+* JSX, formulário, etapas, estados, validações, nome, CPF, telefone, possui pet, email, senha, confirmação de senha, localização, loading, Alerts, payload, tratamento de erro, navegação, textos, estilos, cores, accessibility e comportamento preservados.
+* Import relativo de API ajustado de `../services/api` para `../../../services/api` exclusivamente por necessidade física da movimentação.
+* O novo import continua resolvendo para o mesmo módulo real `mobile/src/services/api.ts`.
+* Import direto de `expo-location` preservado.
+* `Location.requestForegroundPermissionsAsync()`, `Location.getCurrentPositionAsync()` e `Location.Accuracy.Balanced` preservados sem alteração de permissão, precisão ou fallback.
+* Endpoint `/auth/registro/usuario` e payload com `nome_completo`, `cpf`, `telefone`, `tem_pet`, `email`, `senha`, `localizacao_lat` e `localizacao_lng` não foram alterados.
+* Navegação para a rota Login após sucesso preservada.
+* Os `navigation: any` e `catch (error: any)` preexistentes foram preservados por estarem fora do escopo.
+* AuthNavigator teve somente o caminho do import de CadastroUserScreen atualizado.
+* Nomes das rotas CadastroUser e Login, ordem das rotas, screenOptions e AuthStackParamList não foram alterados.
+* LoginScreen, TipoCadastroScreen e EsqueceuSenhaScreen permaneceram intactas.
+* CadastroONGScreen.tsx permanece em `mobile/src/screens/`.
+* services/api.ts não foi movido ou alterado.
+* Nenhuma pasta vazia ou arquivo `.gitkeep` criado.
+
+Smoke test Fase 3D:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+Validação manual necessária:
+* Login abre.
+* “Cadastre-se” abre TipoCadastroScreen.
+* A opção de cadastro de usuário abre CadastroUserScreen.
+* CadastroUserScreen aparece normalmente.
+* Avançar e voltar entre etapas funciona.
+* Validações obrigatórias continuam funcionando.
+* Switch de possui pet continua funcionando.
+* Voltar funciona.
 * Nenhum erro ou crash ocorre.
 
 ======================================================================
@@ -478,12 +511,14 @@ DECISÕES TOMADAS
 * O import relativo de api.ts foi ajustado sem mover ou alterar o módulo de API.
 * LoginScreen foi movida sem renomeação na Fase 3C.
 * Os caminhos relativos de api.ts, useAuthStore.ts e logo.png foram ajustados sem mover ou alterar esses arquivos.
+* CadastroUserScreen foi movida sem renomear o arquivo ou o componente interno CadastroUsuarioScreen na Fase 3D.
+* O import relativo de api.ts foi ajustado sem mover ou alterar o módulo; o uso direto de expo-location foi preservado.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 3C antes de mover outra tela Auth.
+Aguardar smoke test manual da Fase 3D antes de mover outra tela Auth.
 
 ======================================================================
 FASES
@@ -525,15 +560,16 @@ Subetapas concluídas:
 * Fase 3A — movimentação de TipoCadastroScreen.tsx para `features/auth/screens/`.
 * Fase 3B — movimentação de EsqueceuSenhaScreen.tsx para `features/auth/screens/`.
 * Fase 3C — movimentação de LoginScreen.tsx para `features/auth/screens/`.
+* Fase 3D — movimentação de CadastroUserScreen.tsx para `features/auth/screens/`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/auth/screens/LoginScreen.tsx` e `mobile/src/navigation/AuthNavigator.tsx`.
+`mobile/src/features/auth/screens/CadastroUserScreen.tsx` e `mobile/src/navigation/AuthNavigator.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar smoke test manual da Fase 3C antes de mover outra tela Auth.
+Aguardar smoke test manual da Fase 3D antes de mover outra tela Auth.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
