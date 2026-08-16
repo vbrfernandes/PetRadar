@@ -27,6 +27,7 @@ import api from "../../../services/api";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
 import type { AppTabParamList } from "../../../navigation/navigation.types";
+import { occurrenceService } from "../services/occurrenceService";
 
 type CadastroOcorrenciaScreenProps = BottomTabScreenProps<
   AppTabParamList,
@@ -315,8 +316,8 @@ export default function CadastroOcorrenciaScreen({
 
         const carregarOcorrencia = async () => {
           try {
-            const response = await api.get<OcorrenciaEdicao>(
-              `/ocorrencias/${ocorrenciaId}`,
+            const response = await occurrenceService.getById<OcorrenciaEdicao>(
+              ocorrenciaId,
             );
 
             if (!ativo) {

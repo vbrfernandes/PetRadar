@@ -50,6 +50,8 @@ import api from "../../../services/api";
 
 import OccurrenceDetailDrawer
   from "../../occurrences/components/OccurrenceDetailDrawer";
+import { occurrenceService }
+  from "../../occurrences/services/occurrenceService";
 
 import AppNavigationDrawer
   from "../../../components/AppNavigationDrawer";
@@ -468,34 +470,26 @@ export default function FeedNoticias() {
           // ==================================================
 
           const response =
-            await api.get<
-              OcorrenciaFeed[]
-            >(
-              "/ocorrencias/proximas",
+            await occurrenceService.getNearby<OcorrenciaFeed>({
+              lat:
+                currentLocation
+                  .coords
+                  .latitude,
 
-              {
-                params: {
-                  lat:
-                    currentLocation
-                      .coords
-                      .latitude,
+              lng:
+                currentLocation
+                  .coords
+                  .longitude,
 
-                  lng:
-                    currentLocation
-                      .coords
-                      .longitude,
+              raio_km:
+                raioAtual,
 
-                  raio_km:
-                    raioAtual,
-
-                  modo:
-                    modoSelecionado ===
-                      "ECO"
-                      ? "eco"
-                      : "proximidade",
-                },
-              },
-            );
+              modo:
+                modoSelecionado ===
+                  "ECO"
+                  ? "eco"
+                  : "proximidade",
+            });
 
           const dados =
             Array.isArray(

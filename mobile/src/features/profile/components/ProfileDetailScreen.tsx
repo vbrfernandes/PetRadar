@@ -35,9 +35,9 @@ import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { theme } from "../../../theme/colors";
-import api from "../../../services/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 
+import { occurrenceService } from "../../occurrences/services/occurrenceService";
 import type { OcorrenciaResumo } from "../../occurrences/types/occurrence.types";
 import PetsTab from "../../pets/components/PetsTab";
 
@@ -544,7 +544,7 @@ export default function ProfileDetailScreen({
       // Essa requisição não pode impedir o carregamento do perfil.
 
       try {
-        const resOcorrencias = await api.get("/ocorrencias/minhas");
+        const resOcorrencias = await occurrenceService.getMine();
 
         setMinhasOcorrencias(
           Array.isArray(resOcorrencias.data) ? resOcorrencias.data : [],

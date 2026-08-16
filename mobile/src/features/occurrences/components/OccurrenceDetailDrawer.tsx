@@ -26,6 +26,8 @@ import api from "../../../services/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { theme } from "../../../theme/colors";
 
+import { occurrenceService } from "../services/occurrenceService";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const DRAWER_WIDTH = Math.min(SCREEN_WIDTH * 0.9, 430);
@@ -537,8 +539,8 @@ export default function OccurrenceDetailDrawer({
 
     const carregarDetalhes = async () => {
       try {
-        const response = await api.get<OcorrenciaDetalhe>(
-          `/ocorrencias/${occurrenceId}`
+        const response = await occurrenceService.getById<OcorrenciaDetalhe>(
+          occurrenceId
         );
 
         if (ativo) {

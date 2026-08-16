@@ -34,6 +34,7 @@ import type {
   ProfileUpdateResult,
 } from "../features/profile/types/profile.types";
 import OccurrenceDetailDrawer from "../features/occurrences/components/OccurrenceDetailDrawer";
+import { occurrenceService } from "../features/occurrences/services/occurrenceService";
 import type { OcorrenciaResumo } from "../features/occurrences/types/occurrence.types";
 import AppNavigationDrawer from "../components/AppNavigationDrawer";
 import ProfileQuickMenu from "../features/profile/components/ProfileQuickMenu";
@@ -397,12 +398,10 @@ export default function MapScreen() {
       try {
         setLoadingOcorrencias(true);
 
-        const response = await api.get("/ocorrencias/proximas", {
-          params: {
-            lat: latitude,
-            lng: longitude,
-            raio_km: raioKm,
-          },
+        const response = await occurrenceService.getNearby<OcorrenciaMapa>({
+          lat: latitude,
+          lng: longitude,
+          raio_km: raioKm,
         });
 
         const dados = Array.isArray(response.data) ? response.data : [];
