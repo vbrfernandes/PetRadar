@@ -12,16 +12,13 @@ import React, {
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   FlatList,
   Image,
   Modal,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
@@ -63,11 +60,15 @@ import ProfileQuickMenu
 import FeedBannerCarousel
   from "../components/FeedBannerCarousel";
 
-import OccurrenceCard, {
-  feedButtonPressedStyle,
-} from "../components/OccurrenceCard";
+import OccurrenceCard
+  from "../components/OccurrenceCard";
+
+import FeedControls
+  from "../components/FeedControls";
 
 import type {
+  FiltroFeed,
+  ModoFeed,
   OcorrenciaFeed,
 } from "../types/feed.types";
 
@@ -75,6 +76,10 @@ import {
   ehUrgente,
   normalizarTexto,
 } from "../utils/feed.utils";
+
+import {
+  feedButtonPressedStyle,
+} from "../styles/feed.styles";
 
 import ProfileDetailScreen, {
   type ProfileUpdateResult,
@@ -95,10 +100,6 @@ import {
 const DEFAULT_SEARCH_RADIUS_KM = 10;
 const MIN_SEARCH_RADIUS_KM = 1;
 const MAX_SEARCH_RADIUS_KM = 100;
-
-const FEED_MODE_CAROUSEL_WIDTH =
-  Dimensions.get("window").width -
-  theme.spacing.globalMargin * 2;
 
 // ============================================================
 // MOTIVOS DE DENÚNCIA
@@ -142,65 +143,6 @@ interface ForcaResponse {
 
 type RecarregarListaOcorrencias =
   () => void | Promise<void>;
-
-type FiltroFeed =
-  | "TODAS"
-  | "PERDIDOS"
-  | "AVISTADOS"
-  | "RUA"
-  | "URGENTES";
-
-type ModoFeed =
-  | "PROXIMIDADE"
-  | "ECO";
-
-
-interface FiltroConfig {
-  id: FiltroFeed;
-
-  label: string;
-
-  icon:
-  keyof typeof Ionicons.glyphMap;
-}
-
-
-// ============================================================
-// FILTROS
-// ============================================================
-
-const FILTROS: FiltroConfig[] = [
-  {
-    id: "TODAS",
-    label: "Todas",
-    icon: "apps-outline",
-  },
-
-  {
-    id: "PERDIDOS",
-    label: "Perdidos",
-    icon: "paw-outline",
-  },
-
-  {
-    id: "AVISTADOS",
-    label: "Avistados",
-    icon: "eye-outline",
-  },
-
-  {
-    id: "RUA",
-    label: "Animal de rua",
-    icon: "home-outline",
-  },
-
-  {
-    id: "URGENTES",
-    label: "Urgentes",
-    icon: "warning-outline",
-  },
-];
-
 
 // ============================================================
 // TELA
@@ -303,11 +245,6 @@ export default function FeedNoticias() {
   const modoFeedRef =
     useRef<ModoFeed>(
       "PROXIMIDADE",
-    );
-
-  const feedModeCarouselRef =
-    useRef<ScrollView | null>(
-      null,
     );
 
   // ==========================================================
@@ -1611,430 +1548,36 @@ export default function FeedNoticias() {
                 CARROSSEL: BUSCA / MODOS DO FEED
             ================================================= */}
 
-            <View
-              style={
-                styles.feedModeCarouselWrapper
+            <FeedControls
+              search={
+                search
               }
-            >
-              <ScrollView
-                ref={
-                  feedModeCarouselRef
-                }
-                horizontal
-                pagingEnabled
-                bounces={false}
-                scrollEnabled={
-                  !refreshing
-                }
-                showsHorizontalScrollIndicator={
-                  false
-                }
-                keyboardShouldPersistTaps="handled"
-                decelerationRate="fast"
-              >
-                {/* =============================================
-                    PÁGINA 1 — LAYOUT ORIGINAL / PROXIMIDADE
-                ============================================== */}
-
-                <View
-                  style={
-                    styles.feedModeCarouselPage
-                  }
-                >
-                  {/* ===========================================
-                      BUSCA
-                  ============================================ */}
-
-                  <View
-                    style={
-                      styles.searchBox
-                    }
-                  >
-                    <Ionicons
-                      name="search-outline"
-                      size={19}
-                      color={
-                        theme.colors
-                          .textBody
-                      }
-                    />
-
-                    <TextInput
-                      value={
-                        search
-                      }
-                      onChangeText={
-                        setSearch
-                      }
-                      placeholder="Pesquisar animal ou local..."
-                      placeholderTextColor={
-                        theme.colors
-                          .textBody
-                      }
-                      style={
-                        styles.searchInput
-                      }
-                      returnKeyType="search"
-                    />
-
-                    {search.length >
-                    0 ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Limpar pesquisa"
-                        hitSlop={8}
-                        onPress={() =>
-                          setSearch(
-                            "",
-                          )
-                        }
-                      >
-                        <Ionicons
-                          name="close-circle"
-                          size={19}
-                          color={
-                            theme.colors
-                              .textBody
-                          }
-                        />
-                      </Pressable>
-                    ) : null}
-                  </View>
-
-                  {/* ===========================================
-                      CABEÇALHO ORIGINAL DO FEED
-                  ============================================ */}
-
-                  <View
-                    style={
-                      styles.feedSectionHeader
-                    }
-                  >
-                    <View
-                      style={
-                        styles.feedSectionText
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.feedSectionTitle
-                        }
-                      >
-                        Ocorrências
-                      </Text>
-
-                      <Text
-                        style={
-                          styles.feedSectionSubtitle
-                        }
-                      >
-                        Ordenadas da mais próxima para a mais distante
-                      </Text>
-                    </View>
-
-                    <View
-                      style={
-                        styles.counterBadge
-                      }
-                    >
-                      <Text
-                        style={
-                          styles.counterText
-                        }
-                      >
-                        {
-                          ocorrenciasFiltradas
-                            .length
-                        }
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* =============================================
-                    PÁGINA 2 — SELEÇÃO DE MODO
-                ============================================== */}
-
-                <View
-                  style={[
-                    styles.feedModeCarouselPage,
-                    styles.feedModeButtonsPage,
-                  ]}
-                >
-                  {/* ===========================================
-                      MODO PROXIMIDADE
-                  ============================================ */}
-
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Ocorrências locais"
-                    accessibilityHint={`Mostra ocorrências dentro do raio de ${raioPesquisaKm} km`}
-                    accessibilityState={{
-                      selected:
-                        modoFeed ===
-                        "PROXIMIDADE",
-
-                      disabled:
-                        refreshing,
-                    }}
-                    disabled={
-                      refreshing
-                    }
-                    onPress={() => {
-                      selecionarModoFeed(
-                        "PROXIMIDADE",
-                      );
-                    }}
-                    style={({
-                      pressed,
-                    }) => [
-                        styles.feedModeButton,
-
-                        modoFeed ===
-                          "PROXIMIDADE" &&
-                          styles.feedModeButtonActive,
-
-                        pressed &&
-                          !refreshing &&
-                          styles.feedModeButtonPressed,
-                      ]}
-                  >
-                    <View
-                      style={[
-                        styles.feedModeIconBox,
-
-                        modoFeed ===
-                          "PROXIMIDADE" &&
-                          styles.feedModeIconBoxActive,
-                      ]}
-                    >
-                      <Ionicons
-                        name="location-outline"
-                        size={24}
-                        color={
-                          modoFeed ===
-                            "PROXIMIDADE"
-                            ? theme.colors
-                              .surface
-                            : theme.colors
-                              .brand
-                        }
-                      />
-                    </View>
-
-                    <View
-                      style={
-                        styles.feedModeContent
-                      }
-                    >
-                      <Text
-                        style={[
-                          styles.feedModeTitle,
-
-                          modoFeed ===
-                            "PROXIMIDADE" &&
-                            styles.feedModeTitleActive,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        Ocorrências locais
-                      </Text>
-
-                      <Text
-                        style={[
-                          styles.feedModeSubtitle,
-
-                          modoFeed ===
-                            "PROXIMIDADE" &&
-                            styles.feedModeSubtitleActive,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        Até {raioPesquisaKm} km
-                      </Text>
-                    </View>
-                  </Pressable>
-
-                  {/* ===============================================
-                      MODO ECO
-                  ================================================ */}
-
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Ocorrências mais ecoadas"
-                    accessibilityHint="Mostra ocorrências globais priorizando as que receberam mais Ecos"
-                    accessibilityState={{
-                      selected:
-                        modoFeed ===
-                        "ECO",
-
-                      disabled:
-                        refreshing,
-                    }}
-                    disabled={
-                      refreshing
-                    }
-onPress={() => {
-                      selecionarModoFeed(
-                        "ECO",
-                      );
-                    }}
-                    style={({
-                      pressed,
-                    }) => [
-                        styles.feedModeButton,
-
-                        modoFeed ===
-                          "ECO" &&
-                          styles.feedModeButtonActive,
-
-                        pressed &&
-                          !refreshing &&
-                          styles.feedModeButtonPressed,
-                      ]}
-                  >
-                    <View
-                      style={[
-                        styles.feedModeIconBox,
-
-                        modoFeed ===
-                          "ECO" &&
-                          styles.feedModeIconBoxActive,
-                      ]}
-                    >
-                      <Image
-                        source={require(
-                          "../../../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
-                        )}
-                        resizeMode="contain"
-                        style={[
-                          styles.feedModeEcoIcon,
-
-                          {
-                            tintColor:
-                              modoFeed ===
-                                "ECO"
-                                ? theme.colors
-                                  .surface
-                                : theme.colors
-                                  .brand,
-                          },
-                        ]}
-                      />
-                    </View>
-
-                    <View
-                      style={
-                        styles.feedModeContent
-                      }
-                    >
-                      <Text
-                        style={[
-                          styles.feedModeTitle,
-
-                          modoFeed ===
-                          "ECO" &&
-                          styles.feedModeTitleActive,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        ECO
-                      </Text>
-
-                      <Text
-                        style={[
-                          styles.feedModeSubtitle,
-
-                          modoFeed ===
-                          "ECO" &&
-                          styles.feedModeSubtitleActive,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        Mais ecoadas
-                      </Text>
-                    </View>
-                  </Pressable>
-                </View>
-              </ScrollView>
-            </View>
-
-            {/* =================================================
-                FILTROS
-            ================================================= */}
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={
-                false
+              modoFeed={
+                modoFeed
               }
-              contentContainerStyle={
-                styles.filtersContent
+              filtro={
+                filtro
               }
-            >
-              {FILTROS.map(
-                (
-                  item,
-                ) => {
-                  const ativo =
-                    filtro ===
-                    item.id;
-
-                  return (
-                    <Pressable
-                      key={
-                        item.id
-                      }
-                      accessibilityRole="button"
-                      accessibilityLabel={`Filtrar por ${item.label}`}
-                      onPress={() =>
-                        setFiltro(
-                          item.id,
-                        )
-                      }
-                      style={({
-                        pressed,
-                      }) => [
-                          styles.filterChip,
-
-                          ativo &&
-                          styles.filterChipActive,
-
-                          pressed &&
-                          feedButtonPressedStyle,
-                        ]}
-                    >
-                      <Ionicons
-                        name={
-                          item.icon
-                        }
-                        size={15}
-                        color={
-                          ativo
-                            ? theme
-                              .colors
-                              .surface
-                            : theme
-                              .colors
-                              .brand
-                        }
-                      />
-
-                      <Text
-                        style={[
-                          styles.filterText,
-
-                          ativo &&
-                          styles.filterTextActive,
-                        ]}
-                      >
-                        {item.label}
-                      </Text>
-                    </Pressable>
-                  );
-                },
-              )}
-            </ScrollView>
+              raioPesquisaKm={
+                raioPesquisaKm
+              }
+              refreshing={
+                refreshing
+              }
+              quantidadeOcorrenciasFiltradas={
+                ocorrenciasFiltradas
+                  .length
+              }
+              onSearchChange={
+                setSearch
+              }
+              onSelectMode={
+                selecionarModoFeed
+              }
+              onFilterChange={
+                setFiltro
+              }
+            />
           </>
         }
 
@@ -2770,359 +2313,6 @@ const styles =
 
       fontWeight:
         "800",
-    },
-
-    // ========================================================
-    // CARROSSEL: BUSCA / MODOS DO FEED
-    // ========================================================
-
-    feedModeCarouselWrapper: {
-      width: "100%",
-
-      overflow:
-        "hidden",
-    },
-
-    feedModeCarouselPage: {
-      width:
-        FEED_MODE_CAROUSEL_WIDTH,
-    },
-
-    // ========================================================
-    // BUSCA
-    // ========================================================
-
-    searchBox: {
-      width: "100%",
-      minHeight: 48,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      paddingHorizontal:
-        14,
-
-      borderRadius:
-        15,
-
-      backgroundColor:
-        theme.colors
-          .surface,
-
-      ...theme.shadows
-        .elevation1,
-    },
-
-    searchInput: {
-      flex: 1,
-
-      height: 48,
-
-      marginLeft: 9,
-
-      color:
-        theme.colors
-          .textTitle,
-
-      fontSize: 13,
-    },
-
-    // ========================================================
-    // CABEÇALHO ORIGINAL DO FEED
-    // ========================================================
-
-    feedSectionHeader: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "space-between",
-
-      marginTop: 22,
-
-      marginBottom:
-        12,
-    },
-
-    feedSectionText: {
-      flex: 1,
-
-      paddingRight: 12,
-    },
-
-    feedSectionTitle: {
-      color:
-        theme.colors
-          .textTitle,
-
-      fontSize: 16,
-
-      fontWeight:
-        "900",
-    },
-
-    feedSectionSubtitle: {
-      marginTop: 3,
-
-      color:
-        theme.colors
-          .textBody,
-
-      fontSize: 10,
-    },
-
-    counterBadge: {
-      minWidth: 34,
-      height: 30,
-
-      paddingHorizontal:
-        9,
-
-      borderRadius:
-        theme.radius
-          .button,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      backgroundColor:
-        theme.colors
-          .inputBg,
-    },
-
-    counterText: {
-      color:
-        theme.colors
-          .brand,
-
-      fontSize: 11,
-
-      fontWeight:
-        "900",
-    },
-
-    // ========================================================
-    // PÁGINA DOS MODOS
-    // ========================================================
-
-    feedModeButtonsPage: {
-      minHeight: 112,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap: 10,
-
-      paddingBottom: 12,
-    },
-
-    feedModeButton: {
-      flex: 1,
-
-      minWidth: 0,
-      minHeight: 88,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      paddingHorizontal: 12,
-
-      borderWidth: 1,
-
-      borderColor:
-        theme.colors
-          .inputBg,
-
-      borderRadius: 18,
-
-      backgroundColor:
-        theme.colors
-          .surface,
-
-      ...theme.shadows
-        .elevation1,
-    },
-
-    feedModeButtonActive: {
-      borderColor:
-        theme.colors
-          .brand,
-
-      backgroundColor:
-        theme.colors
-          .brand,
-    },
-
-    feedModeButtonPressed: {
-      opacity: 0.82,
-
-      transform: [
-        {
-          scale: 0.985,
-        },
-      ],
-    },
-
-    feedModeIconBox: {
-      width: 42,
-      height: 42,
-
-      flexShrink: 0,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      borderRadius: 14,
-
-      backgroundColor:
-        theme.colors
-          .semantic
-          .success
-          .bg,
-    },
-
-    feedModeIconBoxActive: {
-      backgroundColor:
-        theme.colors
-          .action,
-    },
-
-    feedModeEcoIcon: {
-      width: 26,
-      height: 26,
-    },
-
-    feedModeContent: {
-      flex: 1,
-
-      minWidth: 0,
-
-      marginLeft: 10,
-    },
-
-    feedModeTitle: {
-      color:
-        theme.colors
-          .textTitle,
-
-      fontSize: 12,
-
-      fontWeight:
-        "900",
-    },
-
-    feedModeTitleActive: {
-      color:
-        theme.colors
-          .surface,
-    },
-
-    feedModeSubtitle: {
-      marginTop: 4,
-
-      color:
-        theme.colors
-          .textBody,
-
-      fontSize: 9,
-
-      fontWeight:
-        "600",
-    },
-
-    feedModeSubtitleActive: {
-      color:
-        theme.colors
-          .surface,
-    },
-
-    // ========================================================
-    // FILTROS
-    // ========================================================
-
-    filtersContent: {
-      gap: 8,
-
-      paddingBottom:
-        14,
-
-      paddingRight:
-        6,
-    },
-
-    filterChip: {
-      minHeight: 38,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap: 6,
-
-      paddingHorizontal:
-        13,
-
-      borderRadius:
-        theme.radius
-          .button,
-
-      borderWidth:
-        1,
-
-      borderColor:
-        theme.colors
-          .inputBg,
-
-      backgroundColor:
-        theme.colors
-          .surface,
-    },
-
-    filterChipActive: {
-      borderColor:
-        theme.colors
-          .brand,
-
-      backgroundColor:
-        theme.colors
-          .brand,
-    },
-
-    filterText: {
-      color:
-        theme.colors
-          .textBody,
-
-      fontSize: 11,
-
-      fontWeight:
-        "700",
-    },
-
-    filterTextActive: {
-      color:
-        theme.colors
-          .surface,
     },
 
     // ========================================================

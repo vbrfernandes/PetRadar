@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 4C — OccurrenceCard extraído; smoke test manual pendente.
+FASE 4F — consolidação técnica de 4D + 4E.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -436,7 +436,7 @@ EM ANDAMENTO
 Subetapas:
 [X] FeedBannerCarousel migrado
 [X] FeedNoticias migrada
-[ ] organização interna do Feed avaliada
+[X] organização interna do Feed avaliada
 [ ] validação final da Fase 4
 
 Subetapa Fase 4A — FeedBannerCarousel:
@@ -535,9 +535,9 @@ Subetapa Fase 4C — OccurrenceCard:
 * `npx tsc --noEmit` concluído com 0 erros.
 
 Smoke test Fase 4C:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
 
-Validação manual necessária:
+Validação manual aprovada contemplou:
 * Login funciona.
 * Feed abre.
 * Cards aparecem normalmente.
@@ -552,6 +552,109 @@ Validação manual necessária:
 * Ícone ECO continua apontando para o mesmo asset.
 * Busca, filtros, PROXIMIDADE/ECO e refresh continuam funcionando.
 * Nenhum erro ou crash ocorre.
+
+Subetapa Fase 4D — FeedControls:
+* Criado `mobile/src/features/feed/components/FeedControls.tsx` como componente visual/presentacional da busca, carrossel de busca/modos, seleção PROXIMIDADE/ECO e filtros do Feed.
+* FeedNoticias permanece responsável pelos estados search, modoFeed, filtro, raioPesquisaKm e refreshing, pela lista ocorrenciasFiltradas e por todos os comportamentos associados.
+* FeedControls recebe somente search, modoFeed, filtro, raioPesquisaKm, refreshing, quantidadeOcorrenciasFiltradas e os callbacks onSearchChange, onSelectMode e onFilterChange.
+* A lógica de ocorrenciasFiltradas permaneceu integralmente em FeedNoticias; normalizarTexto e ehUrgente permaneceram em `mobile/src/features/feed/utils/feed.utils.ts`.
+* A pesquisa de consumidores confirmou que feedModeCarouselRef possuía somente a declaração e o uso como ref do ScrollView do carrossel; o ref foi movido para dentro de FeedControls com o mesmo tipo `ScrollView | null` e o mesmo comportamento.
+* Os unions literais FiltroFeed e ModoFeed foram movidos sem alteração para `mobile/src/features/feed/types/feed.types.ts` após passarem a possuir dois consumidores reais: FeedNoticias e FeedControls.
+* FiltroConfig e FILTROS permanecem internos de FeedControls por possuírem somente esse consumidor real.
+* FEED_MODE_CAROUSEL_WIDTH foi movido para FeedControls por ser usado exclusivamente no bloco extraído; Dimensions e TextInput deixaram de ser imports da Screen.
+* Foram movidos exclusivamente os 27 styles do bloco: feedModeCarouselWrapper, feedModeCarouselPage, searchBox, searchInput, feedSectionHeader, feedSectionText, feedSectionTitle, feedSectionSubtitle, counterBadge, counterText, feedModeButtonsPage, feedModeButton, feedModeButtonActive, feedModeButtonPressed, feedModeIconBox, feedModeIconBoxActive, feedModeEcoIcon, feedModeContent, feedModeTitle, feedModeTitleActive, feedModeSubtitle, feedModeSubtitleActive, filtersContent, filterChip, filterChipActive, filterText e filterTextActive.
+* A comparação normalizada confirmou que os 27 styles foram preservados literalmente, sem alteração de valores ou duplicação.
+* A comparação normalizada do JSX transferido, substituindo apenas os acessos diretos da Screen pelas props correspondentes, confirmou conteúdo equivalente.
+* O botão ECO continua apontando para o mesmo asset físico `mobile/assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png`, com o mesmo caminho relativo usado pelos componentes do diretório.
+* FeedControls não realiza chamadas HTTP, não acessa api.ts, não solicita localização, não carrega ocorrências, não altera regras de filtragem e não conhece navegação, drawers, perfil ou denúncia.
+* GET `/auth/me`, GET `/ocorrencias/proximas`, POST `/ocorrencias/${occurrenceId}/forca` e POST `/ocorrencias/${denunciaOccurrenceId}/denuncias` permaneceram em FeedNoticias sem alteração.
+* carregarFeed, alternarForca, enviarDenuncia, refresh, localização, raio, navegação, perfil, drawers, modal de denúncia, ocorrência selecionada, lista de ocorrências e ocorrenciasFiltradas permaneceram na Screen.
+* FeedBannerCarousel.tsx e OccurrenceCard.tsx não foram alterados nesta subetapa; seus comportamentos permanecem preservados.
+* Nenhum hook, feedService, feature futura, modal de denúncia ou abstração adicional foi criado.
+* Arquivo criado: `mobile/src/features/feed/components/FeedControls.tsx`.
+* Arquivos de aplicação modificados: `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/features/feed/types/feed.types.ts`.
+* Arquivo documental modificado: `STATUS_REFATORACAO_PETRADAR.txt`.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelos 82 trailing whitespaces preexistentes em codigo_frontend_consolidado.txt e codigo_projeto_consolidado.txt; nenhum erro foi encontrado nos arquivos da Fase 4D.
+* Ambiguidade preservada: feedButtonPressedStyle continua definido e exportado por OccurrenceCard porque possui consumidores reais no card e em várias áreas da Screen. FeedControls reutiliza a mesma definição no filtro, sem duplicação. A propriedade arquitetural desse style será reavaliada em etapa futura, sem ampliar o escopo da Fase 4D.
+
+Smoke test Fase 4D:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Validação manual aprovada contemplou:
+* Login funciona.
+* Feed abre sem erro ou crash.
+* Busca aceita texto, filtra os cards e pode ser limpa pelo ícone.
+* O contador de ocorrências acompanha o resultado filtrado.
+* O swipe entre a página de busca e a página de modos continua funcionando.
+* PROXIMIDADE continua selecionável e exibe o raio correto.
+* ECO continua selecionável, exibe o mesmo ícone e carrega o modo correspondente.
+* Os botões de modo permanecem desabilitados durante refreshing.
+* Todos os filtros aparecem, podem ser selecionados e preservam o resultado esperado.
+* Refresh continua funcionando.
+* Cards, detalhes, ECO/força, menus e navegação continuam funcionando.
+* FeedBannerCarousel e OccurrenceCard continuam visualmente e funcionalmente iguais.
+
+Subetapa Fase 4E — style compartilhado do Feed:
+* A pesquisa no código real confirmou três consumidores de feedButtonPressedStyle dentro do domínio Feed: OccurrenceCard, FeedControls e FeedNoticias.
+* Criado `mobile/src/features/feed/styles/feed.styles.ts` somente com a definição compartilhada de feedButtonPressedStyle.
+* A definição foi movida literalmente de OccurrenceCard para o novo módulo, preservando `opacity: 0.78`.
+* OccurrenceCard deixou de exportar feedButtonPressedStyle e passou a importá-lo de `../styles/feed.styles` para seu uso interno.
+* FeedControls deixou de importar o style de OccurrenceCard e passou a importá-lo de `../styles/feed.styles`.
+* FeedNoticias deixou de importar o style de OccurrenceCard e passou a importá-lo de `../styles/feed.styles`.
+* Ao final existe uma única definição de feedButtonPressedStyle e todos os três consumidores reais do domínio Feed utilizam essa definição.
+* A pesquisa global também encontrou `styles.buttonPressed` em RegistrarPet, mas esse style pertence ao domínio Pets e possui valores diferentes (`opacity: 0.85` e `scale: 0.99`); portanto não é consumidor nem duplicação do style compartilhado do Feed.
+* Todos os demais styles, JSX, handlers, props, accessibility, animações, asset ECO, filtros, busca, modos PROXIMIDADE/ECO, HTTP, endpoints e navegação foram preservados.
+* feed.types.ts e feed.utils.ts não foram alterados nesta subetapa.
+* Nenhum componente, hook, service ou abstração adicional foi criado.
+* Arquivo criado: `mobile/src/features/feed/styles/feed.styles.ts`.
+* Arquivos de aplicação modificados nesta subetapa: `mobile/src/features/feed/components/OccurrenceCard.tsx`, `mobile/src/features/feed/components/FeedControls.tsx` e `mobile/src/features/feed/screens/FeedNoticias.tsx`.
+* Arquivo documental modificado: `STATUS_REFATORACAO_PETRADAR.txt`.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelos 82 trailing whitespaces preexistentes em codigo_frontend_consolidado.txt e codigo_projeto_consolidado.txt; a verificação restrita aos arquivos da Fase 4E concluiu sem erros.
+
+Avaliação final da organização interna do Feed:
+* carregarFeed permanece em FeedNoticias porque ainda coordena perfil, raio de pesquisa, permissão/localização atual e carregamento de ocorrências.
+* ECO/força permanece em FeedNoticias e poderá ser tratado na futura Fase 9 — Care / Engagement / Reports quando houver justificativa real.
+* A denúncia, incluindo DENUNCIA_MOTIVOS, estado, envio e modal, permanece em FeedNoticias e poderá ser tratada na futura fase Reports quando houver justificativa real.
+* ProfileQuickMenu e ProfileDetailScreen pertencem conceitualmente ao domínio Profile e sua movimentação permanece reservada à Fase 5.
+* OccurrenceDetailDrawer pertence conceitualmente ao domínio Occurrences e sua movimentação permanece reservada à Fase 7.
+* As integrações diretas de localização e API permanecem para as fases posteriores previstas no Plano Mestre.
+* O Header, o estado vazio e o botão Registrar ocorrência permanecem específicos da Screen e não justificam componentes adicionais neste momento.
+* A análise do código real não justificou FeedHeader, FeedEmptyState, hooks, feedService ou qualquer outra extração interna nesta subetapa.
+* Com a aprovação manual da Fase 4E, não há outra extração interna de Feed atualmente justificada; resta somente o fechamento formal da Fase 4, sem iniciar Profile automaticamente.
+
+Smoke test Fase 4E:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Validação manual aprovada contemplou:
+* Login funciona.
+* Feed abre sem erro ou crash.
+* Pressionar cards e botões mantém o mesmo feedback visual de opacidade.
+* Busca e limpeza da busca continuam funcionando.
+* PROXIMIDADE e ECO continuam selecionáveis.
+* Filtros continuam funcionando e mantendo o mesmo feedback visual ao pressionar.
+* ECO/força e sua animação continuam funcionando.
+* Abrir detalhes de ocorrência continua funcionando.
+* Menu principal e perfil continuam abrindo.
+* Modal de denúncia continua abrindo, cancelando e enviando normalmente.
+* Refresh e botão Registrar ocorrência continuam funcionando.
+
+Subetapa Fase 4F — consolidação técnica de 4D + 4E:
+* O smoke test manual da Fase 4D permanece aprovado pelo usuário.
+* O smoke test manual da Fase 4E foi aprovado pelo usuário.
+* FeedControls foi validado manualmente no estado atual do working tree.
+* feedButtonPressedStyle compartilhado foi validado manualmente no estado atual do working tree.
+* As implementações das Fases 4D e 4E coexistiam no mesmo working tree antes do commit técnico.
+* As alterações de 4D e 4E serão consolidadas em um único commit porque foram construídas sequencialmente nos mesmos arquivos antes de qualquer commit intermediário.
+* Nenhum reset, checkout, stash ou reconstrução artificial do estado intermediário foi realizado.
+* Nenhum código funcional foi alterado na Fase 4F; somente este arquivo de acompanhamento foi atualizado.
+* `npx tsc --noEmit` foi validado com 0 erros no estado conjunto de 4D + 4E.
+* A única falha global de `git diff --check` permanece constituída pelos 82 trailing whitespaces preexistentes nos dois arquivos consolidados, que continuam fora do escopo e fora do commit.
+* A estrutura atual de `features/feed/`, os tipos compartilhados, os três consumidores do style, os quatro endpoints e as responsabilidades mantidas em FeedNoticias foram revisados no código real.
+* Nenhuma outra extração interna do Feed está atualmente justificada.
+* A Fase 4 permanece EM ANDAMENTO e sua validação final continua pendente.
+* A Fase 5 — Profile permanece NÃO INICIADA.
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -577,6 +680,13 @@ ETAPAS CONCLUÍDAS
 [X] Fase 4B — FeedNoticias movida para o domínio Feed
 [X] Smoke test manual da Fase 4B aprovado pelo usuário
 [X] Fase 4C — OccurrenceCard extraído para `features/feed/components/`
+[X] Smoke test manual da Fase 4C aprovado pelo usuário
+[X] Fase 4D — FeedControls extraído para `features/feed/components/`
+[X] Smoke test manual da Fase 4D aprovado pelo usuário
+[X] Fase 4E — feedButtonPressedStyle movido para `features/feed/styles/feed.styles.ts`
+[X] Smoke test manual da Fase 4E aprovado pelo usuário
+[X] Organização interna atual do Feed avaliada
+[X] Fase 4F — checkpoint técnico de consolidação de 4D + 4E
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -771,14 +881,23 @@ DECISÕES TOMADAS
 * OcorrenciaFeed foi movido para `features/feed/types/feed.types.ts` somente após passar a ter dois consumidores reais.
 * normalizarTexto e ehUrgente residem em `features/feed/utils/feed.utils.ts` porque ambos passaram a possuir uso real na Screen e no card.
 * Nenhum service ou hook foi criado na Fase 4C; as operações HTTP continuam separadas apenas pela orquestração atual da Screen até análise específica posterior.
-* A avaliação restante da organização interna do Feed somente continuará após aprovação do smoke test manual da Fase 4C.
+* A avaliação da organização interna do Feed continuou somente após a aprovação do smoke test manual da Fase 4C.
+* O smoke test manual da Fase 4C foi aprovado antes do início da extração de FeedControls.
+* FeedControls foi escolhido como a próxima extração interna por possuir uma fronteira visual coesa de busca, modos e filtros, mantendo estados e comportamento na Screen.
+* FiltroFeed e ModoFeed foram movidos para feed.types.ts somente após passarem a possuir dois consumidores reais.
+* FiltroConfig e FILTROS permanecem internos de FeedControls porque não possuem reuso externo.
+* feedModeCarouselRef foi internalizado em FeedControls após a pesquisa confirmar somente declaração e uso no ScrollView transferido.
+* feedButtonPressedStyle deixou de pertencer a OccurrenceCard e passou a residir em `features/feed/styles/feed.styles.ts`, com uma única definição compartilhada pelos três consumidores reais do domínio Feed.
+* A avaliação restante da organização interna do Feed continuou somente após a aprovação do smoke test manual da Fase 4D.
+* A organização interna atual do Feed foi avaliada no código real; após a aprovação manual da Fase 4E, não há outra extração interna atualmente justificada.
+* As Fases 4D e 4E são consolidadas em um único commit técnico porque foram implementadas sequencialmente no mesmo working tree antes de qualquer commit intermediário, sem reconstrução artificial de estado.
 * AppNavigationDrawer permanece candidato a Shared na Fase 11; ProfileQuickMenu e OccurrenceDetailDrawer permanecem reservados aos seus respectivos domínios.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar smoke test manual da Fase 4C antes de continuar a avaliação da organização interna do Feed.
+Executar o fechamento formal da Fase 4 — Feed em tarefa separada.
 
 ======================================================================
 FASES
@@ -827,9 +946,12 @@ Subetapas concluídas:
 * Fase 4A — movimentação de FeedBannerCarousel.tsx para `features/feed/components/`.
 * Fase 4B — movimentação de FeedNoticias.tsx para `features/feed/screens/`.
 * Fase 4C — extração de OccurrenceCard.tsx, feed.types.ts e feed.utils.ts dentro do domínio Feed.
+* Fase 4D — extração de FeedControls.tsx e compartilhamento de FiltroFeed e ModoFeed em feed.types.ts.
+* Fase 4E — movimentação de feedButtonPressedStyle para `features/feed/styles/feed.styles.ts` e avaliação documental da organização interna restante.
+* Fase 4F — consolidação técnica das alterações validadas de 4D + 4E em um único checkpoint.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/feed/components/OccurrenceCard.tsx`, `mobile/src/features/feed/types/feed.types.ts`, `mobile/src/features/feed/utils/feed.utils.ts` e o consumidor `mobile/src/features/feed/screens/FeedNoticias.tsx`.
+`mobile/src/features/feed/styles/feed.styles.ts` e os consumidores `mobile/src/features/feed/components/OccurrenceCard.tsx`, `mobile/src/features/feed/components/FeedControls.tsx` e `mobile/src/features/feed/screens/FeedNoticias.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -838,7 +960,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar smoke test manual da Fase 4C antes de continuar a avaliação da organização interna do Feed.
+Executar o fechamento formal da Fase 4 — Feed em tarefa separada.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

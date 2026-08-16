@@ -35,6 +35,10 @@ import {
   theme,
 } from "../../../theme/colors";
 
+import {
+  feedButtonPressedStyle,
+} from "../styles/feed.styles";
+
 // ============================================================
 // TIPAGEM
 // ============================================================
@@ -779,7 +783,7 @@ export default function OccurrenceCard({
               styles.moreOptionsButton,
 
               pressed &&
-              styles.buttonPressed,
+              feedButtonPressedStyle,
             ]}
         >
           <Ionicons
@@ -1673,11 +1677,4 @@ const styles =
         "900",
     },
 
-    buttonPressed: {
-      opacity:
-        0.78,
-    },
   });
-
-export const feedButtonPressedStyle =
-  styles.buttonPressed;

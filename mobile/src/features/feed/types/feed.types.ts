@@ -43,3 +43,14 @@ export interface OcorrenciaFeed {
 
   usuario_deu_forca?: boolean;
 }
+
+export type FiltroFeed =
+  | "TODAS"
+  | "PERDIDOS"
+  | "AVISTADOS"
+  | "RUA"
+  | "URGENTES";
+
+export type ModoFeed =
+  | "PROXIMIDADE"
+  | "ECO";
