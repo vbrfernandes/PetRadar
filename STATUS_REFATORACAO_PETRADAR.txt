@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 6D — extração do modal visual PetDetailModal.
+FASE 6E — extração do formulário coeso PetFormModal.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -884,7 +884,9 @@ Subetapas:
 [X] PetCard extraído
 [X] smoke test manual da Fase 6C
 [X] PetDetailModal extraído
-[ ] smoke test manual da Fase 6D
+[X] smoke test manual da Fase 6D
+[X] PetFormModal extraído
+[ ] smoke test manual da Fase 6E
 [ ] organização interna de Pets avaliada
 [ ] validação final da Fase 6
 
@@ -984,6 +986,38 @@ Subetapa Fase 6D — PetDetailModal:
 * `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
 
 Smoke test Fase 6D:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 6E — PetFormModal:
+* A extração foi justificada pela coesão do formulário: campos, foto, validação, reset, submissão e estado de saving pertencem ao mesmo fluxo e sua separação puramente visual exigiria props e setters excessivos.
+* Criado `mobile/src/features/pets/components/PetFormModal.tsx` com as props `visible: boolean`, `onClose: () => void` e `onPetCreated: (pet: Pet) => void`.
+* RegistrarPet permanece proprietário de `formVisible` e decide a abertura e o fechamento da composição; PetFormModal não internaliza a visibilidade.
+* RegistrarPet permanece proprietário de `pets` e `setPets`, do carregamento inicial e da atualização da lista após a criação.
+* Os estados saving, nome, especie, especieOutro, raca, sexo, cor, porte, idade e foto foram movidos para PetFormModal com os mesmos tipos e valores iniciais.
+* TipoEspecie e FotoSelecionada foram confirmados como exclusivos do formulário e movidos para PetFormModal como tipos internos não exportados; `pet.types.ts` permaneceu inalterado.
+* limparFormulario foi movido literalmente, preservando todos os valores de reset.
+* fecharFormulario permanece interno ao formulário e preserva a ordem reset -> fechamento, delegando somente o fechamento ao callback `onClose`.
+* selecionarFoto e o import direto de expo-image-picker foram movidos para PetFormModal, preservando permissão, mensagem, opções do seletor, cancelamento, filename, MIME type, logs e Alert de erro.
+* cadastrarPet foi movido para PetFormModal, preservando normalização, validações, trim, campos opcionais, FormData, nomes dos campos, foto, tratamento de erro, logs, Alerts e saving.
+* `petService.createPet(formData)` passou a ser consumido por PetFormModal; `petService.getMyPets()` permanece consumido por RegistrarPet.
+* O FormData, o objeto React Native da foto e o `as any` preexistente foram preservados integralmente.
+* Após sucesso, PetFormModal executa `onPetCreated(response.data)`, fecha/reseta o formulário e então mostra o mesmo Alert, preservando a ordem observável preexistente.
+* O callback síncrono do pai acrescenta o Pet criado no início da lista por meio de `setPets((petsAtuais) => [pet, ...petsAtuais])`.
+* O JSX completo do modal de formulário foi movido para PetFormModal, sem alteração de textos, campos, opções, condicionais, loading, ícones ou accessibility.
+* Os styles exclusivos modalBackdrop, modalContainer, modalHeader, modalTitle, modalSubtitle, closeButton, photoSelector, selectedPhoto, photoTitle, photoHint, label, inputContainer, input, optionContainer, optionButton, sizeButton, optionButtonActive, optionText, optionTextActive, saveButton, saveButtonDisabled e saveButtonText foram movidos literalmente.
+* buttonPressed permaneceu em RegistrarPet para o botão Adicionar pet; nenhum style compartilhado foi criado.
+* RegistrarPet deixou de importar Image, Modal, ScrollView, TextInput e expo-image-picker porque esses símbolos não possuem mais consumidor no pai; ActivityIndicator e Alert permanecem devido ao carregamento inicial.
+* PetCard.tsx e PetDetailModal.tsx permaneceram intactos.
+* informarComoPerdido e a navegação para CadastroOcorrencia permaneceram em RegistrarPet com id_pet, nome, especie, raca, sexo, cor, porte, idade e foto preservados.
+* GET `/pets/meus` e POST `/pets/`, métodos, multipart, payload e contratos permaneceram inalterados; componentes de Pets não importam api diretamente.
+* Backend, dependências, theme, navigation.types.ts e contratos de API permaneceram intactos.
+* Nenhum RF novo, edição, exclusão, endpoint, hook, lista adicional, PhotoPicker, style compartilhado, pasta vazia, index.ts ou `.gitkeep` foi criado.
+* Comparações normalizadas confirmaram equivalência de limparFormulario, fecharFormulario, selecionarFoto, cadastrarPet, JSX do formulário e todos os styles movidos, considerando somente as delegações previstas por onClose e onPetCreated.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt; a verificação restrita aos arquivos rastreados da Fase 6E concluiu sem erros.
+* `git diff --cached --check` concluído sem erros para os três arquivos do checkpoint técnico da Fase 6E; os consolidados permaneceram fora do staging.
+
+Smoke test Fase 6E:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1035,6 +1069,9 @@ ETAPAS CONCLUÍDAS
 [X] Fase 6C — PetCard extraído para `features/pets/components/`
 [X] Smoke test manual da Fase 6C aprovado pelo usuário
 [X] Fase 6D — PetDetailModal extraído para `features/pets/components/`
+[X] Smoke test manual da Fase 6D aprovado pelo usuário
+[X] Fase 6E — PetFormModal extraído para `features/pets/components/`
+[ ] Smoke test manual da Fase 6E
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1262,12 +1299,15 @@ DECISÕES TOMADAS
 * buttonPressed permanece também em RegistrarPet porque Adicionar pet e INFORMAR COMO PERDIDO continuam sendo consumidores reais do mesmo efeito visual.
 * PetDetailModal foi extraído como componente apresentacional com Pet, onClose e onReportLost; estado selecionado, informarComoPerdido e navigation permanecem em RegistrarPet.
 * DetailRow permanece interno a PetDetailModal, e modalBackdrop, closeButton e buttonPressed não foram transformados em abstrações compartilhadas sem necessidade real.
+* PetFormModal concentra o estado coeso e as operações exclusivas do cadastro, enquanto RegistrarPet mantém visibilidade, lista, carregamento, seleção e integração com ocorrência.
+* TipoEspecie e FotoSelecionada permanecem internos a PetFormModal; nenhum tipo antecipado foi adicionado a pet.types.ts.
+* expo-image-picker permanece diretamente no componente do domínio que possui o fluxo e sua abstração tecnológica continua reservada para a Fase 10 — Infrastructure.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 6D antes de avaliar qualquer nova extração de Pets.
+Aguardar aprovação manual do smoke test da Fase 6E e então realizar avaliação final da organização interna de Pets antes de decidir pelo fechamento da Fase 6.
 
 ======================================================================
 FASES
@@ -1327,10 +1367,11 @@ Subetapas concluídas:
 * Fase 6A — movimentação estrutural de RegistrarPet.tsx para `features/pets/components/`, aprovada manualmente pelo usuário.
 * Fase 6B — extração do contrato Pet para `features/pets/types/pet.types.ts` e das duas operações HTTP para `features/pets/services/petService.ts`, aprovada manualmente pelo usuário.
 * Fase 6C — extração do componente visual PetCard para `features/pets/components/PetCard.tsx`, aprovada manualmente pelo usuário.
-* Fase 6D — extração do modal visual PetDetailModal para `features/pets/components/PetDetailModal.tsx`, com smoke test manual pendente.
+* Fase 6D — extração do modal visual PetDetailModal para `features/pets/components/PetDetailModal.tsx`, aprovada manualmente pelo usuário.
+* Fase 6E — extração do formulário coeso PetFormModal para `features/pets/components/PetFormModal.tsx`, com smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/pets/components/RegistrarPet.tsx` e `mobile/src/features/pets/components/PetDetailModal.tsx`.
+`mobile/src/features/pets/components/RegistrarPet.tsx` e `mobile/src/features/pets/components/PetFormModal.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1339,7 +1380,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 6D antes de avaliar qualquer nova extração de Pets.
+Aguardar aprovação manual do smoke test da Fase 6E e então realizar avaliação final da organização interna de Pets antes de decidir pelo fechamento da Fase 6.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack
