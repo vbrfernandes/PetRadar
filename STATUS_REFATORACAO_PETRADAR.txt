@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 7A — movimentação estrutural de OccurrenceDetailDrawer.
+FASE 7B — movimentação estrutural de CadastroOcorrenciaScreen.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1104,7 +1104,10 @@ EM ANDAMENTO
 Subetapas:
 [X] OccurrenceDetailDrawer movido para o domínio Occurrences
 [X] validação técnica da Fase 7A
-[ ] smoke test manual da Fase 7A
+[X] smoke test manual da Fase 7A
+[X] CadastroOcorrenciaScreen movida para o domínio Occurrences
+[X] validação técnica da Fase 7B
+[ ] smoke test manual da Fase 7B
 [ ] validação final da Fase 7
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
@@ -1127,6 +1130,30 @@ Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
 * `git diff --check` restrito aos arquivos da Fase 7A foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7A:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7B — movimentação estrutural de CadastroOcorrenciaScreen:
+* Movido `mobile/src/screens/CadastroOcorrenciaScreen.tsx` para `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+* `mobile/src/features/occurrences/screens/` foi criado somente para receber código real.
+* Nome do arquivo, componente, export default, props, tipagem da rota, estados, hooks, callbacks, formulário, validações, JSX, styles, textos, Alerts, accessibility e comportamento foram preservados.
+* A pesquisa no código executável confirmou um único consumidor real: `mobile/src/navigation/AppNavigator.tsx`.
+* AppNavigator passou a importar a Screen de `../features/occurrences/screens/CadastroOcorrenciaScreen`.
+* A rota `CadastroOcorrencia`, sua ordem, componente, AppTabParamList, screenOptions, tabBar e parâmetros permaneceram inalterados.
+* Os imports internos de theme, useAuthStore, api e AppTabParamList foram ajustados exclusivamente por necessidade física para `../../../theme/colors`, `../../../store/useAuthStore`, `../../../services/api` e `../../../navigation/navigation.types`, continuando a resolver os mesmos módulos reais.
+* Comparação normalizada confirmou 3.417 linhas e conteúdo integralmente idêntico após desconsiderar somente o caminho físico e os quatro imports relativos internos obrigatórios.
+* Expo Location foi preservado integralmente, incluindo permissões, precisão, callbacks, fallbacks, localização atual e tratamento de erro.
+* Expo ImagePicker foi preservado integralmente, incluindo permissões, launchImageLibraryAsync, edição, qualidade, seleção, cancelamento, preview e FormData da foto.
+* Mapbox e geocoding foram preservados, incluindo `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN`, endpoint, parâmetros e fetch atuais.
+* Os modos de criação e edição, o FormData, multipart, payloads, validações e tratamento de erro permaneceram inalterados.
+* O prefill Pet → INFORMAR COMO PERDIDO → CadastroOcorrencia, route.params.pet, PetOcorrenciaPrefill e todos os seus campos permaneceram inalterados.
+* GET `/ocorrencias/{id}`, POST `/ocorrencias/` e PUT `/ocorrencias/{id}` foram preservados sem mudança de método, URL, payload, multipart ou ordem.
+* OccurrenceDetailDrawer, FeedNoticias, MapScreen, ProfileDetailScreen e GET `/ocorrencias/minhas` permaneceram intactos.
+* Backend, dependências, contratos de API e funcionalidades existentes não foram alterados.
+* Nenhum RF novo, service, type, hook, formulário extraído, util, constant, style compartilhado, pasta vazia, index.ts ou `.gitkeep` foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7B foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7B:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -1187,7 +1214,10 @@ ETAPAS CONCLUÍDAS
 [X] Fase 6 — Pets concluída
 [X] Fase 7A — OccurrenceDetailDrawer movido para `features/occurrences/components/`
 [X] Validação técnica da Fase 7A concluída
-[ ] Smoke test manual da Fase 7A
+[X] Smoke test manual da Fase 7A aprovado pelo usuário
+[X] Fase 7B — CadastroOcorrenciaScreen movida para `features/occurrences/screens/`
+[X] Validação técnica da Fase 7B concluída
+[ ] Smoke test manual da Fase 7B
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1425,7 +1455,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7A.
+Aguardar aprovação manual do smoke test da Fase 7B.
 
 ======================================================================
 FASES
@@ -1456,7 +1486,7 @@ Fase atual:
 Fase 7 — Occurrences — EM ANDAMENTO.
 
 Próxima fase:
-Fase 7B — NÃO INICIADA.
+Fase 7C — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1489,10 +1519,11 @@ Subetapas concluídas:
 * Fase 6E — extração do formulário coeso PetFormModal para `features/pets/components/PetFormModal.tsx`, aprovada manualmente pelo usuário.
 * Fase 6F — renomeação semântica de `RegistrarPet.tsx` para `PetsTab.tsx`, aprovada manualmente pelo usuário.
 * Fase 6G — fechamento formal da Fase 6 — Pets, sem alteração de código-fonte.
-* Fase 7A — movimentação estrutural de `OccurrenceDetailDrawer.tsx` para `features/occurrences/components/`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7A — movimentação estrutural de `OccurrenceDetailDrawer.tsx` para `features/occurrences/components/`, aprovada manualmente pelo usuário.
+* Fase 7B — movimentação estrutural de `CadastroOcorrenciaScreen.tsx` para `features/occurrences/screens/`, com validação técnica concluída e smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx`, `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/screens/MapScreen.tsx`.
+`mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/navigation/AppNavigator.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1501,7 +1532,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7A; não iniciar a Fase 7B automaticamente.
+Aguardar aprovação manual do smoke test da Fase 7B; não iniciar a Fase 7C automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

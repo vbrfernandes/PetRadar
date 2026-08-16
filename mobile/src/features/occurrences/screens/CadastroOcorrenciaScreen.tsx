@@ -20,13 +20,13 @@ import * as Location from "expo-location";
 import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 
-import { theme } from "../theme/colors";
-import { useAuthStore } from "../store/useAuthStore";
-import api from "../services/api";
+import { theme } from "../../../theme/colors";
+import { useAuthStore } from "../../../store/useAuthStore";
+import api from "../../../services/api";
 
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
-import type { AppTabParamList } from "../navigation/navigation.types";
+import type { AppTabParamList } from "../../../navigation/navigation.types";
 
 type CadastroOcorrenciaScreenProps = BottomTabScreenProps<
   AppTabParamList,

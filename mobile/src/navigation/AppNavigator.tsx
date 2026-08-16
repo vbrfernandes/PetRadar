@@ -4,7 +4,7 @@ import { View, Text } from 'react-native';
 
 import MapScreen from '../screens/MapScreen';
 import FeedNoticias from '../features/feed/screens/FeedNoticias';
-import CadastroOcorrenciaScreen from '../screens/CadastroOcorrenciaScreen';
+import CadastroOcorrenciaScreen from '../features/occurrences/screens/CadastroOcorrenciaScreen';
 import type { AppTabParamList } from './navigation.types';
 
 const SOSScreen = () => (
