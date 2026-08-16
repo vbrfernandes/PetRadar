@@ -24,13 +24,13 @@ commit Inicial de refatoração de codigo
 FASE ATUAL
 ==========
 
-FASE 2 — ESTRUTURA MODULAR BASE
+FASE 3 — AUTH
 
 Status:
-CONCLUÍDA
+EM ANDAMENTO
 
-Próxima fase:
-FASE 3 — AUTH — NÃO INICIADA.
+Subetapa atual:
+FASE 3A — TipoCadastroScreen movida para o domínio Auth.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -187,6 +187,43 @@ Decisão arquitetural da Fase 2:
 “As pastas da arquitetura modular serão criadas progressivamente quando receberem código real. Não serão utilizados diretórios vazios ou .gitkeep apenas para materializar antecipadamente a árvore-alvo.”
 
 Não foram criados os domínios futuros care, engagement, reports, sightings, ong, chat, notifications ou sos. Sua existência futura dependerá de código real suficiente para justificá-los.
+
+======================================================================
+FASE 3 — AUTH
+=============
+
+Status:
+EM ANDAMENTO
+
+Subetapas:
+[X] TipoCadastroScreen movida para `features/auth/screens/`
+[ ] demais telas Auth migradas
+[ ] organização interna de Auth avaliada
+[ ] validação final da Fase 3
+
+Subetapa Fase 3A — TipoCadastroScreen:
+* Movido `mobile/src/screens/TipoCadastroScreen.tsx` para `mobile/src/features/auth/screens/TipoCadastroScreen.tsx`.
+* Primeiro diretório físico de `features/` criado com código real.
+* Nenhuma pasta vazia ou arquivo `.gitkeep` criado.
+* Nome TipoCadastroScreen preservado.
+* JSX, estilos, textos, navegação, handlers, cores, accessibility e comportamento preservados.
+* O `any` preexistente de `navigation` foi preservado por estar fora do escopo desta movimentação.
+* AuthNavigator foi o único consumidor executável encontrado e teve somente o caminho do import atualizado.
+* As rotas, sua ordem, screenOptions e AuthStackParamList não foram alterados.
+* LoginScreen.tsx, EsqueceuSenhaScreen.tsx, CadastroUserScreen.tsx e CadastroONGScreen.tsx permanecem em `mobile/src/screens/`.
+* useAuthStore.ts não foi movido.
+
+Smoke test Fase 3A:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+Validação manual necessária:
+* Login abre.
+* Escolha de tipo de cadastro abre.
+* TipoCadastroScreen aparece normalmente.
+* Botão voltar funciona.
+* Opção CadastroUser continua abrindo.
+* Opção CadastroONG continua abrindo.
+* Opção Fazer Login continua funcionando.
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -374,12 +411,14 @@ DECISÕES TOMADAS
 * NavigationContainer e providers permanecem no App.tsx nesta subetapa.
 * A estrutura modular base foi definida conceitualmente sem criar diretórios vazios ou mover arquivos.
 * Diretórios de domínio serão criados progressivamente ao receberem o primeiro arquivo real.
+* `features/auth/screens/` foi criado somente ao receber TipoCadastroScreen.tsx como primeiro arquivo real.
+* O nome e o `any` preexistente de TipoCadastroScreen foram preservados na Fase 3A.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar instrução do usuário antes de iniciar a Fase 3 — Auth.
+Aguardar smoke test manual da Fase 3A antes de mover outra tela Auth.
 
 ======================================================================
 FASES
@@ -388,7 +427,7 @@ FASES
 [X] Fase 0  — Baseline / branch — CONCLUÍDA
 [X] Fase 1  — Navigation — CONCLUÍDA
 [X] Fase 2  — Estrutura modular base — CONCLUÍDA
-[ ] Fase 3  — Auth
+[ ] Fase 3  — Auth — EM ANDAMENTO
 [ ] Fase 4  — Feed
 [ ] Fase 5  — Profile
 [ ] Fase 6  — Pets
@@ -407,10 +446,10 @@ FASES
 Fase 2 — Estrutura modular base.
 
 Fase atual:
-Fase 2 — Estrutura modular base — CONCLUÍDA.
+Fase 3 — Auth — EM ANDAMENTO.
 
 Próxima fase:
-Fase 3 — Auth — NÃO INICIADA.
+Fase 4 — Feed — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -418,15 +457,16 @@ Subetapas concluídas:
 * Extração do AppNavigator para `src/navigation/AppNavigator.tsx`.
 * Extração do RootNavigator e da decisão autenticado/não autenticado para `src/navigation/RootNavigator.tsx`.
 * Checkpoint arquitetural da estrutura modular base, sem criação de pastas vazias ou movimentação de arquivos.
+* Fase 3A — movimentação de TipoCadastroScreen.tsx para `features/auth/screens/`.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/navigation/RootNavigator.tsx` e `mobile/App.tsx`.
+`mobile/src/features/auth/screens/TipoCadastroScreen.tsx` e `mobile/src/navigation/AuthNavigator.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar instrução do usuário antes de iniciar a Fase 3 — Auth.
+Aguardar smoke test manual da Fase 3A antes de mover outra tela Auth.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

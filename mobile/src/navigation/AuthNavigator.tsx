@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/LoginScreen';
-import TipoCadastroScreen from '../screens/TipoCadastroScreen';
+import TipoCadastroScreen from '../features/auth/screens/TipoCadastroScreen';
 import CadastroUserScreen from '../screens/CadastroUserScreen';
 import CadastroONGScreen from '../screens/CadastroONGScreen';
 import EsqueceuSenhaScreen from '../screens/EsqueceuSenhaScreen';
