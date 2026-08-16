@@ -27,7 +27,7 @@ FASE ATUAL
 FASE 1 — NAVIGATION
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapas:
 [X] navigation.types.ts
@@ -35,7 +35,7 @@ Subetapas:
 [X] AppNavigator.tsx
 [X] RootNavigator.tsx
 [X] decisão autenticado/não autenticado fora do App.tsx
-[ ] validação final da Fase 1
+[X] validação final da Fase 1
 
 Tipos extraídos sem alteração de contrato:
 * AuthStackParamList
@@ -65,7 +65,21 @@ Smoke test da Fase 1C — AppNavigator:
 APROVADO MANUALMENTE PELO USUÁRIO.
 
 Smoke test da Fase 1D — RootNavigator:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Fechamento formal da Fase 1 — Navigation:
+[X] navigation.types.ts extraído
+[X] AuthNavigator.tsx extraído
+[X] AppNavigator.tsx extraído
+[X] RootNavigator.tsx extraído
+[X] decisão autenticado/não autenticado removida do App.tsx
+[X] contratos de navegação preservados
+[X] rotas e parâmetros preservados
+[X] smoke tests das Fases 1B, 1C e 1D aprovados manualmente pelo usuário
+[X] nenhum RF novo implementado
+[X] nenhuma alteração de backend realizada
+[X] Mapbox não alterado
+[X] nenhuma dependência alterada
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -256,14 +270,14 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar revisão e teste manual do usuário antes de fechar a Fase 1.
+Aguardar instrução do usuário antes de iniciar a Fase 2 — Estrutura modular base.
 
 ======================================================================
 FASES
 =====
 
 [X] Fase 0  — Baseline / branch — CONCLUÍDA
-[ ] Fase 1  — Navigation — EM ANDAMENTO
+[X] Fase 1  — Navigation — CONCLUÍDA
 [ ] Fase 2  — Estrutura modular base
 [ ] Fase 3  — Auth
 [ ] Fase 4  — Feed
@@ -281,10 +295,13 @@ FASES
 [ ] Fase 16 — Limpeza final
 
 Última fase concluída:
-Fase 0 — Baseline / branch.
+Fase 1 — Navigation.
 
 Fase atual:
-Fase 1 — Navigation — EM ANDAMENTO.
+Fase 1 — Navigation — CONCLUÍDA.
+
+Próxima fase:
+Fase 2 — Estrutura modular base — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -299,6 +316,12 @@ Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar revisão e teste manual do usuário antes de fechar a Fase 1.
+Aguardar instrução do usuário antes de iniciar a Fase 2 — Estrutura modular base.
+
+Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
+* AppStack
+* createNativeStackNavigator
+* ActivityIndicator
+* ProfileDetailScreen
 
 ======================================================================
