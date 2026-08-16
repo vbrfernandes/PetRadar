@@ -18,8 +18,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import * as ImagePicker from "expo-image-picker";
 
-import api from "../services/api";
-import { theme } from "../theme/colors";
+import api from "../../../services/api";
+import { theme } from "../../../theme/colors";
 
 import { useNavigation } from '@react-navigation/native';
 
@@ -29,7 +29,7 @@ import type {
 
 import type {
     AppTabParamList,
-} from '../navigation/navigation.types';
+} from '../../../navigation/navigation.types';
 
 interface Pet {
     id_pet: number;

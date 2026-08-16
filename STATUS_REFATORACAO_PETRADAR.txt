@@ -24,13 +24,13 @@ commit Inicial de refatoração de codigo
 FASE ATUAL
 ==========
 
-FASE 5 — PROFILE
+FASE 6 — PETS
 
 Status:
-CONCLUÍDA
+EM ANDAMENTO
 
 Subetapa atual:
-FASE 5D — avaliação final da organização interna e fechamento formal da Fase 5 — concluída.
+FASE 6A — movimentação estrutural de RegistrarPet para o domínio Pets.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -870,6 +870,44 @@ Checklist final da Fase 5:
 [X] Fase 5 concluída
 
 ======================================================================
+FASE 6 — PETS
+=============
+
+Status:
+EM ANDAMENTO
+
+Subetapas:
+[X] RegistrarPet movido para o domínio Pets
+[ ] smoke test manual da Fase 6A
+[ ] organização interna de Pets avaliada
+[ ] validação final da Fase 6
+
+Subetapa Fase 6A — movimentação estrutural de RegistrarPet:
+* Movido `mobile/src/screens/RegistrarPet.tsx` para `mobile/src/features/pets/components/RegistrarPet.tsx`.
+* `mobile/src/features/pets/components/` foi criado somente ao receber código real.
+* Nome do arquivo RegistrarPet.tsx preservado.
+* Export `export default function RegistrarPet()` preservado.
+* ProfileDetailScreen foi o único consumidor executável identificado e teve somente o caminho do import atualizado de `../../../screens/RegistrarPet` para `../../pets/components/RegistrarPet`.
+* O JSX `<RegistrarPet />` permaneceu funcionalmente idêntico.
+* Os imports relativos de api, theme e navigation.types foram ajustados de `../services/api`, `../theme/colors` e `../navigation/navigation.types` para `../../../services/api`, `../../../theme/colors` e `../../../navigation/navigation.types`, continuando a resolver exatamente para os mesmos módulos reais.
+* Imports de React, React Native, React Navigation, ícones e expo-image-picker foram preservados.
+* Comparação normalizada do conteúdo antes/depois, desconsiderando somente os três imports relativos obrigatórios, confirmou 1.509 linhas e 0 diferenças.
+* Listagem, cadastro, formulário, modal de cadastro, lista/cards, modal de detalhes, seleção de foto, FormData, textos, Alerts, console.error, acessibilidade, estilos, cores, tamanhos, estados, validações, payload, headers, FlatList e comportamento foram preservados.
+* GET `/pets/meus` e POST `/pets/` foram preservados sem alteração de endpoint, payload, FormData multipart ou headers.
+* A integração “INFORMAR COMO PERDIDO” e a navegação para CadastroOcorrencia com os dados preexistentes do pet foram preservadas.
+* O arquivo antigo não permanece duplicado; `mobile/src/features/pets/components/RegistrarPet.tsx` é a única implementação executável.
+* A ausência de edição e exclusão de pet foi confirmada como comportamento atual preexistente. O frontend e o router atual de Pets possuem somente POST `/pets/` e GET `/pets/meus`; nenhum RF, endpoint ou abstração de edição/exclusão foi criado.
+* Backend, services/api.ts, MapScreen, FeedNoticias, CadastroOcorrenciaScreen, navigation.types.ts, theme/colors.ts e App.tsx não foram alterados.
+* expo-image-picker e FormData permanecem diretamente em RegistrarPet; sua reorganização não pertence à Fase 6A.
+* Pet, TipoEspecie, FotoSelecionada, DetailRow, carregarPets, cadastrarPet, selecionarFoto, informarComoPerdido, JSX e StyleSheet permanecem no mesmo arquivo.
+* Nenhum PetsTab, PetCard, PetList, PetFormModal, PetPhotoPicker, usePets, petService, pet.types, styles, constants, utils, index.ts ou `.gitkeep` foi criado.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
+
+Smoke test Fase 6A:
+PENDENTE DE VALIDAÇÃO MANUAL.
+
+======================================================================
 ETAPAS CONCLUÍDAS
 =================
 
@@ -911,6 +949,7 @@ ETAPAS CONCLUÍDAS
 [X] Organização interna de Profile avaliada
 [X] Fase 5D — avaliação final e fechamento formal da Fase 5 — Profile
 [X] Fase 5 — Profile concluída
+[X] Fase 6A — RegistrarPet movido para `features/pets/components/`
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1128,12 +1167,15 @@ DECISÕES TOMADAS
 * `/ocorrencias/minhas` permanece diretamente em ProfileDetailScreen até a Fase 7 — Occurrences.
 * expo-image-picker permanece diretamente em ProfileDetailScreen até a Fase 10 — Infrastructure.
 * As pendências preexistentes de App.tsx permanecem reservadas para fases posteriores, especialmente Cleanup/App.
+* RegistrarPet foi movido primeiro para `features/pets/components/` com nome e implementação preservados; renomeações e extrações internas dependem da aprovação do smoke test da Fase 6A e de análise posterior do código real.
+* A ausência de edição e exclusão de pet é comportamento atual preexistente e critério não aplicável nesta etapa; nenhum RF ou endpoint será criado durante a refatoração.
+* expo-image-picker, FormData, tipos, handlers, JSX e StyleSheet de Pets permanecem juntos em RegistrarPet durante a movimentação estrutural inicial.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Iniciar o planejamento e a revisão da Fase 6 — Pets em tarefa separada. A Fase 6 permanece não iniciada neste fechamento.
+Aguardar aprovação manual do smoke test da Fase 6A antes de iniciar qualquer extração interna de Pets.
 
 ======================================================================
 FASES
@@ -1145,7 +1187,7 @@ FASES
 [X] Fase 3  — Auth — CONCLUÍDA
 [X] Fase 4  — Feed — CONCLUÍDA
 [X] Fase 5  — Profile — CONCLUÍDA
-[ ] Fase 6  — Pets — NÃO INICIADA
+[ ] Fase 6  — Pets — EM ANDAMENTO
 [ ] Fase 7  — Occurrences
 [ ] Fase 8  — Map
 [ ] Fase 9  — Care / Engagement / Reports quando aplicável
@@ -1161,10 +1203,10 @@ FASES
 Fase 5 — Profile.
 
 Fase atual:
-Fase 5 — Profile — CONCLUÍDA.
+Fase 6 — Pets — EM ANDAMENTO.
 
 Próxima fase:
-Fase 6 — Pets — NÃO INICIADA.
+Fase 7 — Occurrences — NÃO INICIADA.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1190,9 +1232,10 @@ Subetapas concluídas:
 * Fase 5B — movimentação de ProfileDetailScreen.tsx para `features/profile/components/`.
 * Fase 5C — extração das quatro operações HTTP próprias de Profile para `features/profile/services/profileService.ts` e dos três tipos reutilizados para `features/profile/types/profile.types.ts`.
 * Fase 5D — avaliação final da organização interna e fechamento formal da Fase 5 — Profile, sem alteração de código funcional.
+* Fase 6A — movimentação estrutural de RegistrarPet.tsx para `features/pets/components/`, com smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/profile/components/ProfileDetailScreen.tsx`, `mobile/src/features/profile/services/profileService.ts`, `mobile/src/features/profile/types/profile.types.ts` e os consumidores de tipo `mobile/src/features/feed/screens/FeedNoticias.tsx` e `mobile/src/screens/MapScreen.tsx`.
+`mobile/src/features/pets/components/RegistrarPet.tsx` e seu consumidor `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1201,7 +1244,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Iniciar o planejamento e a revisão da Fase 6 — Pets em tarefa separada, sem iniciar Pets automaticamente.
+Aguardar aprovação manual do smoke test da Fase 6A antes de iniciar qualquer extração interna de Pets.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

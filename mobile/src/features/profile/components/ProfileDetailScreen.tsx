@@ -38,7 +38,7 @@ import { theme } from "../../../theme/colors";
 import api from "../../../services/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 
-import RegistrarPet from "../../../screens/RegistrarPet";
+import RegistrarPet from "../../pets/components/RegistrarPet";
 
 import { profileService } from "../services/profileService";
 
