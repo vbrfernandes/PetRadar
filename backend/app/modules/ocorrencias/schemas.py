@@ -27,19 +27,42 @@ class OcorrenciaCriar(BaseModel):
 class OcorrenciaResposta(BaseModel):
     id_ocorrencia: int
     id_conta: int
+
     tipo_ocorrencia: str
     status_badge: str
     tipo_animal: str
+
     foto: str
+
     nivel_urgencia: str
     data_ocorrencia: datetime
+
     endereco_localizacao: str | None = None
+    observacao: str | None = None
+
     latitude: float
     longitude: float
+
     distancia_km: float | None = None
+
+    # =========================================================
+    # DADOS DO AUTOR PARA O FEED
+    # =========================================================
+
+    autor_nome: str | None = None
+    autor_foto: str | None = None
+
+    # =========================================================
+    # ENGAJAMENTO
+    # =========================================================
+
+    total_forca: int = 0
+    total_comentarios: int = 0
+    usuario_deu_forca: bool = False
 
     class Config:
         from_attributes = True
+
 
 class AvistamentoResposta(BaseModel):
     id_avistamento: int

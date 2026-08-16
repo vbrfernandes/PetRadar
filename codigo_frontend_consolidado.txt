@@ -7,6 +7,7 @@ ARQUITETURA DO PROJETO - FRONTEND / MOBILE
 │   ├── components
 │   │   ├── AnimatedCTA.tsx
 │   │   ├── AppNavigationDrawer.tsx
+│   │   ├── FeedBannerCarousel.tsx
 │   │   ├── OccurrenceDetailDrawer.tsx
 │   │   └── ProfileQuickMenu.tsx
 │   ├── screens
@@ -54,22 +55,23 @@ ROTAS E SEQUÊNCIA DOS ARQUIVOS INCLUÍDOS (ORDENADOS DE CIMA PARA BAIXO)
 07. mobile\package.json
 08. mobile\src\components\AnimatedCTA.tsx
 09. mobile\src\components\AppNavigationDrawer.tsx
-10. mobile\src\components\OccurrenceDetailDrawer.tsx
-11. mobile\src\components\ProfileQuickMenu.tsx
-12. mobile\src\screens\CadastroOcorrenciaScreen.tsx
-13. mobile\src\screens\CadastroONGScreen.tsx
-14. mobile\src\screens\CadastroUserScreen.tsx
-15. mobile\src\screens\EsqueceuSenhaScreen.tsx
-16. mobile\src\screens\FeedNoticias.tsx
-17. mobile\src\screens\LoginScreen.tsx
-18. mobile\src\screens\MapScreen.tsx
-19. mobile\src\screens\ProfileDetailScreen.tsx
-20. mobile\src\screens\RegistrarPet.tsx
-21. mobile\src\screens\TipoCadastroScreen.tsx
-22. mobile\src\services\api.ts
-23. mobile\src\store\useAuthStore.ts
-24. mobile\src\theme\colors.ts
-25. mobile\tsconfig.json
+10. mobile\src\components\FeedBannerCarousel.tsx
+11. mobile\src\components\OccurrenceDetailDrawer.tsx
+12. mobile\src\components\ProfileQuickMenu.tsx
+13. mobile\src\screens\CadastroOcorrenciaScreen.tsx
+14. mobile\src\screens\CadastroONGScreen.tsx
+15. mobile\src\screens\CadastroUserScreen.tsx
+16. mobile\src\screens\EsqueceuSenhaScreen.tsx
+17. mobile\src\screens\FeedNoticias.tsx
+18. mobile\src\screens\LoginScreen.tsx
+19. mobile\src\screens\MapScreen.tsx
+20. mobile\src\screens\ProfileDetailScreen.tsx
+21. mobile\src\screens\RegistrarPet.tsx
+22. mobile\src\screens\TipoCadastroScreen.tsx
+23. mobile\src\services\api.ts
+24. mobile\src\store\useAuthStore.ts
+25. mobile\src\theme\colors.ts
+26. mobile\tsconfig.json
 
 ================================================================================
 CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
@@ -1460,6 +1462,727 @@ const styles = StyleSheet.create({
             theme.colors.textBody,
     },
 });
+
+================================================================================
+CAMINHO: mobile\src\components\FeedBannerCarousel.tsx
+================================================================================
+
+// ============================================================
+// D:\PetRadar\src\mobile\src\components\FeedBannerCarousel.tsx
+// ============================================================
+
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+
+import {
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
+
+import {
+  theme,
+} from "../theme/colors";
+
+// ============================================================
+// CONSTANTES
+// ============================================================
+
+const AUTO_PLAY_INTERVAL_MS =
+  6000;
+
+// ============================================================
+// TIPAGEM
+// ============================================================
+
+type FeedBannerType =
+  | "APP"
+  | "SPONSORED";
+
+interface FeedBannerItem {
+  id: string;
+
+  type: FeedBannerType;
+
+  title: string;
+
+  description: string;
+
+  icon:
+    keyof typeof MaterialCommunityIcons.glyphMap;
+}
+
+// ============================================================
+// BANNERS INTERNOS
+// ============================================================
+//
+// Por enquanto todos são comunicações oficiais do PetRadar.
+//
+// Futuramente esta lista poderá ser substituída ou complementada
+// por dados recebidos do backend.
+//
+// type: "APP"
+// -> comunicação oficial do PetRadar.
+//
+// type: "SPONSORED"
+// -> publicidade paga, exibindo "Patrocinado" no card.
+// ============================================================
+
+const BANNERS:
+  FeedBannerItem[] = [
+    {
+      id:
+        "comunidade",
+
+      type:
+        "APP",
+
+      title:
+        "Juntos fazemos a diferença",
+
+      description:
+        "Acompanhe ocorrências próximas e ajude animais que precisam de cuidado.",
+
+      icon:
+        "heart-pulse",
+    },
+
+    {
+      id:
+        "registrar",
+
+      type:
+        "APP",
+
+      title:
+        "Viu um animal precisando de ajuda?",
+
+      description:
+        "Registre uma ocorrência e ajude a comunidade da região a encontrá-lo e acompanhá-lo.",
+
+      icon:
+        "map-marker-plus-outline",
+    },
+
+    {
+      id:
+        "ecoar",
+
+      type:
+        "APP",
+
+      title:
+        "Faça a informação chegar mais longe",
+
+      description:
+        "Use o Eco para aumentar a visibilidade das ocorrências que precisam de atenção.",
+
+      icon:
+        "access-point-network",
+    },
+  ];
+
+// ============================================================
+// COMPONENTE
+// ============================================================
+
+export default function FeedBannerCarousel() {
+  const {
+    width:
+      windowWidth,
+  } =
+    useWindowDimensions();
+
+  // O componente fica dentro da FlatList do Feed,
+  // que já possui globalMargin dos dois lados.
+
+  const bannerWidth =
+    Math.max(
+      1,
+
+      windowWidth -
+        theme.spacing
+          .globalMargin *
+          2,
+    );
+
+  const listRef =
+    useRef<
+      FlatList<FeedBannerItem>
+    >(null);
+
+  const activeIndexRef =
+    useRef(0);
+
+  const interactingRef =
+    useRef(false);
+
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] =
+    useState(0);
+
+  // ==========================================================
+  // ATUALIZAR ÍNDICE
+  // ==========================================================
+
+  const atualizarIndice =
+    useCallback(
+      (
+        index:
+          number,
+      ) => {
+        const indiceSeguro =
+          Math.max(
+            0,
+
+            Math.min(
+              BANNERS.length -
+                1,
+
+              index,
+            ),
+          );
+
+        activeIndexRef.current =
+          indiceSeguro;
+
+        setActiveIndex(
+          indiceSeguro,
+        );
+      },
+      [],
+    );
+
+  // ==========================================================
+  // IR PARA BANNER
+  // ==========================================================
+
+  const irParaBanner =
+    useCallback(
+      (
+        index:
+          number,
+
+        animated =
+          true,
+      ) => {
+        atualizarIndice(
+          index,
+        );
+
+        listRef.current
+          ?.scrollToIndex({
+            index,
+
+            animated,
+          });
+      },
+      [
+        atualizarIndice,
+      ],
+    );
+
+  // ==========================================================
+  // AUTO PLAY
+  // ==========================================================
+
+  useEffect(
+    () => {
+      if (
+        BANNERS.length <=
+        1
+      ) {
+        return;
+      }
+
+      const interval =
+        setInterval(
+          () => {
+            // Evita trocar automaticamente
+            // enquanto o usuário está deslizando.
+
+            if (
+              interactingRef
+                .current
+            ) {
+              return;
+            }
+
+            const proximoIndice =
+              (
+                activeIndexRef
+                  .current +
+                1
+              ) %
+              BANNERS.length;
+
+            irParaBanner(
+              proximoIndice,
+              true,
+            );
+          },
+
+          AUTO_PLAY_INTERVAL_MS,
+        );
+
+      return () => {
+        clearInterval(
+          interval,
+        );
+      };
+    },
+    [
+      irParaBanner,
+    ],
+  );
+
+  // ==========================================================
+  // SWIPE MANUAL
+  // ==========================================================
+
+  const handleMomentumScrollEnd =
+    useCallback(
+      (
+        event:
+          NativeSyntheticEvent<
+            NativeScrollEvent
+          >,
+      ) => {
+        const offsetX =
+          event.nativeEvent
+            .contentOffset
+            .x;
+
+        const novoIndice =
+          Math.round(
+            offsetX /
+              bannerWidth,
+          );
+
+        atualizarIndice(
+          novoIndice,
+        );
+
+        interactingRef.current =
+          false;
+      },
+      [
+        atualizarIndice,
+        bannerWidth,
+      ],
+    );
+
+  // ==========================================================
+  // RENDERIZAÇÃO
+  // ==========================================================
+
+  const renderBanner =
+    useCallback(
+      ({
+        item,
+      }: {
+        item:
+          FeedBannerItem;
+      }) => {
+        const patrocinado =
+          item.type ===
+          "SPONSORED";
+
+        return (
+          <View
+            style={[
+              styles.slide,
+
+              {
+                width:
+                  bannerWidth,
+              },
+            ]}
+          >
+            <View
+              style={
+                styles.banner
+              }
+            >
+              <View
+                style={
+                  styles.iconContainer
+                }
+              >
+                <MaterialCommunityIcons
+                  name={
+                    item.icon
+                  }
+                  size={25}
+                  color={
+                    theme.colors
+                      .brand
+                  }
+                />
+              </View>
+
+              <View
+                style={
+                  styles.content
+                }
+              >
+                {patrocinado ? (
+                  <Text
+                    style={
+                      styles.sponsoredLabel
+                    }
+                  >
+                    Patrocinado
+                  </Text>
+                ) : (
+                  <Text
+                    style={
+                      styles.appLabel
+                    }
+                  >
+                    PetRadar
+                  </Text>
+                )}
+
+                <Text
+                  style={
+                    styles.title
+                  }
+                  numberOfLines={2}
+                >
+                  {item.title}
+                </Text>
+
+                <Text
+                  style={
+                    styles.description
+                  }
+                  numberOfLines={3}
+                >
+                  {
+                    item.description
+                  }
+                </Text>
+              </View>
+            </View>
+          </View>
+        );
+      },
+      [
+        bannerWidth,
+      ],
+    );
+
+  return (
+    <View
+      style={
+        styles.container
+      }
+    >
+      <FlatList
+        ref={
+          listRef
+        }
+        data={
+          BANNERS
+        }
+        horizontal
+        pagingEnabled
+        bounces={false}
+        decelerationRate="fast"
+        showsHorizontalScrollIndicator={
+          false
+        }
+        keyExtractor={(
+          item,
+        ) =>
+          item.id
+        }
+        renderItem={
+          renderBanner
+        }
+        getItemLayout={(
+          _,
+          index,
+        ) => ({
+          length:
+            bannerWidth,
+
+          offset:
+            bannerWidth *
+            index,
+
+          index,
+        })}
+        onScrollBeginDrag={() => {
+          interactingRef.current =
+            true;
+        }}
+        onScrollEndDrag={() => {
+          // Caso não haja momentum,
+          // permite que o autoplay volte.
+          interactingRef.current =
+            false;
+        }}
+        onMomentumScrollEnd={
+          handleMomentumScrollEnd
+        }
+      />
+
+      {/* ======================================================
+          INDICADORES
+      ====================================================== */}
+
+      <View
+        style={
+          styles.pagination
+        }
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        {BANNERS.map(
+          (
+            banner,
+            index,
+          ) => {
+            const ativo =
+              index ===
+              activeIndex;
+
+            return (
+              <View
+                key={
+                  banner.id
+                }
+                style={[
+                  styles.paginationDot,
+
+                  ativo &&
+                    styles.paginationDotActive,
+                ]}
+              />
+            );
+          },
+        )}
+      </View>
+    </View>
+  );
+}
+
+// ============================================================
+// ESTILOS
+// ============================================================
+
+const styles =
+  StyleSheet.create({
+    container: {
+      width:
+        "100%",
+
+      marginTop: 4,
+
+      marginBottom:
+        14,
+    },
+
+    slide: {
+      justifyContent:
+        "center",
+    },
+
+    banner: {
+      minHeight: 104,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      paddingHorizontal:
+        16,
+
+      paddingVertical:
+        14,
+
+      borderRadius:
+        theme.radius
+          .card,
+
+      backgroundColor:
+        theme.colors
+          .brand,
+
+      ...theme.shadows
+        .elevation1,
+
+        marginRight:
+          12,
+    },
+
+    iconContainer: {
+      width: 48,
+      height: 48,
+
+      flexShrink: 0,
+
+      borderRadius:
+        16,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        theme.colors
+          .surface,
+    },
+
+    content: {
+      flex: 1,
+
+      minWidth: 0,
+
+      marginLeft:
+        13,
+    },
+
+    appLabel: {
+      marginBottom:
+        3,
+
+      color:
+        theme.colors
+          .surface,
+
+      fontSize: 8,
+
+      fontWeight:
+        "700",
+
+      opacity:
+        0.8,
+
+      textTransform:
+        "uppercase",
+
+      letterSpacing:
+        0.7,
+    },
+
+    sponsoredLabel: {
+      alignSelf:
+        "flex-start",
+
+      marginBottom:
+        4,
+
+      paddingHorizontal:
+        6,
+
+      paddingVertical:
+        2,
+
+      borderRadius:
+        theme.radius
+          .button,
+
+      color:
+        theme.colors
+          .brand,
+
+      fontSize: 8,
+
+      fontWeight:
+        "800",
+
+      backgroundColor:
+        theme.colors
+          .surface,
+    },
+
+    title: {
+      color:
+        theme.colors
+          .surface,
+
+      fontSize: 14,
+
+      lineHeight: 18,
+
+      fontWeight:
+        "900",
+    },
+
+    description: {
+      marginTop: 4,
+
+      color:
+        theme.colors
+          .surface,
+
+      fontSize: 10,
+
+      lineHeight: 15,
+
+      opacity:
+        0.92,
+    },
+
+    pagination: {
+      minHeight: 18,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 5,
+
+      paddingTop:
+        8,
+    },
+
+    paginationDot: {
+      width: 6,
+      height: 6,
+
+      borderRadius:
+        3,
+
+      backgroundColor:
+        theme.colors
+          .inputBg,
+    },
+
+    paginationDotActive: {
+      width: 17,
+
+      backgroundColor:
+        theme.colors
+          .brand,
+    },
+  });
 
 ================================================================================
 CAMINHO: mobile\src\components\OccurrenceDetailDrawer.tsx
@@ -9054,12 +9777,23 @@ CAMINHO: mobile\src\screens\FeedNoticias.tsx
 // D:\PetRadar\src\mobile\src\screens\FeedNoticias.tsx
 // ============================================================
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Easing,
   FlatList,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9069,33 +9803,55 @@ import {
   View,
 } from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+} from "react-native-safe-area-context";
 
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 
 import * as Location from "expo-location";
 
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
 
-import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import type {
+  BottomTabNavigationProp,
+} from "@react-navigation/bottom-tabs";
 
-import type { AppTabParamList } from "../../App";
+import type {
+  AppTabParamList,
+} from "../../App";
 
 import api from "../services/api";
 
-import OccurrenceDetailDrawer from "../components/OccurrenceDetailDrawer";
+import OccurrenceDetailDrawer
+  from "../components/OccurrenceDetailDrawer";
 
-import AppNavigationDrawer from "../components/AppNavigationDrawer";
+import AppNavigationDrawer
+  from "../components/AppNavigationDrawer";
 
-import ProfileQuickMenu from "../components/ProfileQuickMenu";
+import ProfileQuickMenu
+  from "../components/ProfileQuickMenu";
+
+import FeedBannerCarousel
+  from "../components/FeedBannerCarousel";
 
 import ProfileDetailScreen, {
-    type ProfileUpdateResult,
+  type ProfileUpdateResult,
 } from "./ProfileDetailScreen";
 
-import { theme } from "../theme/colors";
+import {
+  theme,
+} from "../theme/colors";
 
-import { useAuthStore } from "../store/useAuthStore";
+import {
+  useAuthStore,
+} from "../store/useAuthStore";
 
 // ============================================================
 // CONSTANTES
@@ -9104,6 +9860,40 @@ import { useAuthStore } from "../store/useAuthStore";
 const DEFAULT_SEARCH_RADIUS_KM = 10;
 const MIN_SEARCH_RADIUS_KM = 1;
 const MAX_SEARCH_RADIUS_KM = 100;
+
+const FEED_MODE_CAROUSEL_WIDTH =
+  Dimensions.get("window").width -
+  theme.spacing.globalMargin * 2;
+
+// ============================================================
+// MOTIVOS DE DENÚNCIA
+// ============================================================
+
+const DENUNCIA_MOTIVOS = [
+  {
+    id: "INFORMACAO_FALSA",
+    label:
+      "Informação falsa ou enganosa",
+  },
+
+  {
+    id: "CONTEUDO_IMPROPRIO",
+    label:
+      "Conteúdo impróprio",
+  },
+
+  {
+    id: "SPAM_DUPLICADA",
+    label:
+      "Spam ou publicação duplicada",
+  },
+
+  {
+    id: "OUTRO",
+    label:
+      "Outro problema com a publicação",
+  },
+] as const;
 
 // ============================================================
 // TIPAGEM
@@ -9122,34 +9912,85 @@ interface OcorrenciaFeed {
   nivel_urgencia: string;
   data_ocorrencia: string;
 
-  endereco_localizacao?: string | null;
+  endereco_localizacao?:
+  | string
+  | null;
+
+  observacao?:
+  | string
+  | null;
 
   latitude: number;
   longitude: number;
 
-  distancia_km?: number | null;
+  distancia_km?:
+  | number
+  | null;
 
+  autor_nome?:
+  | string
+  | null;
+
+  autor_foto?:
+  | string
+  | null;
+
+  total_forca?: number;
+  total_comentarios?: number;
+
+  usuario_deu_forca?: boolean;
 }
-type RecarregarListaOcorrencias =
-    () => void | Promise<void>;
 
-type FiltroFeed = "TODAS" | "PERDIDOS" | "AVISTADOS" | "RUA" | "URGENTES";
+interface ForcaResponse {
+  ativo: boolean;
+  total_forca: number;
+}
+
+type RecarregarListaOcorrencias =
+  () => void | Promise<void>;
+
+type FiltroFeed =
+  | "TODAS"
+  | "PERDIDOS"
+  | "AVISTADOS"
+  | "RUA"
+  | "URGENTES";
+
+type ModoFeed =
+  | "PROXIMIDADE"
+  | "ECO";
+
 
 interface FiltroConfig {
   id: FiltroFeed;
+
   label: string;
-  icon: keyof typeof Ionicons.glyphMap;
+
+  icon:
+  keyof typeof Ionicons.glyphMap;
 }
 
 interface StatusVisual {
   label: string;
+
   textColor: string;
+
   backgroundColor: string;
 }
 
 interface OccurrenceCardProps {
   occurrence: OcorrenciaFeed;
-  onPress: (occurrenceId: number) => void;
+
+  forcaLoading: boolean;
+
+  onPress:
+  (occurrenceId: number) => void;
+
+  onToggleForca:
+  (occurrenceId: number) => void;
+
+  onOpenOptions:
+  (occurrenceId: number) => void;
 }
 
 // ============================================================
@@ -9162,21 +10003,25 @@ const FILTROS: FiltroConfig[] = [
     label: "Todas",
     icon: "apps-outline",
   },
+
   {
     id: "PERDIDOS",
     label: "Perdidos",
     icon: "paw-outline",
   },
+
   {
     id: "AVISTADOS",
     label: "Avistados",
     icon: "eye-outline",
   },
+
   {
     id: "RUA",
     label: "Animal de rua",
     icon: "home-outline",
   },
+
   {
     id: "URGENTES",
     label: "Urgentes",
@@ -9188,55 +10033,104 @@ const FILTROS: FiltroConfig[] = [
 // UTILITÁRIOS
 // ============================================================
 
-function normalizarTexto(valor: string | null | undefined) {
+function normalizarTexto(
+  valor:
+    | string
+    | null
+    | undefined,
+) {
   return (valor ?? "")
     .trim()
     .toLocaleLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(
+      /[\u0300-\u036f]/g,
+      "",
+    );
 }
 
-function capitalizar(valor: string) {
-  const texto = valor.trim().toLocaleLowerCase().replace(/_/g, " ");
+function capitalizar(
+  valor: string,
+) {
+  const texto = valor
+    .trim()
+    .toLocaleLowerCase()
+    .replace(
+      /_/g,
+      " ",
+    );
 
   if (!texto) {
     return "Animal";
   }
 
-  return texto.charAt(0).toLocaleUpperCase() + texto.slice(1);
+  return (
+    texto
+      .charAt(0)
+      .toLocaleUpperCase() +
+    texto.slice(1)
+  );
 }
 
-function formatarDistancia(distanciaKm: number | null | undefined) {
-  const distancia = Number(distanciaKm);
+function formatarDistancia(
+  distanciaKm:
+    | number
+    | null
+    | undefined,
+) {
+  const distancia =
+    Number(distanciaKm);
 
-  if (!Number.isFinite(distancia) || distancia < 0) {
+  if (
+    !Number.isFinite(distancia) ||
+    distancia < 0
+  ) {
     return "Distância indisponível";
   }
 
   if (distancia < 1) {
-    return `${Math.round(distancia * 1000)} m`;
+    return `${Math.round(
+      distancia * 1000,
+    )} m`;
   }
 
-  return `${distancia.toLocaleString("pt-BR", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  })} km`;
+  return `${distancia.toLocaleString(
+    "pt-BR",
+    {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    },
+  )} km`;
 }
 
-function formatarTempoRelativo(data: string) {
-  const date = new Date(data);
+function formatarTempoRelativo(
+  data: string,
+) {
+  const date = new Date(
+    data,
+  );
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime(),
+    )
+  ) {
     return "Data não informada";
   }
 
-  const diferencaMs = Date.now() - date.getTime();
+  const diferencaMs =
+    Date.now() -
+    date.getTime();
 
   if (diferencaMs <= 0) {
     return "Agora";
   }
 
-  const minutos = Math.floor(diferencaMs / (1000 * 60));
+  const minutos =
+    Math.floor(
+      diferencaMs /
+      (1000 * 60),
+    );
 
   if (minutos < 1) {
     return "Agora";
@@ -9246,266 +10140,1006 @@ function formatarTempoRelativo(data: string) {
     return `há ${minutos} min`;
   }
 
-  const horas = Math.floor(minutos / 60);
+  const horas =
+    Math.floor(
+      minutos / 60,
+    );
 
   if (horas < 24) {
-    return horas === 1 ? "há 1 hora" : `há ${horas} horas`;
+    return horas === 1
+      ? "há 1 hora"
+      : `há ${horas} horas`;
   }
 
-  const dias = Math.floor(horas / 24);
+  const dias =
+    Math.floor(
+      horas / 24,
+    );
 
   if (dias < 7) {
-    return dias === 1 ? "há 1 dia" : `há ${dias} dias`;
+    return dias === 1
+      ? "há 1 dia"
+      : `há ${dias} dias`;
   }
 
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  return date.toLocaleDateString(
+    "pt-BR",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    },
+  );
 }
 
-function obterStatusVisual(occurrence: OcorrenciaFeed): StatusVisual {
-  const status = normalizarTexto(occurrence.status_badge);
+function obterStatusVisual(
+  occurrence: OcorrenciaFeed,
+): StatusVisual {
+  const status =
+    normalizarTexto(
+      occurrence.status_badge,
+    );
 
-  if (status.includes("perdid")) {
+  if (
+    status.includes(
+      "perdid",
+    )
+  ) {
     return {
       label: "Perdido",
-      textColor: theme.colors.semantic.danger.text,
-      backgroundColor: theme.colors.semantic.danger.bg,
+
+      textColor:
+        theme.colors.semantic
+          .danger.text,
+
+      backgroundColor:
+        theme.colors.semantic
+          .danger.bg,
     };
   }
 
-  if (status.includes("avist")) {
+  if (
+    status.includes(
+      "avist",
+    )
+  ) {
     return {
       label: "Avistado",
-      textColor: theme.colors.semantic.warning.text,
-      backgroundColor: theme.colors.semantic.warning.bg,
+
+      textColor:
+        theme.colors.semantic
+          .warning.text,
+
+      backgroundColor:
+        theme.colors.semantic
+          .warning.bg,
     };
   }
 
   return {
     label: "Animal de rua",
-    textColor: theme.colors.semantic.success.text,
-    backgroundColor: theme.colors.semantic.success.bg,
+
+    textColor:
+      theme.colors.semantic
+        .success.text,
+
+    backgroundColor:
+      theme.colors.semantic
+        .success.bg,
   };
 }
 
-function obterTituloOcorrencia(occurrence: OcorrenciaFeed) {
-  const animal = capitalizar(occurrence.tipo_animal);
+function obterTituloOcorrencia(
+  occurrence: OcorrenciaFeed,
+) {
+  const animal =
+    capitalizar(
+      occurrence.tipo_animal,
+    );
 
-  const status = normalizarTexto(occurrence.status_badge);
+  const status =
+    normalizarTexto(
+      occurrence.status_badge,
+    );
 
-  if (status.includes("perdid")) {
+  if (
+    status.includes(
+      "perdid",
+    )
+  ) {
     return `${animal} perdido`;
   }
 
-  if (status.includes("avist")) {
+  if (
+    status.includes(
+      "avist",
+    )
+  ) {
     return `${animal} avistado`;
   }
 
   return `${animal} precisa de ajuda`;
 }
 
-function ehUrgente(nivelUrgencia: string) {
-  const urgencia = normalizarTexto(nivelUrgencia);
+function ehUrgente(
+  nivelUrgencia: string,
+) {
+  const urgencia =
+    normalizarTexto(
+      nivelUrgencia,
+    );
 
-  return urgencia.includes("alta") || urgencia.includes("crit");
+  return (
+    urgencia.includes(
+      "alta",
+    ) ||
+    urgencia.includes(
+      "crit",
+    )
+  );
 }
 
-function obterUrgenciaVisual(nivelUrgencia: string) {
-  const urgencia = normalizarTexto(nivelUrgencia);
+function obterDescricaoOcorrencia(
+  occurrence: OcorrenciaFeed,
+) {
+  const observacao =
+    occurrence.observacao
+      ?.trim();
 
-  if (urgencia.includes("crit") || urgencia.includes("alta")) {
-    return {
-      color: theme.colors.semantic.danger.text,
-      background: theme.colors.semantic.danger.bg,
-    };
+  if (observacao) {
+    return observacao;
   }
 
-  if (urgencia.includes("moder")) {
-    return {
-      color: theme.colors.semantic.warning.text,
-      background: theme.colors.semantic.warning.bg,
-    };
+  const titulo =
+    obterTituloOcorrencia(
+      occurrence,
+    );
+
+  const endereco =
+    occurrence
+      .endereco_localizacao
+      ?.trim();
+
+  if (endereco) {
+    return `${titulo}. Localização: ${endereco}.`;
   }
 
-  return {
-    color: theme.colors.semantic.success.text,
-    background: theme.colors.semantic.success.bg,
-  };
+  return `${titulo}. Abra os detalhes para ver todas as informações desta ocorrência.`;
+}
+
+function obterIniciais(
+  nome:
+    | string
+    | null
+    | undefined,
+) {
+  const partes =
+    (nome ?? "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+  if (
+    partes.length === 0
+  ) {
+    return "PR";
+  }
+
+  if (
+    partes.length === 1
+  ) {
+    return partes[0]
+      .slice(0, 2)
+      .toLocaleUpperCase();
+  }
+
+  return (
+    partes[0].charAt(0) +
+    partes[
+      partes.length - 1
+    ].charAt(0)
+  ).toLocaleUpperCase();
+}
+
+function formatarQuantidadeComentarios(
+  total:
+    | number
+    | null
+    | undefined,
+) {
+  const quantidade =
+    Number.isFinite(
+      Number(total),
+    )
+      ? Math.max(
+        0,
+        Number(total),
+      )
+      : 0;
+
+  return quantidade === 1
+    ? "1 comentário"
+    : `${quantidade} comentários`;
 }
 
 // ============================================================
 // CARD DA OCORRÊNCIA
 // ============================================================
 
-function OccurrenceCard({ occurrence, onPress }: OccurrenceCardProps) {
-  const status = obterStatusVisual(occurrence);
+function OccurrenceCard({
+  occurrence,
 
-  const urgencia = obterUrgenciaVisual(occurrence.nivel_urgencia);
+  forcaLoading,
+
+  onPress,
+
+  onToggleForca,
+
+  onOpenOptions,
+}: OccurrenceCardProps) {
+  const status =
+    obterStatusVisual(
+      occurrence,
+    );
 
   const fotoValida =
-    typeof occurrence.foto === "string" && occurrence.foto.trim().length > 0;
+    typeof occurrence.foto ===
+    "string" &&
+    occurrence.foto
+      .trim()
+      .length > 0;
+
+  const autorNome =
+    occurrence.autor_nome
+      ?.trim() ||
+    "Usuário PetRadar";
+
+  const autorFoto =
+    occurrence.autor_foto
+      ?.trim() ||
+    null;
+
+  const usuarioDeuForca =
+    Boolean(
+      occurrence
+        .usuario_deu_forca,
+    );
+
+  const totalForca =
+    Math.max(
+      0,
+      Number(
+        occurrence
+          .total_forca ?? 0,
+      ),
+    );
+
+  const descricao =
+    obterDescricaoOcorrencia(
+      occurrence,
+    );
+
+  // ==========================================================
+  // ANIMAÇÃO DO ECO
+  // ==========================================================
+  //
+  // A animação acontece somente quando o estado recebido
+  // do backend muda.
+  //
+  // false -> true:
+  // gira uma volta e dá um pequeno pulso.
+  //
+  // true -> false:
+  // apenas retrai levemente.
+  // ==========================================================
+
+  const echoRotation =
+    useRef(
+      new Animated.Value(0),
+    ).current;
+
+  const echoScale =
+    useRef(
+      new Animated.Value(1),
+    ).current;
+
+  const previousEchoState =
+    useRef(
+      usuarioDeuForca,
+    );
+
+  useEffect(
+    () => {
+      const previousState =
+        previousEchoState.current;
+
+      // Não anima na primeira renderização
+      // nem em renders onde o estado não mudou.
+      if (
+        previousState ===
+        usuarioDeuForca
+      ) {
+        return;
+      }
+
+      previousEchoState.current =
+        usuarioDeuForca;
+
+      echoRotation.stopAnimation();
+
+      echoScale.stopAnimation();
+
+      // ======================================================
+      // ECO REGISTRADO
+      // ======================================================
+
+      if (
+        usuarioDeuForca
+      ) {
+        echoRotation.setValue(
+          0,
+        );
+
+        echoScale.setValue(
+          1,
+        );
+
+        Animated.parallel([
+          Animated.timing(
+            echoRotation,
+            {
+              toValue: 1,
+
+              duration: 1680,
+
+              easing:
+                Easing.out(
+                  Easing.cubic,
+                ),
+
+              useNativeDriver:
+                true,
+            },
+          ),
+
+          Animated.sequence([
+            Animated.timing(
+              echoScale,
+              {
+                toValue: 1.13,
+
+                duration: 150,
+
+                easing:
+                  Easing.out(
+                    Easing.cubic,
+                  ),
+
+                useNativeDriver:
+                  true,
+              },
+            ),
+
+            Animated.timing(
+              echoScale,
+              {
+                toValue: 1,
+
+                duration: 190,
+
+                easing:
+                  Easing.out(
+                    Easing.cubic,
+                  ),
+
+                useNativeDriver:
+                  true,
+              },
+            ),
+          ]),
+        ]).start();
+
+        return;
+      }
+
+      // ======================================================
+      // ECO REMOVIDO
+      // ======================================================
+
+      echoScale.setValue(
+        1,
+      );
+
+      Animated.sequence([
+        Animated.timing(
+          echoScale,
+          {
+            toValue: 0.93,
+
+            duration: 110,
+
+            easing:
+              Easing.out(
+                Easing.cubic,
+              ),
+
+            useNativeDriver:
+              true,
+          },
+        ),
+
+        Animated.timing(
+          echoScale,
+          {
+            toValue: 1,
+
+            duration: 150,
+
+            easing:
+              Easing.out(
+                Easing.cubic,
+              ),
+
+            useNativeDriver:
+              true,
+          },
+        ),
+      ]).start();
+    },
+    [
+      usuarioDeuForca,
+      echoRotation,
+      echoScale,
+    ],
+  );
+
+  const echoRotate =
+    echoRotation.interpolate({
+      inputRange: [
+        0,
+        1,
+      ],
+
+      outputRange: [
+        "0deg",
+        "360deg",
+      ],
+    });
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Abrir detalhes de ${obterTituloOcorrencia(
-        occurrence,
-      )}`}
-      accessibilityHint="Abre os detalhes completos da ocorrência"
-      onPress={() => onPress(occurrence.id_ocorrencia)}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+    <View
+      style={
+        styles.card
+      }
     >
-      {/* FOTO */}
+      {/* ======================================================
+          AUTOR DA PUBLICAÇÃO
+      ====================================================== */}
+      <View
+        style={
+          styles.postHeader
+        }
+      >
+        {/* ==================================================
+            ÁREA CLICÁVEL DO AUTOR
+        ================================================== */}
 
-      <View style={styles.imageContainer}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Abrir detalhes de ${obterTituloOcorrencia(
+            occurrence,
+          )}`}
+          accessibilityHint="Abre os detalhes completos da ocorrência"
+          onPress={() =>
+            onPress(
+              occurrence.id_ocorrencia,
+            )
+          }
+          style={({
+            pressed,
+          }) => [
+              styles.postHeaderMain,
+
+              pressed &&
+              styles.contentPressed,
+            ]}
+        >
+          <View
+            style={
+              styles.authorAvatar
+            }
+          >
+            {autorFoto ? (
+              <Image
+                source={{
+                  uri: autorFoto,
+                }}
+                style={
+                  styles.authorAvatarImage
+                }
+              />
+            ) : (
+              <Text
+                style={
+                  styles.authorInitials
+                }
+              >
+                {obterIniciais(
+                  autorNome,
+                )}
+              </Text>
+            )}
+          </View>
+
+          <View
+            style={
+              styles.authorContent
+            }
+          >
+            <Text
+              style={
+                styles.authorName
+              }
+              numberOfLines={1}
+            >
+              {autorNome}
+            </Text>
+
+            <View
+              style={
+                styles.authorMetaRow
+              }
+            >
+              <View
+                style={[
+                  styles.statusBadge,
+
+                  {
+                    backgroundColor:
+                      status.backgroundColor,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.statusDot,
+
+                    {
+                      backgroundColor:
+                        status.textColor,
+                    },
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    styles.statusText,
+
+                    {
+                      color:
+                        status.textColor,
+                    },
+                  ]}
+                >
+                  {status.label}
+                </Text>
+              </View>
+
+              {ehUrgente(
+                occurrence.nivel_urgencia,
+              ) ? (
+                <View
+                  style={
+                    styles.urgentBadge
+                  }
+                >
+                  <Ionicons
+                    name="warning-outline"
+                    size={11}
+                    color={
+                      theme.colors
+                        .semantic
+                        .danger
+                        .text
+                    }
+                  />
+
+                  <Text
+                    style={
+                      styles.urgentText
+                    }
+                  >
+                    Urgente
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        </Pressable>
+
+        {/* ==================================================
+            MENU / DENÚNCIA
+
+            É um botão separado propositalmente para que
+            tocar nos três pontos NÃO abra os detalhes.
+        ================================================== */}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Opções da publicação"
+          accessibilityHint="Abre as opções para denunciar esta ocorrência"
+          hitSlop={8}
+          onPress={() =>
+            onOpenOptions(
+              occurrence.id_ocorrencia,
+            )
+          }
+          style={({
+            pressed,
+          }) => [
+              styles.moreOptionsButton,
+
+              pressed &&
+              styles.buttonPressed,
+            ]}
+        >
+          <Ionicons
+            name="ellipsis-vertical"
+            size={21}
+            color={
+              theme.colors
+                .textBody
+            }
+          />
+        </Pressable>
+      </View>
+
+
+
+      {/* ======================================================
+          FOTO
+      ====================================================== */}
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Abrir detalhes de ${obterTituloOcorrencia(
+          occurrence,
+        )}`}
+        accessibilityHint="Abre os detalhes completos da ocorrência"
+        onPress={() =>
+          onPress(
+            occurrence.id_ocorrencia,
+          )
+        }
+        style={({
+          pressed,
+        }) => [
+            styles.imageContainer,
+
+            pressed &&
+            styles.imagePressed,
+          ]}
+      >
         {fotoValida ? (
           <Image
             source={{
-              uri: occurrence.foto,
+              uri:
+                occurrence.foto,
             }}
-            style={styles.image}
+            style={
+              styles.image
+            }
             resizeMode="cover"
           />
         ) : (
-          <View style={styles.imageFallback}>
+          <View
+            style={
+              styles.imageFallback
+            }
+          >
             <MaterialCommunityIcons
               name="paw"
-              size={42}
-              color={theme.colors.brand}
-            />
-
-            <Text style={styles.imageFallbackText}>Foto indisponível</Text>
-          </View>
-        )}
-
-        {/* STATUS */}
-
-        <View
-          style={[
-            styles.statusBadge,
-            {
-              backgroundColor: status.backgroundColor,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.statusDot,
-              {
-                backgroundColor: status.textColor,
-              },
-            ]}
-          />
-
-          <Text
-            style={[
-              styles.statusText,
-              {
-                color: status.textColor,
-              },
-            ]}
-          >
-            {status.label}
-          </Text>
-        </View>
-
-        {/* DISTÂNCIA */}
-
-        <View style={styles.distanceBadge}>
-          <Ionicons name="location" size={13} color={theme.colors.brand} />
-
-          <Text style={styles.distanceText}>
-            {formatarDistancia(occurrence.distancia_km)}
-          </Text>
-        </View>
-      </View>
-
-      {/* CONTEÚDO */}
-
-      <View style={styles.cardContent}>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardTitleContainer}>
-            <Text style={styles.cardTitle} numberOfLines={2}>
-              {obterTituloOcorrencia(occurrence)}
-            </Text>
-
-            <Text style={styles.timeText}>
-              {formatarTempoRelativo(occurrence.data_ocorrencia)}
-            </Text>
-          </View>
-
-          <View style={styles.animalIcon}>
-            <MaterialCommunityIcons
-              name={
-                normalizarTexto(occurrence.tipo_animal).includes("gato")
-                  ? "cat"
-                  : "dog"
+              size={45}
+              color={
+                theme.colors
+                  .brand
               }
-              size={22}
-              color={theme.colors.brand}
-            />
-          </View>
-        </View>
-
-        {/* LOCALIZAÇÃO */}
-
-        <View style={styles.locationRow}>
-          <View style={styles.locationIcon}>
-            <Ionicons
-              name="location-outline"
-              size={17}
-              color={theme.colors.brand}
-            />
-          </View>
-
-          <Text style={styles.locationText} numberOfLines={2}>
-            {occurrence.endereco_localizacao?.trim() ||
-              "Localização informada no mapa"}
-          </Text>
-        </View>
-
-        {/* DIVISOR */}
-
-        <View style={styles.divider} />
-
-        {/* FOOTER */}
-
-        <View style={styles.cardFooter}>
-          <View
-            style={[
-              styles.urgencyBadge,
-              {
-                backgroundColor: urgencia.background,
-              },
-            ]}
-          >
-            <Ionicons
-              name="alert-circle-outline"
-              size={14}
-              color={urgencia.color}
             />
 
             <Text
+              style={
+                styles.imageFallbackText
+              }
+            >
+              Foto indisponível
+            </Text>
+          </View>
+        )}
+      </Pressable>
+
+      {/* ======================================================
+          AÇÕES
+      ====================================================== */}
+
+      <View
+        style={
+          styles.actionsRow
+        }
+      >
+        <View
+          style={
+            styles.actionsLeft
+          }
+        >
+          {/* COMPARTILHAR - AINDA NÃO FUNCIONAL */}
+
+          <Pressable
+            disabled
+            accessibilityRole="button"
+            accessibilityLabel="Compartilhar ocorrência"
+            accessibilityState={{
+              disabled: true,
+            }}
+            style={
+              styles.actionIconButton
+            }
+          >
+            <Ionicons
+              name="share-social-outline"
+              size={20}
+              color={
+                theme.colors
+                  .textBody
+              }
+            />
+          </Pressable>
+
+          {/* ==================================================
+              ECOAR - FUNCIONAL
+          ================================================== */}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              usuarioDeuForca
+                ? "Remover Eco da ocorrência"
+                : "Ecoar ocorrência"
+            }
+            accessibilityHint={
+              usuarioDeuForca
+                ? "Remove seu Eco desta ocorrência"
+                : "Ajuda esta ocorrência a alcançar mais pessoas da comunidade"
+            }
+            accessibilityState={{
+              selected:
+                usuarioDeuForca,
+
+              disabled:
+                forcaLoading,
+            }}
+            disabled={
+              forcaLoading
+            }
+            onPress={() =>
+              onToggleForca(
+                occurrence.id_ocorrencia,
+              )
+            }
+            style={({
+              pressed,
+            }) => [
+                styles.forceButton,
+
+                usuarioDeuForca &&
+                styles.forceButtonActive,
+
+                forcaLoading &&
+                styles.forceButtonLoading,
+
+                pressed &&
+                !forcaLoading &&
+                styles.forceButtonPressed,
+              ]}
+          >
+            <Animated.Image
+              source={require(
+                "../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
+              )}
+              resizeMode="contain"
               style={[
-                styles.urgencyText,
+                styles.echoIcon,
+
                 {
-                  color: urgencia.color,
+                  tintColor:
+                    usuarioDeuForca
+                      ? theme.colors.action
+                      : theme.colors.textBody,
+
+                  transform: [
+                    {
+                      rotate:
+                        echoRotate,
+                    },
+
+                    {
+                      scale:
+                        echoScale,
+                    },
+                  ],
                 },
               ]}
+            />
+
+            {totalForca > 0 ? (
+              <Text
+                style={[
+                  styles.echoCount,
+
+                  usuarioDeuForca &&
+                  styles.echoCountActive,
+                ]}
+              >
+                {totalForca}
+              </Text>
+            ) : null}
+          </Pressable>
+
+          {/* FAVORITO - AINDA NÃO FUNCIONAL */}
+
+          <Pressable
+            disabled
+            accessibilityRole="button"
+            accessibilityLabel="Favoritar ocorrência"
+            accessibilityState={{
+              disabled: true,
+            }}
+            style={
+              styles.actionIconButton
+            }
+          >
+            <Ionicons
+              name="star-outline"
+              size={21}
+              color={
+                theme.colors
+                  .textBody
+              }
+            />
+          </Pressable>
+
+          {/* COMENTÁRIOS - AINDA NÃO FUNCIONAL */}
+
+          <Pressable
+            disabled
+            accessibilityRole="button"
+            accessibilityLabel="Abrir comentários"
+            accessibilityState={{
+              disabled: true,
+            }}
+            style={
+              styles.actionIconButton
+            }
+          >
+            <Ionicons
+              name="chatbubble-outline"
+              size={20}
+              color={
+                theme.colors
+                  .textBody
+              }
+            />
+          </Pressable>
+        </View>
+
+        <Text
+          style={
+            styles.commentsCount
+          }
+          numberOfLines={1}
+        >
+          {formatarQuantidadeComentarios(
+            occurrence
+              .total_comentarios,
+          )}
+        </Text>
+      </View>
+
+      {/* ======================================================
+          DESCRIÇÃO
+      ====================================================== */}
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Abrir detalhes de ${obterTituloOcorrencia(
+          occurrence,
+        )}`}
+        accessibilityHint="Abre os detalhes completos da ocorrência"
+        onPress={() =>
+          onPress(
+            occurrence.id_ocorrencia,
+          )
+        }
+        style={({
+          pressed,
+        }) => [
+            styles.captionContainer,
+
+            pressed &&
+            styles.contentPressed,
+          ]}
+      >
+        <Text
+          style={
+            styles.captionText
+          }
+          numberOfLines={3}
+        >
+          {descricao}
+        </Text>
+
+        <View
+          style={
+            styles.postMetaRow
+          }
+        >
+          <View
+            style={
+              styles.postMetaLeft
+            }
+          >
+            <Text
+              style={
+                styles.postMetaText
+              }
             >
-              {occurrence.nivel_urgencia || "Moderado"}
+              {formatarTempoRelativo(
+                occurrence.data_ocorrencia,
+              )}
+            </Text>
+
+            <View
+              style={
+                styles.metaDot
+              }
+            />
+
+            <Ionicons
+              name="location-outline"
+              size={13}
+              color={
+                theme.colors
+                  .textBody
+              }
+            />
+
+            <Text
+              style={
+                styles.postMetaText
+              }
+            >
+              {formatarDistancia(
+                occurrence
+                  .distancia_km,
+              )}
             </Text>
           </View>
 
-          <Text style={styles.registryText}>
-            Registro #{occurrence.id_ocorrencia}
-          </Text>
+          <View
+            style={
+              styles.moreButton
+            }
+          >
+            <Text
+              style={
+                styles.moreText
+              }
+            >
+              Mais
+            </Text>
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 
@@ -9514,398 +11148,988 @@ function OccurrenceCard({ occurrence, onPress }: OccurrenceCardProps) {
 // ============================================================
 
 export default function FeedNoticias() {
-  const navigation = useNavigation<BottomTabNavigationProp<AppTabParamList>>();
+  const navigation =
+    useNavigation<
+      BottomTabNavigationProp<
+        AppTabParamList
+      >
+    >();
 
-  const user = useAuthStore((state) => state.user);
+  const user =
+    useAuthStore(
+      (state) =>
+        state.user,
+    );
 
-  const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<
-    number | null
-  >(null);
+  // ==========================================================
+  // OCORRÊNCIA SELECIONADA
+  // ==========================================================
 
-  const [ocorrencias, setOcorrencias] = useState<OcorrenciaFeed[]>([]);
+  const [
+    selectedOccurrenceId,
+    setSelectedOccurrenceId,
+  ] =
+    useState<
+      number | null
+    >(null);
 
-  const [loading, setLoading] = useState(true);
+  // ==========================================================
+  // FEED
+  // ==========================================================
 
-  const [refreshing, setRefreshing] = useState(false);
+  const [
+    ocorrencias,
+    setOcorrencias,
+  ] =
+    useState<
+      OcorrenciaFeed[]
+    >([]);
 
-  const [error, setError] = useState<string | null>(null);
+  const [
+    loading,
+    setLoading,
+  ] =
+    useState(true);
 
-  const [localizacaoNegada, setLocalizacaoNegada] = useState(false);
+  const [
+    refreshing,
+    setRefreshing,
+  ] =
+    useState(false);
 
-  const [raioPesquisaKm, setRaioPesquisaKm] = useState(
-    DEFAULT_SEARCH_RADIUS_KM,
-  );
+  const [
+    error,
+    setError,
+  ] =
+    useState<
+      string | null
+    >(null);
 
-  const [search, setSearch] = useState("");
+  const [
+    localizacaoNegada,
+    setLocalizacaoNegada,
+  ] =
+    useState(false);
 
-  const [filtro, setFiltro] = useState<FiltroFeed>("TODAS");
+  const [
+    raioPesquisaKm,
+    setRaioPesquisaKm,
+  ] =
+    useState(
+      DEFAULT_SEARCH_RADIUS_KM,
+    );
 
+  const [
+    search,
+    setSearch,
+  ] =
+    useState("");
 
-// ==========================================================
-// LISTA QUE ORIGINOU A ABERTURA DA OCORRÊNCIA
-// ==========================================================
+  const [
+    filtro,
+    setFiltro,
+  ] =
+    useState<FiltroFeed>(
+      "TODAS",
+    );
 
-// [ALTERE AQUI]
-const recarregarListaOrigemRef =
+  const [
+    modoFeed,
+    setModoFeed,
+  ] =
+    useState<ModoFeed>(
+      "PROXIMIDADE",
+    );
+
+  const modoFeedRef =
+    useRef<ModoFeed>(
+      "PROXIMIDADE",
+    );
+
+  const feedModeCarouselRef =
+    useRef<ScrollView | null>(
+      null,
+    );
+
+  // ==========================================================
+  // ECO (FORÇA NO BACKEND)
+  // ==========================================================
+
+  const [
+    forcasEmAndamento,
+    setForcasEmAndamento,
+  ] =
+    useState<
+      Set<number>
+    >(
+      () =>
+        new Set<number>(),
+    );
+
+  const forcasEmAndamentoRef =
     useRef<
-        RecarregarListaOcorrencias | null
+      Set<number>
+    >(
+      new Set<number>(),
+    );
+
+  // ==========================================================
+  // LISTA QUE ORIGINOU A ABERTURA DA OCORRÊNCIA
+  // ==========================================================
+
+  const recarregarListaOrigemRef =
+    useRef<
+      RecarregarListaOcorrencias
+      | null
     >(null);
 
   // ==========================================================
   // NAVEGAÇÃO / PERFIL
   // ==========================================================
 
-  //
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [
+    menuVisible,
+    setMenuVisible,
+  ] =
+    useState(false);
 
-  //
-  // Será utilizado no próximo passo para o menu rápido
-  // do avatar.
-  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [
+    profileMenuVisible,
+    setProfileMenuVisible,
+  ] =
+    useState(false);
 
-  //
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [
+    profilePhoto,
+    setProfilePhoto,
+  ] =
+    useState<
+      string | null
+    >(null);
 
   const [
     profileDetailVisible,
     setProfileDetailVisible,
-] = useState(false);
+  ] =
+    useState(false);
+
+  // ==========================================================
+  // DENÚNCIA
+  // ==========================================================
+
+  const [
+    denunciaOccurrenceId,
+    setDenunciaOccurrenceId,
+  ] =
+    useState<
+      number | null
+    >(null);
+
+  const [
+    enviandoDenuncia,
+    setEnviandoDenuncia,
+  ] =
+    useState(false);
+
   // ==========================================================
   // CARREGAR FEED
   // ==========================================================
 
-  const carregarFeed = useCallback(
-    async (modo: "normal" | "refresh" = "normal") => {
-      if (modo === "refresh") {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+  const carregarFeed =
+    useCallback(
+      async (
+        modo:
+          | "normal"
+          | "refresh" =
+          "normal",
 
-      setError(null);
-
-      try {
-        // ------------------------------------------------------
-        // 1. RAIO DO PERFIL
-        // ------------------------------------------------------
-
-        let raioAtual = DEFAULT_SEARCH_RADIUS_KM;
-
-        try {
-          const profileResponse = await api.get("/auth/me");
-
-          setProfilePhoto(profileResponse.data?.foto_perfil ?? null);
-
-          const raioRecebido = Number(profileResponse.data?.raio_pesquisa_km);
-
-          if (Number.isFinite(raioRecebido)) {
-            raioAtual = Math.min(
-              MAX_SEARCH_RADIUS_KM,
-              Math.max(MIN_SEARCH_RADIUS_KM, raioRecebido),
-            );
-          }
-        } catch (profileError) {
-          console.warn(
-            "[FeedNoticias] Não foi possível carregar o raio do perfil:",
-            profileError,
+        modoSelecionado:
+          ModoFeed =
+          modoFeedRef.current,
+      ) => {
+        if (
+          modo ===
+          "refresh"
+        ) {
+          setRefreshing(
+            true,
+          );
+        } else {
+          setLoading(
+            true,
           );
         }
 
-        setRaioPesquisaKm(raioAtual);
+        setError(
+          null,
+        );
 
-        // ------------------------------------------------------
-        // 2. PERMISSÃO DE LOCALIZAÇÃO
-        // ------------------------------------------------------
+        try {
+          // ==================================================
+          // 1. RAIO DO PERFIL
+          // ==================================================
 
-        const { status } = await Location.requestForegroundPermissionsAsync();
+          let raioAtual =
+            DEFAULT_SEARCH_RADIUS_KM;
 
-        if (status !== "granted") {
-          setLocalizacaoNegada(true);
-          setOcorrencias([]);
-          return;
+          try {
+            const profileResponse =
+              await api.get(
+                "/auth/me",
+              );
+
+            setProfilePhoto(
+              profileResponse
+                .data
+                ?.foto_perfil ??
+              null,
+            );
+
+            const raioRecebido =
+              Number(
+                profileResponse
+                  .data
+                  ?.raio_pesquisa_km,
+              );
+
+            if (
+              Number.isFinite(
+                raioRecebido,
+              )
+            ) {
+              raioAtual =
+                Math.min(
+                  MAX_SEARCH_RADIUS_KM,
+
+                  Math.max(
+                    MIN_SEARCH_RADIUS_KM,
+                    raioRecebido,
+                  ),
+                );
+            }
+          } catch (
+          profileError
+          ) {
+            console.warn(
+              "[FeedNoticias] Não foi possível carregar o raio do perfil:",
+              profileError,
+            );
+          }
+
+          setRaioPesquisaKm(
+            raioAtual,
+          );
+
+          // ==================================================
+          // 2. PERMISSÃO DE LOCALIZAÇÃO
+          // ==================================================
+
+          const {
+            status,
+          } =
+            await Location
+              .requestForegroundPermissionsAsync();
+
+          if (
+            status !==
+            "granted"
+          ) {
+            setLocalizacaoNegada(
+              true,
+            );
+
+            setOcorrencias(
+              [],
+            );
+
+            return;
+          }
+
+          setLocalizacaoNegada(
+            false,
+          );
+
+          // ==================================================
+          // 3. LOCALIZAÇÃO ATUAL
+          // ==================================================
+
+          const currentLocation =
+            await Location
+              .getCurrentPositionAsync(
+                {
+                  accuracy:
+                    Location
+                      .Accuracy
+                      .Balanced,
+                },
+              );
+
+          // ==================================================
+          // 4. OCORRÊNCIAS DO FEED
+          // ==================================================
+
+          const response =
+            await api.get<
+              OcorrenciaFeed[]
+            >(
+              "/ocorrencias/proximas",
+
+              {
+                params: {
+                  lat:
+                    currentLocation
+                      .coords
+                      .latitude,
+
+                  lng:
+                    currentLocation
+                      .coords
+                      .longitude,
+
+                  raio_km:
+                    raioAtual,
+
+                  modo:
+                    modoSelecionado ===
+                      "ECO"
+                      ? "eco"
+                      : "proximidade",
+                },
+              },
+            );
+
+          const dados =
+            Array.isArray(
+              response.data,
+            )
+              ? response.data
+              : [];
+
+          const ocorrenciasValidas =
+            dados.filter(
+              (
+                occurrence,
+              ) =>
+                Number.isFinite(
+                  Number(
+                    occurrence
+                      .latitude,
+                  ),
+                ) &&
+                Number.isFinite(
+                  Number(
+                    occurrence
+                      .longitude,
+                  ),
+                ),
+            );
+
+
+
+          setOcorrencias(
+            ocorrenciasValidas,
+          );
+        } catch (
+        err: unknown
+        ) {
+          console.warn(
+            "[FeedNoticias] Erro ao carregar feed:",
+            err,
+          );
+
+          setOcorrencias(
+            [],
+          );
+
+          setError(
+            modoSelecionado ===
+              "ECO"
+              ? "Não foi possível carregar as ocorrências do modo Eco."
+              : "Não foi possível carregar as ocorrências próximas.",
+          );
+        } finally {
+          setLoading(
+            false,
+          );
+
+          setRefreshing(
+            false,
+          );
         }
-
-        setLocalizacaoNegada(false);
-
-        // ------------------------------------------------------
-        // 3. LOCALIZAÇÃO ATUAL
-        // ------------------------------------------------------
-
-        const currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-
-        // ------------------------------------------------------
-        // 4. OCORRÊNCIAS PRÓXIMAS
-        // ------------------------------------------------------
-
-        const response = await api.get<OcorrenciaFeed[]>(
-          "/ocorrencias/proximas",
-          {
-            params: {
-              lat: currentLocation.coords.latitude,
-
-              lng: currentLocation.coords.longitude,
-
-              raio_km: raioAtual,
-            },
-          },
-        );
-
-        const dados = Array.isArray(response.data) ? response.data : [];
-
-        const ocorrenciasValidas = dados.filter(
-          (occurrence) =>
-            Number.isFinite(Number(occurrence.latitude)) &&
-            Number.isFinite(Number(occurrence.longitude)),
-        );
-
-        // IMPORTANTE:
-        // não ordenamos novamente aqui.
-        //
-        // O backend já deve devolver:
-        //
-        // mais perto -> mais distante
-        //
-        // conforme implementado no PASSO 1.
-
-        setOcorrencias(ocorrenciasValidas);
-      } catch (err: unknown) {
-        console.warn("[FeedNoticias] Erro ao carregar feed:", err);
-
-        setOcorrencias([]);
-
-        setError("Não foi possível carregar as ocorrências próximas.");
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [],
-  );
+      },
+      [],
+    );
 
   // ==========================================================
   // ATUALIZAR AO ENTRAR NA TELA
   // ==========================================================
 
-useFocusEffect(
-    useCallback(() => {
-        const atualizarFeed =
-            async () => {
-                // ==================================================
-                // 1. RECARREGA O FEED
-                // ==================================================
-
-                await carregarFeed();
-
-                // ==================================================
-                // 2. VERIFICA SE A OCORRÊNCIA VEIO DO PERFIL
-                // ==================================================
-
-                const recarregarListaOrigem =
-                    recarregarListaOrigemRef.current;
-
-                if (
-                    !recarregarListaOrigem
-                ) {
-                    return;
-                }
-
-                // Limpa antes de executar para evitar
-                // chamadas duplicadas em futuros focuses.
-                recarregarListaOrigemRef.current =
-                    null;
-
-                // ==================================================
-                // 3. ATUALIZA A LISTA DO PERFIL
-                // ==================================================
-
-                await recarregarListaOrigem();
-            };
-
-        void atualizarFeed();
-    }, [carregarFeed]),
-);
-
-  // ==========================================================
-// PERFIL ATUALIZADO
-// ==========================================================
-
-// [ALTERE AQUI]
-const handleProfileUpdated =
+  useFocusEffect(
     useCallback(
-        (
-            updatedProfile: ProfileUpdateResult,
-        ) => {
-            // Atualização imediata do avatar,
-            // caso a foto tenha sido alterada.
+      () => {
+        const atualizarFeed =
+          async () => {
+            await carregarFeed();
+
+            const recarregarListaOrigem =
+              recarregarListaOrigemRef
+                .current;
+
             if (
-                updatedProfile.foto_perfil !==
-                undefined
+              !recarregarListaOrigem
             ) {
-                setProfilePhoto(
-                    updatedProfile.foto_perfil ??
-                        null,
-                );
+              return;
             }
 
-            // Recarrega o estado oficial do perfil
-            // e as ocorrências usando o novo raio.
-            void carregarFeed();
-        },
-        [carregarFeed],
+            recarregarListaOrigemRef.current =
+              null;
+
+            await recarregarListaOrigem();
+          };
+
+        void atualizarFeed();
+      },
+      [
+        carregarFeed,
+      ],
+    ),
+  );
+
+  // ==========================================================
+  // PERFIL ATUALIZADO
+  // ==========================================================
+
+  const handleProfileUpdated =
+    useCallback(
+      (
+        updatedProfile:
+          ProfileUpdateResult,
+      ) => {
+        if (
+          updatedProfile
+            .foto_perfil !==
+          undefined
+        ) {
+          setProfilePhoto(
+            updatedProfile
+              .foto_perfil ??
+            null,
+          );
+        }
+
+        void carregarFeed();
+      },
+      [
+        carregarFeed,
+      ],
     );
 
   // ==========================================================
   // DETALHES DA OCORRÊNCIA
   // ==========================================================
 
-const abrirDetalheOcorrencia =
+  const abrirDetalheOcorrencia =
     useCallback(
-        (
-            occurrenceId: number,
-            recarregarLista?:
-                RecarregarListaOcorrencias,
-        ) => {
-            recarregarListaOrigemRef.current =
-                recarregarLista ?? null;
+      (
+        occurrenceId:
+          number,
 
-            setSelectedOccurrenceId(
+        recarregarLista?:
+          RecarregarListaOcorrencias,
+      ) => {
+        recarregarListaOrigemRef.current =
+          recarregarLista ??
+          null;
+
+        setSelectedOccurrenceId(
+          occurrenceId,
+        );
+      },
+      [],
+    );
+
+  const handleOccurrenceEdit =
+    useCallback(
+      (
+        occurrenceId:
+          number,
+      ) => {
+        navigation.navigate(
+          "CadastroOcorrencia",
+
+          {
+            ocorrenciaId:
+              occurrenceId,
+          },
+        );
+      },
+      [
+        navigation,
+      ],
+    );
+
+  const handleOccurrenceDeleted =
+    useCallback(
+      async (
+        occurrenceId:
+          number,
+      ) => {
+        // ====================================================
+        // 1. REMOVE DO FEED IMEDIATAMENTE
+        // ====================================================
+
+        setOcorrencias(
+          (
+            atuais,
+          ) =>
+            atuais.filter(
+              (
+                occurrence,
+              ) =>
+                occurrence
+                  .id_ocorrencia !==
                 occurrenceId,
-            );
-        },
-        [],
+            ),
+        );
+
+        // ====================================================
+        // 2. LISTA DE ORIGEM
+        // ====================================================
+
+        const recarregarListaOrigem =
+          recarregarListaOrigemRef
+            .current;
+
+        recarregarListaOrigemRef.current =
+          null;
+
+        // ====================================================
+        // 3. ATUALIZA LISTAS
+        // ====================================================
+
+        const atualizacoes:
+          Promise<unknown>[] =
+          [
+            carregarFeed(
+              "refresh",
+            ),
+          ];
+
+        if (
+          recarregarListaOrigem
+        ) {
+          atualizacoes.push(
+            Promise
+              .resolve()
+              .then(
+                recarregarListaOrigem,
+              ),
+          );
+        }
+
+        await Promise
+          .allSettled(
+            atualizacoes,
+          );
+      },
+      [
+        carregarFeed,
+      ],
     );
 
-  const handleOccurrenceEdit = useCallback(
-    (occurrenceId: number) => {
-      navigation.navigate("CadastroOcorrencia", {
-        ocorrenciaId: occurrenceId,
-      });
-    },
-    [navigation],
-  );
+  // ==========================================================
+  // FORÇA
+  // ==========================================================
 
-const handleOccurrenceDeleted =
+  const alternarForca =
     useCallback(
-        async (
-            occurrenceId: number,
-        ) => {
-            // ==================================================
-            // 1. REMOVE IMEDIATAMENTE DO FEED
-            // ==================================================
+      async (
+        occurrenceId:
+          number,
+      ) => {
+        // Impede duplo clique enquanto
+        // a requisição está em andamento.
 
-            setOcorrencias((atuais) =>
-                atuais.filter(
-                    (occurrence) =>
-                        occurrence.id_ocorrencia !==
-                        occurrenceId,
-                ),
+        if (
+          forcasEmAndamentoRef
+            .current
+            .has(
+              occurrenceId,
+            )
+        ) {
+          return;
+        }
+
+        forcasEmAndamentoRef
+          .current
+          .add(
+            occurrenceId,
+          );
+
+        setForcasEmAndamento(
+          new Set(
+            forcasEmAndamentoRef
+              .current,
+          ),
+        );
+
+        try {
+          const response =
+            await api.post<
+              ForcaResponse
+            >(
+              `/ocorrencias/${occurrenceId}/forca`,
             );
 
-            // ==================================================
-            // 2. RECUPERA A LISTA QUE ABRIU O DETALHE
-            // ==================================================
+          const {
+            ativo,
+            total_forca,
+          } =
+            response.data;
 
-            const recarregarListaOrigem =
-                recarregarListaOrigemRef.current;
+          setOcorrencias(
+            (
+              atuais,
+            ) =>
+              atuais.map(
+                (
+                  occurrence,
+                ) => {
+                  if (
+                    occurrence
+                      .id_ocorrencia !==
+                    occurrenceId
+                  ) {
+                    return occurrence;
+                  }
 
-            recarregarListaOrigemRef.current =
-                null;
+                  return {
+                    ...occurrence,
 
-            // ==================================================
-            // 3. ATUALIZA AS LISTAS
-            // ==================================================
+                    usuario_deu_forca:
+                      Boolean(
+                        ativo,
+                      ),
 
-            const atualizacoes:
-                Promise<unknown>[] = [
-                    carregarFeed("refresh"),
-                ];
+                    total_forca:
+                      Math.max(
+                        0,
 
-            // Se a ocorrência foi aberta pelo Perfil,
-            // atualiza também as ocorrências do Perfil.
-            if (
-                recarregarListaOrigem
-            ) {
-                atualizacoes.push(
-                    Promise.resolve().then(
-                        recarregarListaOrigem,
-                    ),
-                );
-            }
+                        Number(
+                          total_forca,
+                        ) || 0,
+                      ),
+                  };
+                },
+              ),
+          );
+        } catch (
+        err: unknown
+        ) {
+          console.warn(
+            "[FeedNoticias] Erro ao atualizar Eco:",
+            err,
+          );
 
-            await Promise.allSettled(
-                atualizacoes,
+          Alert.alert(
+            "Não foi possível atualizar",
+            "Tente Ecoar novamente em alguns instantes.",
+          );
+        } finally {
+          forcasEmAndamentoRef
+            .current
+            .delete(
+              occurrenceId,
             );
-        },
-        [carregarFeed],
+
+          setForcasEmAndamento(
+            new Set(
+              forcasEmAndamentoRef
+                .current,
+            ),
+          );
+        }
+      },
+      [],
     );
+
+  // ==========================================================
+  // OPÇÕES / DENÚNCIA
+  // ==========================================================
+
+  const abrirOpcoesOcorrencia =
+    useCallback(
+      (
+        occurrenceId:
+          number,
+      ) => {
+        setDenunciaOccurrenceId(
+          occurrenceId,
+        );
+      },
+      [],
+    );
+
+  const fecharDenuncia =
+    useCallback(
+      () => {
+        if (
+          enviandoDenuncia
+        ) {
+          return;
+        }
+
+        setDenunciaOccurrenceId(
+          null,
+        );
+      },
+      [
+        enviandoDenuncia,
+      ],
+    );
+
+  const enviarDenuncia =
+    useCallback(
+      async (
+        motivo:
+          string,
+      ) => {
+        if (
+          denunciaOccurrenceId ===
+          null ||
+          enviandoDenuncia
+        ) {
+          return;
+        }
+
+        setEnviandoDenuncia(
+          true,
+        );
+
+        try {
+          await api.post(
+            `/ocorrencias/${denunciaOccurrenceId}/denuncias`,
+
+            {
+              motivo,
+            },
+          );
+
+          setDenunciaOccurrenceId(
+            null,
+          );
+
+          Alert.alert(
+            "Denúncia enviada",
+            "Obrigado. A ocorrência foi sinalizada para análise.",
+          );
+        } catch (
+        err: unknown
+        ) {
+          console.warn(
+            "[FeedNoticias] Erro ao denunciar ocorrência:",
+            err,
+          );
+
+          Alert.alert(
+            "Não foi possível enviar",
+            "Não conseguimos registrar a denúncia agora. Tente novamente em alguns instantes.",
+          );
+        } finally {
+          setEnviandoDenuncia(
+            false,
+          );
+        }
+      },
+      [
+        denunciaOccurrenceId,
+        enviandoDenuncia,
+      ],
+    );
+
 
   // ==========================================================
   // NAVEGAÇÃO DO FEED
   // ==========================================================
 
-  //
-  const abrirMenu = useCallback(() => {
-    setMenuVisible(true);
-  }, []);
+  const abrirMenu =
+    useCallback(
+      () => {
+        setMenuVisible(
+          true,
+        );
+      },
+      [],
+    );
 
-  //
-  const fecharMenu = useCallback(() => {
-    setMenuVisible(false);
-  }, []);
+  const fecharMenu =
+    useCallback(
+      () => {
+        setMenuVisible(
+          false,
+        );
+      },
+      [],
+    );
 
-  const registrarOcorrencia = useCallback(() => {
-    navigation.navigate("CadastroOcorrencia");
-  }, [navigation]);
+  const registrarOcorrencia =
+    useCallback(
+      () => {
+        navigation.navigate(
+          "CadastroOcorrencia",
+        );
+      },
+      [
+        navigation,
+      ],
+    );
+
+  const selecionarModoFeed =
+    useCallback(
+      (
+        novoModo:
+          ModoFeed,
+      ) => {
+        if (
+          modoFeedRef.current ===
+          novoModo ||
+          refreshing
+        ) {
+          return;
+        }
+
+        modoFeedRef.current =
+          novoModo;
+
+        setModoFeed(
+          novoModo,
+        );
+
+        void carregarFeed(
+          "refresh",
+          novoModo,
+        );
+      },
+      [
+        carregarFeed,
+        refreshing,
+      ],
+    );
+
   // ==========================================================
   // BUSCA + FILTROS
   // ==========================================================
 
-  const ocorrenciasFiltradas = useMemo(() => {
-    const termo = normalizarTexto(search);
+  const ocorrenciasFiltradas =
+    useMemo(
+      () => {
+        const termo =
+          modoFeed ===
+            "PROXIMIDADE"
+            ? normalizarTexto(
+                search,
+              )
+            : "";
 
-    return ocorrencias.filter((occurrence) => {
-      const correspondeBusca =
-        !termo ||
-        [
-          occurrence.tipo_animal,
-          occurrence.tipo_ocorrencia,
-          occurrence.status_badge,
-          occurrence.nivel_urgencia,
-          occurrence.endereco_localizacao,
-        ].some((valor) => normalizarTexto(valor).includes(termo));
+        return ocorrencias.filter(
+          (
+            occurrence,
+          ) => {
+            const correspondeBusca =
+              !termo ||
+              [
+                occurrence
+                  .tipo_animal,
 
-      if (!correspondeBusca) {
-        return false;
-      }
+                occurrence
+                  .tipo_ocorrencia,
 
-      const status = normalizarTexto(occurrence.status_badge);
+                occurrence
+                  .status_badge,
 
-      switch (filtro) {
-        case "PERDIDOS":
-          return status.includes("perdid");
+                occurrence
+                  .nivel_urgencia,
 
-        case "AVISTADOS":
-          return status.includes("avist");
+                occurrence
+                  .endereco_localizacao,
 
-        case "RUA":
-          return (
-            status.includes("rua") ||
-            normalizarTexto(occurrence.tipo_ocorrencia).includes(
-              "animal_de_rua",
-            )
-          );
+                occurrence
+                  .observacao,
 
-        case "URGENTES":
-          return ehUrgente(occurrence.nivel_urgencia);
+                occurrence
+                  .autor_nome,
+              ].some(
+                (
+                  valor,
+                ) =>
+                  normalizarTexto(
+                    valor,
+                  ).includes(
+                    termo,
+                  ),
+              );
 
-        case "TODAS":
-        default:
-          return true;
-      }
-    });
-  }, [ocorrencias, search, filtro]);
+            if (
+              !correspondeBusca
+            ) {
+              return false;
+            }
+
+            const status =
+              normalizarTexto(
+                occurrence
+                  .status_badge,
+              );
+
+            switch (
+            filtro
+            ) {
+              case "PERDIDOS":
+                return status
+                  .includes(
+                    "perdid",
+                  );
+
+              case "AVISTADOS":
+                return status
+                  .includes(
+                    "avist",
+                  );
+
+              case "RUA":
+                return (
+                  status.includes(
+                    "rua",
+                  ) ||
+                  normalizarTexto(
+                    occurrence
+                      .tipo_ocorrencia,
+                  ).includes(
+                    "animal_de_rua",
+                  )
+                );
+
+              case "URGENTES":
+                return ehUrgente(
+                  occurrence
+                    .nivel_urgencia,
+                );
+
+              case "TODAS":
+
+              default:
+                return true;
+            }
+          },
+        );
+      },
+      [
+        ocorrencias,
+        search,
+        filtro,
+        modoFeed,
+      ],
+    );
 
   // ==========================================================
   // LOADING INICIAL
@@ -9913,21 +12137,52 @@ const handleOccurrenceDeleted =
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.stateContainer}>
-          <View style={styles.stateIcon}>
+      <SafeAreaView
+        style={
+          styles.container
+        }
+      >
+        <View
+          style={
+            styles.stateContainer
+          }
+        >
+          <View
+            style={
+              styles.stateIcon
+            }
+          >
             <MaterialCommunityIcons
               name="paw"
               size={35}
-              color={theme.colors.brand}
+              color={
+                theme.colors
+                  .brand
+              }
             />
           </View>
 
-          <ActivityIndicator size="small" color={theme.colors.brand} />
+          <ActivityIndicator
+            size="small"
+            color={
+              theme.colors
+                .brand
+            }
+          />
 
-          <Text style={styles.stateTitle}>Buscando ocorrências</Text>
+          <Text
+            style={
+              styles.stateTitle
+            }
+          >
+            Buscando ocorrências
+          </Text>
 
-          <Text style={styles.stateDescription}>
+          <Text
+            style={
+              styles.stateDescription
+            }
+          >
             Estamos procurando animais próximos da sua localização.
           </Text>
         </View>
@@ -9939,37 +12194,82 @@ const handleOccurrenceDeleted =
   // LOCALIZAÇÃO NEGADA
   // ==========================================================
 
-  if (localizacaoNegada) {
+  if (
+    localizacaoNegada
+  ) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.stateContainer}>
-          <View style={styles.stateIcon}>
+      <SafeAreaView
+        style={
+          styles.container
+        }
+      >
+        <View
+          style={
+            styles.stateContainer
+          }
+        >
+          <View
+            style={
+              styles.stateIcon
+            }
+          >
             <Ionicons
               name="location-outline"
               size={34}
-              color={theme.colors.brand}
+              color={
+                theme.colors
+                  .brand
+              }
             />
           </View>
 
-          <Text style={styles.stateTitle}>Localização necessária</Text>
+          <Text
+            style={
+              styles.stateTitle
+            }
+          >
+            Localização necessária
+          </Text>
 
-          <Text style={styles.stateDescription}>
-            Precisamos da sua localização para mostrar as ocorrências mais
-            próximas de você.
+          <Text
+            style={
+              styles.stateDescription
+            }
+          >
+            Precisamos da sua localização para mostrar as ocorrências mais próximas de você.
           </Text>
 
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Tentar permitir localização novamente"
-            onPress={() => void carregarFeed()}
-            style={({ pressed }) => [
-              styles.stateButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Ionicons name="location" size={18} color={theme.colors.surface} />
+            onPress={() =>
+              void carregarFeed()
+            }
+            style={({
+              pressed,
+            }) => [
+                styles.stateButton,
 
-            <Text style={styles.stateButtonText}>Tentar novamente</Text>
+                pressed &&
+                styles.buttonPressed,
+              ]}
+          >
+            <Ionicons
+              name="location"
+              size={18}
+              color={
+                theme.colors
+                  .surface
+              }
+            />
+
+            <Text
+              style={
+                styles.stateButtonText
+              }
+            >
+              Tentar novamente
+            </Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -9982,32 +12282,81 @@ const handleOccurrenceDeleted =
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.stateContainer}>
-          <View style={[styles.stateIcon, styles.errorIcon]}>
+      <SafeAreaView
+        style={
+          styles.container
+        }
+      >
+        <View
+          style={
+            styles.stateContainer
+          }
+        >
+          <View
+            style={[
+              styles.stateIcon,
+              styles.errorIcon,
+            ]}
+          >
             <Ionicons
               name="cloud-offline-outline"
               size={34}
-              color={theme.colors.semantic.danger.text}
+              color={
+                theme.colors
+                  .semantic
+                  .danger
+                  .text
+              }
             />
           </View>
 
-          <Text style={styles.stateTitle}>Não foi possível carregar</Text>
+          <Text
+            style={
+              styles.stateTitle
+            }
+          >
+            Não foi possível carregar
+          </Text>
 
-          <Text style={styles.stateDescription}>{error}</Text>
+          <Text
+            style={
+              styles.stateDescription
+            }
+          >
+            {error}
+          </Text>
 
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Tentar carregar feed novamente"
-            onPress={() => void carregarFeed()}
-            style={({ pressed }) => [
-              styles.stateButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Ionicons name="refresh" size={18} color={theme.colors.surface} />
+            onPress={() =>
+              void carregarFeed()
+            }
+            style={({
+              pressed,
+            }) => [
+                styles.stateButton,
 
-            <Text style={styles.stateButtonText}>Tentar novamente</Text>
+                pressed &&
+                styles.buttonPressed,
+              ]}
+          >
+            <Ionicons
+              name="refresh"
+              size={18}
+              color={
+                theme.colors
+                  .surface
+              }
+            />
+
+            <Text
+              style={
+                styles.stateButtonText
+              }
+            >
+              Tentar novamente
+            </Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -10019,392 +12368,1152 @@ const handleOccurrenceDeleted =
   // ==========================================================
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={
+        styles.container
+      }
+    >
       <FlatList
-        data={ocorrenciasFiltradas}
-        keyExtractor={(item) => String(item.id_ocorrencia)}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+        data={
+          ocorrenciasFiltradas
+        }
+        keyExtractor={(
+          item,
+        ) =>
+          String(
+            item.id_ocorrencia,
+          )
+        }
+        showsVerticalScrollIndicator={
+          false
+        }
+        contentContainerStyle={
+          styles.listContent
+        }
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void carregarFeed("refresh")}
-            tintColor={theme.colors.brand}
-            colors={[theme.colors.brand]}
+            refreshing={
+              refreshing
+            }
+            onRefresh={() =>
+              void carregarFeed(
+                "refresh",
+              )
+            }
+            tintColor={
+              theme.colors
+                .brand
+            }
+            colors={[
+              theme.colors
+                .brand,
+            ]}
           />
         }
+
+        // =====================================================
+        // CABEÇALHO
+        // =====================================================
+
         ListHeaderComponent={
           <>
-            {/* ===============================================
-    HEADER
-================================================ */}
+            {/* =================================================
+                HEADER
+            ================================================= */}
 
-            <View style={styles.header}>
-              {/* =====================================================
-        MENU LATERAL
-    ====================================================== */}
-
+            <View
+              style={
+                styles.header
+              }
+            >
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Abrir menu"
                 accessibilityHint="Abre o menu principal do PetRadar"
                 hitSlop={8}
-                onPress={abrirMenu}
-                style={({ pressed }) => [
-                  styles.headerMenuButton,
-                  pressed && styles.buttonPressed,
-                ]}
+                onPress={
+                  abrirMenu
+                }
+                style={({
+                  pressed,
+                }) => [
+                    styles.headerMenuButton,
+
+                    pressed &&
+                    styles.buttonPressed,
+                  ]}
               >
                 <Ionicons
                   name="menu-outline"
                   size={24}
-                  color={theme.colors.textTitle}
+                  color={
+                    theme.colors
+                      .textTitle
+                  }
                 />
               </Pressable>
 
-              {/* =====================================================
-        TÍTULO
-    ====================================================== */}
-
-              <View style={styles.headerContent}>
-                <Text style={styles.headerTitle} numberOfLines={1}>
+              <View
+                style={
+                  styles.headerContent
+                }
+              >
+                <Text
+                  style={
+                    styles.headerTitle
+                  }
+                  numberOfLines={1}
+                >
                   Ocorrências
                 </Text>
               </View>
 
-              {/* =====================================================
-        PERFIL + RAIO
-    ====================================================== */}
-
-              <View style={styles.headerActions}>
+              <View
+                style={
+                  styles.headerActions
+                }
+              >
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Abrir perfil"
                   accessibilityHint="Abre as opções da sua conta"
-                  onPress={() => setProfileMenuVisible(true)}
-                  style={({ pressed }) => [
-                    styles.headerAvatarButton,
-                    pressed && styles.buttonPressed,
-                  ]}
+                  onPress={() =>
+                    setProfileMenuVisible(
+                      true,
+                    )
+                  }
+                  style={({
+                    pressed,
+                  }) => [
+                      styles.headerAvatarButton,
+
+                      pressed &&
+                      styles.buttonPressed,
+                    ]}
                 >
                   <Image
                     source={{
-                      uri: profilePhoto || "https://i.pravatar.cc/150?img=11",
+                      uri:
+                        profilePhoto ||
+                        "https://i.pravatar.cc/150?img=11",
                     }}
-                    style={styles.headerAvatarImage}
+                    style={
+                      styles.headerAvatarImage
+                    }
                   />
 
-                  <View style={styles.headerOnlineIndicator} />
+                  <View
+                    style={
+                      styles.headerOnlineIndicator
+                    }
+                  />
                 </Pressable>
 
-                <View style={styles.radiusBadge}>
+                <View
+                  style={
+                    styles.radiusBadge
+                  }
+                >
                   <Ionicons
-                    name="navigate-outline"
+                    name={
+                      modoFeed ===
+                        "ECO"
+                        ? "earth-outline"
+                        : "navigate-outline"
+                    }
                     size={13}
-                    color={theme.colors.brand}
+                    color={
+                      theme.colors
+                        .brand
+                    }
                   />
 
-                  <Text style={styles.radiusText}>{raioPesquisaKm} km</Text>
+                  <Text
+                    style={
+                      styles.radiusText
+                    }
+                  >
+                    {modoFeed ===
+                      "ECO"
+                      ? "Mundo"
+                      : `${raioPesquisaKm} km`}
+                  </Text>
                 </View>
               </View>
             </View>
-            {/* ===============================================
-                BANNER
-            ================================================ */}
 
-            <View style={styles.communityBanner}>
-              <View style={styles.communityIcon}>
-                <MaterialCommunityIcons
-                  name="heart-pulse"
-                  size={24}
-                  color={theme.colors.brand}
-                />
-              </View>
+            {/* =================================================
+                CARROSSEL DE BANNERS
+            ================================================= */}
 
-              <View style={styles.communityContent}>
-                <Text style={styles.communityTitle}>
-                  Juntos fazemos a diferença
-                </Text>
+            <FeedBannerCarousel />
 
-                <Text style={styles.communityDescription}>
-                  Acompanhe ocorrências próximas e ajude animais que precisam de
-                  cuidado.
-                </Text>
-              </View>
-            </View>
+            {/* =================================================
+                CARROSSEL: BUSCA / MODOS DO FEED
+            ================================================= */}
 
-            {/* ===============================================
-                BUSCA
-            ================================================ */}
+            <View
+              style={
+                styles.feedModeCarouselWrapper
+              }
+            >
+              <ScrollView
+                ref={
+                  feedModeCarouselRef
+                }
+                horizontal
+                pagingEnabled
+                bounces={false}
+                scrollEnabled={
+                  !refreshing
+                }
+                showsHorizontalScrollIndicator={
+                  false
+                }
+                keyboardShouldPersistTaps="handled"
+                decelerationRate="fast"
+              >
+                {/* =============================================
+                    PÁGINA 1 — LAYOUT ORIGINAL / PROXIMIDADE
+                ============================================== */}
 
-            <View style={styles.searchBox}>
-              <Ionicons
-                name="search-outline"
-                size={19}
-                color={theme.colors.textBody}
-              />
-
-              <TextInput
-                value={search}
-                onChangeText={setSearch}
-                placeholder="Pesquisar animal ou local..."
-                placeholderTextColor={theme.colors.textBody}
-                style={styles.searchInput}
-                returnKeyType="search"
-              />
-
-              {search.length > 0 ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Limpar pesquisa"
-                  hitSlop={8}
-                  onPress={() => setSearch("")}
+                <View
+                  style={
+                    styles.feedModeCarouselPage
+                  }
                 >
-                  <Ionicons
-                    name="close-circle"
-                    size={19}
-                    color={theme.colors.textBody}
-                  />
-                </Pressable>
-              ) : null}
+                  {/* ===========================================
+                      BUSCA
+                  ============================================ */}
+
+                  <View
+                    style={
+                      styles.searchBox
+                    }
+                  >
+                    <Ionicons
+                      name="search-outline"
+                      size={19}
+                      color={
+                        theme.colors
+                          .textBody
+                      }
+                    />
+
+                    <TextInput
+                      value={
+                        search
+                      }
+                      onChangeText={
+                        setSearch
+                      }
+                      placeholder="Pesquisar animal ou local..."
+                      placeholderTextColor={
+                        theme.colors
+                          .textBody
+                      }
+                      style={
+                        styles.searchInput
+                      }
+                      returnKeyType="search"
+                    />
+
+                    {search.length >
+                    0 ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Limpar pesquisa"
+                        hitSlop={8}
+                        onPress={() =>
+                          setSearch(
+                            "",
+                          )
+                        }
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={19}
+                          color={
+                            theme.colors
+                              .textBody
+                          }
+                        />
+                      </Pressable>
+                    ) : null}
+                  </View>
+
+                  {/* ===========================================
+                      CABEÇALHO ORIGINAL DO FEED
+                  ============================================ */}
+
+                  <View
+                    style={
+                      styles.feedSectionHeader
+                    }
+                  >
+                    <View
+                      style={
+                        styles.feedSectionText
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.feedSectionTitle
+                        }
+                      >
+                        Ocorrências
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.feedSectionSubtitle
+                        }
+                      >
+                        Ordenadas da mais próxima para a mais distante
+                      </Text>
+                    </View>
+
+                    <View
+                      style={
+                        styles.counterBadge
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.counterText
+                        }
+                      >
+                        {
+                          ocorrenciasFiltradas
+                            .length
+                        }
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* =============================================
+                    PÁGINA 2 — SELEÇÃO DE MODO
+                ============================================== */}
+
+                <View
+                  style={[
+                    styles.feedModeCarouselPage,
+                    styles.feedModeButtonsPage,
+                  ]}
+                >
+                  {/* ===========================================
+                      MODO PROXIMIDADE
+                  ============================================ */}
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Ocorrências locais"
+                    accessibilityHint={`Mostra ocorrências dentro do raio de ${raioPesquisaKm} km`}
+                    accessibilityState={{
+                      selected:
+                        modoFeed ===
+                        "PROXIMIDADE",
+
+                      disabled:
+                        refreshing,
+                    }}
+                    disabled={
+                      refreshing
+                    }
+                    onPress={() => {
+                      selecionarModoFeed(
+                        "PROXIMIDADE",
+                      );
+                    }}
+                    style={({
+                      pressed,
+                    }) => [
+                        styles.feedModeButton,
+
+                        modoFeed ===
+                          "PROXIMIDADE" &&
+                          styles.feedModeButtonActive,
+
+                        pressed &&
+                          !refreshing &&
+                          styles.feedModeButtonPressed,
+                      ]}
+                  >
+                    <View
+                      style={[
+                        styles.feedModeIconBox,
+
+                        modoFeed ===
+                          "PROXIMIDADE" &&
+                          styles.feedModeIconBoxActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name="location-outline"
+                        size={24}
+                        color={
+                          modoFeed ===
+                            "PROXIMIDADE"
+                            ? theme.colors
+                              .surface
+                            : theme.colors
+                              .brand
+                        }
+                      />
+                    </View>
+
+                    <View
+                      style={
+                        styles.feedModeContent
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.feedModeTitle,
+
+                          modoFeed ===
+                            "PROXIMIDADE" &&
+                            styles.feedModeTitleActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        Ocorrências locais
+                      </Text>
+
+                      <Text
+                        style={[
+                          styles.feedModeSubtitle,
+
+                          modoFeed ===
+                            "PROXIMIDADE" &&
+                            styles.feedModeSubtitleActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        Até {raioPesquisaKm} km
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  {/* ===============================================
+                      MODO ECO
+                  ================================================ */}
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Ocorrências mais ecoadas"
+                    accessibilityHint="Mostra ocorrências globais priorizando as que receberam mais Ecos"
+                    accessibilityState={{
+                      selected:
+                        modoFeed ===
+                        "ECO",
+
+                      disabled:
+                        refreshing,
+                    }}
+                    disabled={
+                      refreshing
+                    }
+onPress={() => {
+                      selecionarModoFeed(
+                        "ECO",
+                      );
+                    }}
+                    style={({
+                      pressed,
+                    }) => [
+                        styles.feedModeButton,
+
+                        modoFeed ===
+                          "ECO" &&
+                          styles.feedModeButtonActive,
+
+                        pressed &&
+                          !refreshing &&
+                          styles.feedModeButtonPressed,
+                      ]}
+                  >
+                    <View
+                      style={[
+                        styles.feedModeIconBox,
+
+                        modoFeed ===
+                          "ECO" &&
+                          styles.feedModeIconBoxActive,
+                      ]}
+                    >
+                      <Image
+                        source={require(
+                          "../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
+                        )}
+                        resizeMode="contain"
+                        style={[
+                          styles.feedModeEcoIcon,
+
+                          {
+                            tintColor:
+                              modoFeed ===
+                                "ECO"
+                                ? theme.colors
+                                  .surface
+                                : theme.colors
+                                  .brand,
+                          },
+                        ]}
+                      />
+                    </View>
+
+                    <View
+                      style={
+                        styles.feedModeContent
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.feedModeTitle,
+
+                          modoFeed ===
+                          "ECO" &&
+                          styles.feedModeTitleActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        ECO
+                      </Text>
+
+                      <Text
+                        style={[
+                          styles.feedModeSubtitle,
+
+                          modoFeed ===
+                          "ECO" &&
+                          styles.feedModeSubtitleActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        Mais ecoadas
+                      </Text>
+                    </View>
+                  </Pressable>
+                </View>
+              </ScrollView>
             </View>
 
-            {/* ===============================================
-                CABEÇALHO FEED
-            ================================================ */}
-
-            <View style={styles.feedSectionHeader}>
-              <View>
-                <Text style={styles.feedSectionTitle}>
-                  Ocorrências próximas
-                </Text>
-
-                <Text style={styles.feedSectionSubtitle}>
-                  Ordenadas da mais próxima para a mais distante
-                </Text>
-              </View>
-
-              <View style={styles.counterBadge}>
-                <Text style={styles.counterText}>
-                  {ocorrenciasFiltradas.length}
-                </Text>
-              </View>
-            </View>
-
-            {/* ===============================================
+            {/* =================================================
                 FILTROS
-            ================================================ */}
+            ================================================= */}
 
             <ScrollView
               horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filtersContent}
+              showsHorizontalScrollIndicator={
+                false
+              }
+              contentContainerStyle={
+                styles.filtersContent
+              }
             >
-              {FILTROS.map((item) => {
-                const ativo = filtro === item.id;
+              {FILTROS.map(
+                (
+                  item,
+                ) => {
+                  const ativo =
+                    filtro ===
+                    item.id;
 
-                return (
-                  <Pressable
-                    key={item.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Filtrar por ${item.label}`}
-                    onPress={() => setFiltro(item.id)}
-                    style={({ pressed }) => [
-                      styles.filterChip,
+                  return (
+                    <Pressable
+                      key={
+                        item.id
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={`Filtrar por ${item.label}`}
+                      onPress={() =>
+                        setFiltro(
+                          item.id,
+                        )
+                      }
+                      style={({
+                        pressed,
+                      }) => [
+                          styles.filterChip,
 
-                      ativo && styles.filterChipActive,
+                          ativo &&
+                          styles.filterChipActive,
 
-                      pressed && styles.buttonPressed,
-                    ]}
-                  >
-                    <Ionicons
-                      name={item.icon}
-                      size={15}
-                      color={ativo ? theme.colors.surface : theme.colors.brand}
-                    />
-
-                    <Text
-                      style={[
-                        styles.filterText,
-
-                        ativo && styles.filterTextActive,
-                      ]}
+                          pressed &&
+                          styles.buttonPressed,
+                        ]}
                     >
-                      {item.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Ionicons
+                        name={
+                          item.icon
+                        }
+                        size={15}
+                        color={
+                          ativo
+                            ? theme
+                              .colors
+                              .surface
+                            : theme
+                              .colors
+                              .brand
+                        }
+                      />
+
+                      <Text
+                        style={[
+                          styles.filterText,
+
+                          ativo &&
+                          styles.filterTextActive,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </Pressable>
+                  );
+                },
+              )}
             </ScrollView>
           </>
         }
-        renderItem={({ item }) => (
-          <OccurrenceCard occurrence={item} onPress={abrirDetalheOcorrencia} />
+
+        // =====================================================
+        // CARD
+        // =====================================================
+
+        renderItem={({
+          item,
+        }) => (
+          <OccurrenceCard
+            occurrence={
+              item
+            }
+            forcaLoading={
+              forcasEmAndamento.has(
+                item.id_ocorrencia,
+              )
+            }
+            onPress={
+              abrirDetalheOcorrencia
+            }
+            onToggleForca={
+              alternarForca
+            }
+            onOpenOptions={
+              abrirOpcoesOcorrencia
+            }
+          />
         )}
+
+        // =====================================================
+        // LISTA VAZIA
+        // =====================================================
+
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIcon}>
+          <View
+            style={
+              styles.emptyContainer
+            }
+          >
+            <View
+              style={
+                styles.emptyIcon
+              }
+            >
               <MaterialCommunityIcons
                 name="paw-outline"
                 size={34}
-                color={theme.colors.brand}
+                color={
+                  theme.colors
+                    .brand
+                }
               />
             </View>
 
-            <Text style={styles.emptyTitle}>Nenhuma ocorrência encontrada</Text>
+            <Text
+              style={
+                styles.emptyTitle
+              }
+            >
+              Nenhuma ocorrência encontrada
+            </Text>
 
-            <Text style={styles.emptyText}>
-              {ocorrencias.length === 0
-                ? `Não encontramos ocorrências dentro do raio de ${raioPesquisaKm} km.`
+            <Text
+              style={
+                styles.emptyText
+              }
+            >
+              {ocorrencias.length ===
+                0
+                ? modoFeed ===
+                  "ECO"
+                  ? "Não encontramos ocorrências disponíveis no modo Eco."
+                  : `Não encontramos ocorrências dentro do raio de ${raioPesquisaKm} km.`
                 : "Não encontramos ocorrências correspondentes à pesquisa ou ao filtro selecionado."}
             </Text>
 
-            {(search || filtro !== "TODAS") && (
-              <Pressable
-                onPress={() => {
-                  setSearch("");
-                  setFiltro("TODAS");
-                }}
-                style={({ pressed }) => [
-                  styles.clearButton,
-                  pressed && styles.buttonPressed,
-                ]}
-              >
-                <Text style={styles.clearButtonText}>Limpar filtros</Text>
-              </Pressable>
-            )}
+            {((modoFeed ===
+              "PROXIMIDADE" &&
+              search) ||
+              filtro !==
+              "TODAS") && (
+                <Pressable
+                  onPress={() => {
+                    setSearch(
+                      "",
+                    );
+
+                    setFiltro(
+                      "TODAS",
+                    );
+                  }}
+                  style={({
+                    pressed,
+                  }) => [
+                      styles.clearButton,
+
+                      pressed &&
+                      styles.buttonPressed,
+                    ]}
+                >
+                  <Text
+                    style={
+                      styles.clearButtonText
+                    }
+                  >
+                    Limpar filtros
+                  </Text>
+                </Pressable>
+              )}
           </View>
         }
       />
-      {/* ======================================================
 
-    REGISTRAR OCORRÊNCIA
-====================================================== */}
+      {/* ======================================================
+          REGISTRAR OCORRÊNCIA
+      ====================================================== */}
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Registrar nova ocorrência"
         accessibilityHint="Abre o formulário para registrar um animal"
-        onPress={registrarOcorrencia}
-        style={({ pressed }) => [
-          styles.registerButton,
-          pressed && styles.registerButtonPressed,
-        ]}
+        onPress={
+          registrarOcorrencia
+        }
+        style={({
+          pressed,
+        }) => [
+            styles.registerButton,
+
+            pressed &&
+            styles.registerButtonPressed,
+          ]}
       >
-        <View style={styles.registerButtonIcon}>
-          <Ionicons name="add" size={23} color={theme.colors.brand} />
+        <View
+          style={
+            styles.registerButtonIcon
+          }
+        >
+          <Ionicons
+            name="add"
+            size={23}
+            color={
+              theme.colors
+                .brand
+            }
+          />
         </View>
 
-        <View style={styles.registerButtonContent}>
-          <Text style={styles.registerButtonTitle}>Registrar ocorrência</Text>
+        <View
+          style={
+            styles.registerButtonContent
+          }
+        >
+          <Text
+            style={
+              styles.registerButtonTitle
+            }
+          >
+            Registrar ocorrência
+          </Text>
 
-          <Text style={styles.registerButtonSubtitle}>Avise a comunidade</Text>
+          <Text
+            style={
+              styles.registerButtonSubtitle
+            }
+          >
+            Avise a comunidade
+          </Text>
         </View>
 
-        <View style={styles.registerButtonArrow}>
+        <View
+          style={
+            styles.registerButtonArrow
+          }
+        >
           <Ionicons
             name="arrow-forward"
             size={19}
-            color={theme.colors.surface}
+            color={
+              theme.colors
+                .surface
+            }
           />
         </View>
       </Pressable>
 
       {/* ======================================================
-    MENU PRINCIPAL
+          DENÚNCIA DA PUBLICAÇÃO
+      ====================================================== */}
 
-    
-======================================================= */}
+      <Modal
+        visible={
+          denunciaOccurrenceId !==
+          null
+        }
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={
+          fecharDenuncia
+        }
+      >
+        <View
+          style={
+            styles.reportOverlay
+          }
+        >
+          {/* Área externa fecha o modal */}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Fechar denúncia"
+            onPress={
+              fecharDenuncia
+            }
+            style={
+              StyleSheet.absoluteFill
+            }
+          />
+
+          <View
+            style={
+              styles.reportSheet
+            }
+          >
+            <View
+              style={
+                styles.reportHandle
+              }
+            />
+
+            <View
+              style={
+                styles.reportHeader
+              }
+            >
+              <View
+                style={
+                  styles.reportHeaderIcon
+                }
+              >
+                <Ionicons
+                  name="flag-outline"
+                  size={21}
+                  color={
+                    theme.colors
+                      .semantic
+                      .danger
+                      .text
+                  }
+                />
+              </View>
+
+              <View
+                style={
+                  styles.reportHeaderContent
+                }
+              >
+                <Text
+                  style={
+                    styles.reportTitle
+                  }
+                >
+                  Denunciar publicação
+                </Text>
+
+                <Text
+                  style={
+                    styles.reportDescription
+                  }
+                >
+                  Selecione o motivo da denúncia.
+                </Text>
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Fechar"
+                disabled={
+                  enviandoDenuncia
+                }
+                onPress={
+                  fecharDenuncia
+                }
+                hitSlop={8}
+                style={({
+                  pressed,
+                }) => [
+                    styles.reportCloseButton,
+
+                    pressed &&
+                    styles.buttonPressed,
+                  ]}
+              >
+                <Ionicons
+                  name="close"
+                  size={21}
+                  color={
+                    theme.colors
+                      .textBody
+                  }
+                />
+              </Pressable>
+            </View>
+
+            {enviandoDenuncia ? (
+              <View
+                style={
+                  styles.reportLoading
+                }
+              >
+                <ActivityIndicator
+                  size="small"
+                  color={
+                    theme.colors
+                      .brand
+                  }
+                />
+
+                <Text
+                  style={
+                    styles.reportLoadingText
+                  }
+                >
+                  Enviando denúncia...
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={
+                  styles.reportReasons
+                }
+              >
+                {DENUNCIA_MOTIVOS.map(
+                  (
+                    motivo,
+                  ) => (
+                    <Pressable
+                      key={
+                        motivo.id
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        motivo.label
+                      }
+                      onPress={() =>
+                        void enviarDenuncia(
+                          motivo.label,
+                        )
+                      }
+                      style={({
+                        pressed,
+                      }) => [
+                          styles.reportReasonButton,
+
+                          pressed &&
+                          styles.reportReasonButtonPressed,
+                        ]}
+                    >
+                      <View
+                        style={
+                          styles.reportReasonIcon
+                        }
+                      >
+                        <Ionicons
+                          name="flag-outline"
+                          size={17}
+                          color={
+                            theme.colors
+                              .textBody
+                          }
+                        />
+                      </View>
+
+                      <Text
+                        style={
+                          styles.reportReasonText
+                        }
+                      >
+                        {motivo.label}
+                      </Text>
+
+                      <Ionicons
+                        name="chevron-forward"
+                        size={17}
+                        color={
+                          theme.colors
+                            .textBody
+                        }
+                      />
+                    </Pressable>
+                  ),
+                )}
+              </View>
+            )}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Cancelar denúncia"
+              disabled={
+                enviandoDenuncia
+              }
+              onPress={
+                fecharDenuncia
+              }
+              style={({
+                pressed,
+              }) => [
+                  styles.reportCancelButton,
+
+                  pressed &&
+                  styles.buttonPressed,
+                ]}
+            >
+              <Text
+                style={
+                  styles.reportCancelText
+                }
+              >
+                Cancelar
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ======================================================
+          MENU PRINCIPAL
+      ====================================================== */}
 
       <AppNavigationDrawer
-        visible={menuVisible}
+        visible={
+          menuVisible
+        }
         activeScreen="Feed"
-        profilePhoto={profilePhoto}
-        userName={user?.name || null}
-        userEmail={user?.email || null}
-        onClose={fecharMenu}
+        profilePhoto={
+          profilePhoto
+        }
+        userName={
+          user?.name ||
+          null
+        }
+        userEmail={
+          user?.email ||
+          null
+        }
+        onClose={
+          fecharMenu
+        }
         onNavigateMap={() => {
-          navigation.navigate("Mapa");
+          navigation.navigate(
+            "Mapa",
+          );
         }}
         onNavigateFeed={() => {
-          navigation.navigate("Feed");
+          navigation.navigate(
+            "Feed",
+          );
         }}
       />
 
       {/* ======================================================
-    MENU RÁPIDO DO PERFIL
+          MENU RÁPIDO DO PERFIL
+      ====================================================== */}
 
-    [ALTERE AQUI]
-======================================================= */}
-
-<ProfileQuickMenu
-    visible={
-        profileMenuVisible
-    }
-
-    profilePhoto={
-        profilePhoto
-    }
-
-    userName={
-        user?.name || null
-    }
-
-    userEmail={
-        user?.email || null
-    }
-
-    onClose={() => {
-        setProfileMenuVisible(
+      <ProfileQuickMenu
+        visible={
+          profileMenuVisible
+        }
+        profilePhoto={
+          profilePhoto
+        }
+        userName={
+          user?.name ||
+          null
+        }
+        userEmail={
+          user?.email ||
+          null
+        }
+        onClose={() => {
+          setProfileMenuVisible(
             false,
-        );
-    }}
-
-    onOpenProfile={() => {
-        setProfileDetailVisible(
+          );
+        }}
+        onOpenProfile={() => {
+          setProfileDetailVisible(
             true,
-        );
-    }}
-/>
+          );
+        }}
+      />
 
-{/* ======================================================
-    PERFIL COMPLETO
+      {/* ======================================================
+          PERFIL COMPLETO
+      ====================================================== */}
 
-    [ALTERE AQUI]
-======================================================= */}
-
-<ProfileDetailScreen
-    visible={
-        profileDetailVisible
-    }
-
-    onClose={() => {
-        setProfileDetailVisible(
+      <ProfileDetailScreen
+        visible={
+          profileDetailVisible
+        }
+        onClose={() => {
+          setProfileDetailVisible(
             false,
-        );
-    }}
+          );
+        }}
+        onProfileUpdated={
+          handleProfileUpdated
+        }
+        onOccurrencePress={
+          abrirDetalheOcorrencia
+        }
+      />
 
-    onProfileUpdated={
-        handleProfileUpdated
-    }
-
-    onOccurrencePress={
-        abrirDetalheOcorrencia
-    }
-/>
-
-
-
-      {/* ================================================
-    DETALHES DA OCORRÊNCIA
-================================================= */}
+      {/* ======================================================
+          DETALHES DA OCORRÊNCIA
+      ====================================================== */}
 
       <OccurrenceDetailDrawer
-        visible={selectedOccurrenceId !== null}
-        occurrenceId={selectedOccurrenceId}
-        onClose={() => setSelectedOccurrenceId(null)}
-        onEdit={handleOccurrenceEdit}
-        onDeleted={handleOccurrenceDeleted}
+        visible={
+          selectedOccurrenceId !==
+          null
+        }
+        occurrenceId={
+          selectedOccurrenceId
+        }
+        onClose={() =>
+          setSelectedOccurrenceId(
+            null,
+          )
+        }
+        onEdit={
+          handleOccurrenceEdit
+        }
+        onDeleted={
+          handleOccurrenceDeleted
+        }
       />
     </SafeAreaView>
   );
@@ -10414,831 +13523,1681 @@ const handleOccurrenceDeleted =
 // ESTILOS
 // ============================================================
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
+const styles =
+  StyleSheet.create({
+    // ========================================================
+    // BASE
+    // ========================================================
 
-  listContent: {
-    paddingHorizontal: theme.spacing.globalMargin,
-    paddingBottom: 125,
-  },
+    container: {
+      flex: 1,
 
-  // ==========================================================
-  // HEADER
-  // ==========================================================
+      backgroundColor:
+        theme.colors
+          .background,
+    },
 
-  header: {
-    minHeight: 82,
+    listContent: {
+      paddingHorizontal:
+        theme.spacing
+          .globalMargin,
 
-    flexDirection: "row",
-    alignItems: "center",
+      paddingBottom:
+        125,
+    },
 
-    paddingVertical: 10,
+    // ========================================================
+    // HEADER
+    // ========================================================
 
-    gap: 12,
-  },
-  // ==========================================================
-  // MENU
-  // ==========================================================
+    header: {
+      minHeight: 82,
 
-  headerMenuButton: {
-    width: 46,
-    height: 46,
+      flexDirection:
+        "row",
 
-    borderRadius: 23,
+      alignItems:
+        "center",
 
-    alignItems: "center",
-    justifyContent: "center",
+      paddingVertical:
+        10,
 
-    backgroundColor: theme.colors.surface,
+      gap: 12,
+    },
 
-    ...theme.shadows.elevation1,
-  },
+    headerMenuButton: {
+      width: 46,
+      height: 46,
 
-  // ==========================================================
-  // TÍTULO
-  // ==========================================================
+      borderRadius:
+        23,
 
-  headerContent: {
-    flex: 1,
+      alignItems:
+        "center",
 
-    justifyContent: "center",
+      justifyContent:
+        "center",
 
-    minWidth: 0,
-  },
+      backgroundColor:
+        theme.colors
+          .surface,
 
-  headerTitle: {
-    color: theme.colors.textTitle,
+      ...theme.shadows
+        .elevation1,
+    },
 
-    fontSize: 20,
-    fontWeight: "900",
+    headerContent: {
+      flex: 1,
 
-    letterSpacing: -0.3,
-  },
+      justifyContent:
+        "center",
 
-  // ==========================================================
-  // PERFIL + RAIO
-  // ==========================================================
+      minWidth: 0,
+    },
 
-  headerActions: {
-    alignItems: "center",
-    justifyContent: "center",
+    headerTitle: {
+      color:
+        theme.colors
+          .textTitle,
 
-    gap: 5,
-  },
+      fontSize: 20,
 
-  headerAvatarButton: {
-    width: 46,
-    height: 46,
+      fontWeight:
+        "900",
 
-    borderRadius: 23,
+      letterSpacing:
+        -0.3,
 
-    padding: 2,
+      textAlign:
+        "center",
+    },
 
-    backgroundColor: theme.colors.surface,
+    headerActions: {
+      alignItems:
+        "center",
 
-    ...theme.shadows.elevation1,
-  },
+      justifyContent:
+        "center",
 
-  headerAvatarImage: {
-    width: "100%",
-    height: "100%",
+      gap: 5,
+    },
 
-    borderRadius: 21,
-  },
+    headerAvatarButton: {
+      width: 46,
+      height: 46,
 
-  headerOnlineIndicator: {
-    position: "absolute",
+      borderRadius:
+        23,
 
-    right: 1,
-    bottom: 1,
+      padding: 2,
 
-    width: 11,
-    height: 11,
+      backgroundColor:
+        theme.colors
+          .surface,
 
-    borderRadius: 6,
+      ...theme.shadows
+        .elevation1,
+    },
 
-    backgroundColor: theme.colors.semantic.success.text,
+    headerAvatarImage: {
+      width: "100%",
+      height: "100%",
 
-    borderWidth: 2,
-    borderColor: theme.colors.surface,
-  },
+      borderRadius:
+        21,
+    },
 
-  radiusBadge: {
-    minHeight: 25,
+    headerOnlineIndicator: {
+      position:
+        "absolute",
 
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+      right: 1,
+      bottom: 1,
 
-    gap: 3,
+      width: 11,
+      height: 11,
 
-    paddingHorizontal: 8,
+      borderRadius:
+        6,
 
-    borderRadius: theme.radius.button,
+      backgroundColor:
+        theme.colors
+          .semantic
+          .success
+          .text,
 
-    backgroundColor: theme.colors.semantic.success.bg,
-  },
+      borderWidth:
+        2,
 
-  radiusText: {
-    color: theme.colors.brand,
+      borderColor:
+        theme.colors
+          .surface,
+    },
 
-    fontSize: 10,
-    fontWeight: "800",
-  },
+    radiusBadge: {
+      minHeight: 25,
 
-  backButton: {
-    width: 42,
-    height: 42,
+      flexDirection:
+        "row",
 
-    borderRadius: 14,
+      alignItems:
+        "center",
 
-    alignItems: "center",
-    justifyContent: "center",
+      justifyContent:
+        "center",
 
-    backgroundColor: theme.colors.surface,
+      gap: 3,
 
-    ...theme.shadows.elevation1,
-  },
+      paddingHorizontal:
+        8,
 
-  //
-  headerTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
+      borderRadius:
+        theme.radius
+          .button,
 
-    gap: 7,
-  },
+      backgroundColor:
+        theme.colors
+          .semantic
+          .success
+          .bg,
+    },
 
-  //
-  headerPawIcon: {
-    width: 25,
-    height: 25,
+    radiusText: {
+      color:
+        theme.colors
+          .brand,
 
-    borderRadius: 8,
+      fontSize: 10,
 
-    alignItems: "center",
-    justifyContent: "center",
+      fontWeight:
+        "800",
+    },
 
-    backgroundColor: theme.colors.brand,
-  },
+    // ========================================================
+    // CARROSSEL: BUSCA / MODOS DO FEED
+    // ========================================================
 
-  headerSubtitle: {
-    marginTop: 2,
+    feedModeCarouselWrapper: {
+      width: "100%",
 
-    color: theme.colors.textBody,
+      overflow:
+        "hidden",
+    },
 
-    fontSize: 11,
-    fontWeight: "500",
-  },
+    feedModeCarouselPage: {
+      width:
+        FEED_MODE_CAROUSEL_WIDTH,
+    },
 
-  // ==========================================================
-  // BANNER
-  // ==========================================================
+    // ========================================================
+    // BUSCA
+    // ========================================================
 
-  communityBanner: {
-    minHeight: 92,
+    searchBox: {
+      width: "100%",
+      minHeight: 48,
 
-    flexDirection: "row",
-    alignItems: "center",
+      flexDirection:
+        "row",
 
-    marginTop: 4,
-    marginBottom: 14,
+      alignItems:
+        "center",
 
-    paddingHorizontal: 16,
-    paddingVertical: 15,
+      paddingHorizontal:
+        14,
 
-    borderRadius: theme.radius.card,
+      borderRadius:
+        15,
 
-    backgroundColor: theme.colors.brand,
+      backgroundColor:
+        theme.colors
+          .surface,
 
-    ...theme.shadows.elevation1,
-  },
+      ...theme.shadows
+        .elevation1,
+    },
 
-  communityIcon: {
-    width: 46,
-    height: 46,
+    searchInput: {
+      flex: 1,
 
-    borderRadius: 15,
+      height: 48,
 
-    alignItems: "center",
-    justifyContent: "center",
+      marginLeft: 9,
 
-    backgroundColor: theme.colors.surface,
-  },
+      color:
+        theme.colors
+          .textTitle,
 
-  communityContent: {
-    flex: 1,
+      fontSize: 13,
+    },
 
-    marginLeft: 13,
-  },
+    // ========================================================
+    // CABEÇALHO ORIGINAL DO FEED
+    // ========================================================
 
-  communityTitle: {
-    color: theme.colors.surface,
+    feedSectionHeader: {
+      flexDirection:
+        "row",
 
-    fontSize: 14,
-    fontWeight: "900",
-  },
+      alignItems:
+        "center",
 
-  communityDescription: {
-    marginTop: 4,
+      justifyContent:
+        "space-between",
 
-    color: theme.colors.surface,
+      marginTop: 22,
 
-    fontSize: 10,
-    lineHeight: 15,
-  },
+      marginBottom:
+        12,
+    },
 
-  // ==========================================================
-  // BUSCA
-  // ==========================================================
+    feedSectionText: {
+      flex: 1,
 
-  searchBox: {
-    minHeight: 48,
+      paddingRight: 12,
+    },
 
-    flexDirection: "row",
-    alignItems: "center",
+    feedSectionTitle: {
+      color:
+        theme.colors
+          .textTitle,
 
-    paddingHorizontal: 14,
+      fontSize: 16,
 
-    borderRadius: 15,
+      fontWeight:
+        "900",
+    },
 
-    backgroundColor: theme.colors.surface,
+    feedSectionSubtitle: {
+      marginTop: 3,
 
-    ...theme.shadows.elevation1,
-  },
+      color:
+        theme.colors
+          .textBody,
 
-  searchInput: {
-    flex: 1,
+      fontSize: 10,
+    },
 
-    height: 48,
+    counterBadge: {
+      minWidth: 34,
+      height: 30,
 
-    marginLeft: 9,
+      paddingHorizontal:
+        9,
 
-    color: theme.colors.textTitle,
+      borderRadius:
+        theme.radius
+          .button,
 
-    fontSize: 13,
-  },
+      alignItems:
+        "center",
 
-  // ==========================================================
-  // TÍTULO DO FEED
-  // ==========================================================
+      justifyContent:
+        "center",
 
-  feedSectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+      backgroundColor:
+        theme.colors
+          .inputBg,
+    },
 
-    marginTop: 22,
-    marginBottom: 12,
-  },
+    counterText: {
+      color:
+        theme.colors
+          .brand,
 
-  feedSectionTitle: {
-    color: theme.colors.textTitle,
+      fontSize: 11,
 
-    fontSize: 16,
-    fontWeight: "900",
-  },
+      fontWeight:
+        "900",
+    },
 
-  feedSectionSubtitle: {
-    marginTop: 3,
+    // ========================================================
+    // PÁGINA DOS MODOS
+    // ========================================================
 
-    color: theme.colors.textBody,
+    feedModeButtonsPage: {
+      minHeight: 112,
 
-    fontSize: 10,
-  },
+      flexDirection:
+        "row",
 
-  counterBadge: {
-    minWidth: 34,
-    height: 30,
+      alignItems:
+        "center",
 
-    paddingHorizontal: 9,
+      gap: 10,
 
-    borderRadius: theme.radius.button,
+      paddingBottom: 12,
+    },
 
-    alignItems: "center",
-    justifyContent: "center",
+    feedModeButton: {
+      flex: 1,
 
-    backgroundColor: theme.colors.inputBg,
-  },
+      minWidth: 0,
+      minHeight: 88,
 
-  counterText: {
-    color: theme.colors.brand,
+      flexDirection:
+        "row",
 
-    fontSize: 11,
-    fontWeight: "900",
-  },
+      alignItems:
+        "center",
 
-  // ==========================================================
-  // FILTROS
-  // ==========================================================
+      paddingHorizontal: 12,
 
-  filtersContent: {
-    gap: 8,
+      borderWidth: 1,
 
-    paddingBottom: 14,
-    paddingRight: 6,
-  },
+      borderColor:
+        theme.colors
+          .inputBg,
 
-  filterChip: {
-    minHeight: 38,
+      borderRadius: 18,
 
-    flexDirection: "row",
-    alignItems: "center",
+      backgroundColor:
+        theme.colors
+          .surface,
 
-    gap: 6,
+      ...theme.shadows
+        .elevation1,
+    },
 
-    paddingHorizontal: 13,
+    feedModeButtonActive: {
+      borderColor:
+        theme.colors
+          .brand,
 
-    borderRadius: theme.radius.button,
+      backgroundColor:
+        theme.colors
+          .brand,
+    },
 
-    borderWidth: 1,
-    borderColor: theme.colors.inputBg,
+    feedModeButtonPressed: {
+      opacity: 0.82,
 
-    backgroundColor: theme.colors.surface,
-  },
+      transform: [
+        {
+          scale: 0.985,
+        },
+      ],
+    },
 
-  filterChipActive: {
-    borderColor: theme.colors.brand,
+    feedModeIconBox: {
+      width: 42,
+      height: 42,
 
-    backgroundColor: theme.colors.brand,
-  },
+      flexShrink: 0,
 
-  filterText: {
-    color: theme.colors.textBody,
+      alignItems:
+        "center",
 
-    fontSize: 11,
-    fontWeight: "700",
-  },
+      justifyContent:
+        "center",
 
-  filterTextActive: {
-    color: theme.colors.surface,
-  },
+      borderRadius: 14,
 
-  // ==========================================================
-  // CARD
-  // ==========================================================
+      backgroundColor:
+        theme.colors
+          .semantic
+          .success
+          .bg,
+    },
 
-  card: {
-    overflow: "hidden",
+    feedModeIconBoxActive: {
+      backgroundColor:
+        theme.colors
+          .action,
+    },
 
-    marginBottom: 17,
+    feedModeEcoIcon: {
+      width: 26,
+      height: 26,
+    },
 
-    borderRadius: theme.radius.card,
+    feedModeContent: {
+      flex: 1,
 
-    backgroundColor: theme.colors.surface,
+      minWidth: 0,
 
-    ...theme.shadows.elevation1,
-  },
-  cardPressed: {
-    opacity: 0.94,
-    transform: [{ scale: 0.995 }],
-  },
+      marginLeft: 10,
+    },
 
-  imageContainer: {
-    position: "relative",
+    feedModeTitle: {
+      color:
+        theme.colors
+          .textTitle,
 
-    height: 215,
+      fontSize: 12,
 
-    backgroundColor: theme.colors.inputBg,
-  },
+      fontWeight:
+        "900",
+    },
 
-  image: {
-    width: "100%",
-    height: "100%",
-  },
+    feedModeTitleActive: {
+      color:
+        theme.colors
+          .surface,
+    },
 
-  imageFallback: {
-    flex: 1,
+    feedModeSubtitle: {
+      marginTop: 4,
 
-    alignItems: "center",
-    justifyContent: "center",
+      color:
+        theme.colors
+          .textBody,
 
-    gap: 8,
+      fontSize: 9,
 
-    backgroundColor: theme.colors.inputBg,
-  },
+      fontWeight:
+        "600",
+    },
 
-  imageFallbackText: {
-    color: theme.colors.textBody,
+    feedModeSubtitleActive: {
+      color:
+        theme.colors
+          .surface,
+    },
 
-    fontSize: 11,
-    fontWeight: "600",
-  },
+    // ========================================================
+    // FILTROS
+    // ========================================================
 
-  statusBadge: {
-    position: "absolute",
+    filtersContent: {
+      gap: 8,
 
-    top: 12,
-    left: 12,
+      paddingBottom:
+        14,
 
-    minHeight: 30,
+      paddingRight:
+        6,
+    },
 
-    flexDirection: "row",
-    alignItems: "center",
+    filterChip: {
+      minHeight: 38,
 
-    gap: 6,
+      flexDirection:
+        "row",
 
-    paddingHorizontal: 10,
+      alignItems:
+        "center",
 
-    borderRadius: theme.radius.button,
-  },
+      gap: 6,
 
-  statusDot: {
-    width: 7,
-    height: 7,
+      paddingHorizontal:
+        13,
 
-    borderRadius: 4,
-  },
+      borderRadius:
+        theme.radius
+          .button,
 
-  statusText: {
-    fontSize: 10,
-    fontWeight: "900",
-  },
+      borderWidth:
+        1,
 
-  distanceBadge: {
-    position: "absolute",
+      borderColor:
+        theme.colors
+          .inputBg,
 
-    top: 12,
-    right: 12,
+      backgroundColor:
+        theme.colors
+          .surface,
+    },
 
-    minHeight: 30,
+    filterChipActive: {
+      borderColor:
+        theme.colors
+          .brand,
 
-    flexDirection: "row",
-    alignItems: "center",
+      backgroundColor:
+        theme.colors
+          .brand,
+    },
 
-    gap: 4,
+    filterText: {
+      color:
+        theme.colors
+          .textBody,
 
-    paddingHorizontal: 10,
+      fontSize: 11,
 
-    borderRadius: theme.radius.button,
+      fontWeight:
+        "700",
+    },
 
-    backgroundColor: theme.colors.surface,
+    filterTextActive: {
+      color:
+        theme.colors
+          .surface,
+    },
 
-    ...theme.shadows.elevation1,
-  },
+    // ========================================================
+    // CARD / PUBLICAÇÃO
+    // ========================================================
 
-  distanceText: {
-    color: theme.colors.brand,
+    card: {
+      overflow:
+        "hidden",
 
-    fontSize: 10,
-    fontWeight: "900",
-  },
+      marginBottom:
+        18,
 
-  cardContent: {
-    padding: theme.spacing.padding,
-  },
+      borderRadius:
+        theme.radius
+          .card,
 
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
+      borderWidth:
+        1,
 
-  cardTitleContainer: {
-    flex: 1,
-  },
+      borderColor:
+        theme.colors
+          .inputBg,
 
-  cardTitle: {
-    color: theme.colors.textTitle,
+      backgroundColor:
+        theme.colors
+          .surface,
 
-    fontSize: 16,
-    fontWeight: "900",
+      ...theme.shadows
+        .elevation1,
+    },
 
-    lineHeight: 21,
-  },
+    // ========================================================
+    // AUTOR
+    // ========================================================
 
-  timeText: {
-    marginTop: 4,
+    postHeader: {
+      minHeight: 70,
 
-    color: theme.colors.textBody,
+      flexDirection:
+        "row",
 
-    fontSize: 10,
-  },
+      alignItems:
+        "center",
 
-  animalIcon: {
-    width: 40,
-    height: 40,
+      paddingHorizontal:
+        13,
 
-    marginLeft: 10,
+      paddingVertical:
+        11,
+    },
 
-    borderRadius: 13,
+    postHeaderMain: {
+      flex: 1,
 
-    alignItems: "center",
-    justifyContent: "center",
+      minWidth: 0,
 
-    backgroundColor: theme.colors.semantic.success.bg,
-  },
+      flexDirection:
+        "row",
 
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
+      alignItems:
+        "center",
+    },
 
-    marginTop: 14,
-  },
+    contentPressed: {
+      opacity: 0.84,
+    },
 
-  locationIcon: {
-    width: 31,
-    height: 31,
 
-    borderRadius: 10,
+    authorAvatar: {
+      width: 44,
+      height: 44,
 
-    alignItems: "center",
-    justifyContent: "center",
+      borderRadius:
+        22,
 
-    backgroundColor: theme.colors.inputBg,
-  },
+      overflow:
+        "hidden",
 
-  locationText: {
-    flex: 1,
+      alignItems:
+        "center",
 
-    marginLeft: 9,
+      justifyContent:
+        "center",
 
-    color: theme.colors.textBody,
+      backgroundColor:
+        theme.colors
+          .brand,
+    },
 
-    fontSize: 11,
-    lineHeight: 16,
-  },
+    authorAvatarImage: {
+      width: "100%",
+      height: "100%",
+    },
 
-  divider: {
-    height: 1,
+    authorInitials: {
+      color:
+        theme.colors
+          .surface,
 
-    marginVertical: 14,
+      fontSize: 13,
 
-    backgroundColor: theme.colors.inputBg,
-  },
+      fontWeight:
+        "900",
+    },
 
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    authorContent: {
+      flex: 1,
 
-    gap: 10,
-  },
+      minWidth: 0,
 
-  urgencyBadge: {
-    minHeight: 30,
+      marginLeft:
+        11,
+    },
 
-    flexDirection: "row",
-    alignItems: "center",
+    authorName: {
+      color:
+        theme.colors
+          .textTitle,
 
-    gap: 5,
+      fontSize: 13,
 
-    paddingHorizontal: 10,
+      fontWeight:
+        "900",
+    },
 
-    borderRadius: theme.radius.button,
-  },
+    authorMetaRow: {
+      flexDirection:
+        "row",
 
-  urgencyText: {
-    fontSize: 10,
-    fontWeight: "800",
-  },
+      alignItems:
+        "center",
 
-  registryText: {
-    color: theme.colors.textBody,
+      flexWrap:
+        "wrap",
 
-    fontSize: 9,
-    fontWeight: "600",
-  },
+      gap: 6,
 
-  // ==========================================================
-  // EMPTY STATE
-  // ==========================================================
+      marginTop: 5,
+    },
 
-  emptyContainer: {
-    alignItems: "center",
+    statusBadge: {
+      minHeight: 22,
 
-    paddingHorizontal: 25,
-    paddingVertical: 60,
-  },
+      flexDirection:
+        "row",
 
-  emptyIcon: {
-    width: 72,
-    height: 72,
+      alignItems:
+        "center",
 
-    borderRadius: 36,
+      gap: 5,
 
-    alignItems: "center",
-    justifyContent: "center",
+      paddingHorizontal:
+        8,
 
-    backgroundColor: theme.colors.semantic.success.bg,
-  },
+      borderRadius:
+        theme.radius
+          .button,
+    },
 
-  emptyTitle: {
-    marginTop: 17,
+    statusDot: {
+      width: 6,
+      height: 6,
 
-    color: theme.colors.textTitle,
+      borderRadius:
+        3,
+    },
 
-    fontSize: 16,
-    fontWeight: "900",
+    statusText: {
+      fontSize: 9,
 
-    textAlign: "center",
-  },
+      fontWeight:
+        "900",
+    },
 
-  emptyText: {
-    maxWidth: 290,
+    urgentBadge: {
+      minHeight: 22,
 
-    marginTop: 7,
+      flexDirection:
+        "row",
 
-    color: theme.colors.textBody,
+      alignItems:
+        "center",
 
-    fontSize: 12,
-    lineHeight: 18,
+      gap: 4,
 
-    textAlign: "center",
-  },
+      paddingHorizontal:
+        7,
 
-  clearButton: {
-    minHeight: 40,
+      borderRadius:
+        theme.radius
+          .button,
 
-    alignItems: "center",
-    justifyContent: "center",
+      backgroundColor:
+        theme.colors
+          .semantic
+          .danger
+          .bg,
+    },
 
-    marginTop: 18,
+    urgentText: {
+      color:
+        theme.colors
+          .semantic
+          .danger
+          .text,
 
-    paddingHorizontal: 17,
+      fontSize: 9,
 
-    borderRadius: theme.radius.button,
+      fontWeight:
+        "800",
+    },
 
-    backgroundColor: theme.colors.inputBg,
-  },
+    moreOptionsButton: {
+      width: 38,
+      height: 38,
 
-  clearButtonText: {
-    color: theme.colors.brand,
+      marginLeft: 6,
 
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  // ==========================================================
-  // REGISTRAR OCORRÊNCIA
-  // ==========================================================
+      borderRadius:
+        19,
 
-  //
-  registerButton: {
-    position: "absolute",
+      alignItems:
+        "center",
 
-    left: theme.spacing.globalMargin,
+      justifyContent:
+        "center",
+    },
 
-    right: theme.spacing.globalMargin,
+    // ========================================================
+    // FOTO
+    // ========================================================
 
-    bottom: 18,
+    imageContainer: {
+      height: 215,
 
-    minHeight: 66,
+      backgroundColor:
+        theme.colors
+          .inputBg,
+    },
 
-    flexDirection: "row",
-    alignItems: "center",
+    imagePressed: {
+      opacity:
+        0.94,
+    },
 
-    paddingHorizontal: 12,
+    image: {
+      width: "100%",
+      height: "100%",
+    },
 
-    borderRadius: 21,
+    imageFallback: {
+      flex: 1,
 
-    backgroundColor: theme.colors.brand,
+      alignItems:
+        "center",
 
-    ...theme.shadows.buttonGlow,
-  },
+      justifyContent:
+        "center",
 
-  registerButtonPressed: {
-    transform: [
-      {
-        scale: 0.985,
-      },
-    ],
+      gap: 8,
 
-    opacity: 0.96,
-  },
+      backgroundColor:
+        theme.colors
+          .inputBg,
+    },
 
-  registerButtonIcon: {
-    width: 43,
-    height: 43,
+    imageFallbackText: {
+      color:
+        theme.colors
+          .textBody,
 
-    borderRadius: 14,
+      fontSize: 11,
 
-    alignItems: "center",
-    justifyContent: "center",
+      fontWeight:
+        "600",
+    },
 
-    backgroundColor: theme.colors.surface,
-  },
+    // ========================================================
+    // AÇÕES
+    // ========================================================
 
-  registerButtonContent: {
-    flex: 1,
+    actionsRow: {
+      minHeight: 56,
 
-    marginLeft: 11,
-  },
+      flexDirection:
+        "row",
 
-  registerButtonTitle: {
-    color: theme.colors.surface,
+      alignItems:
+        "center",
 
-    fontSize: 13,
-    fontWeight: "900",
-  },
+      justifyContent:
+        "space-between",
 
-  registerButtonSubtitle: {
-    marginTop: 2,
+      gap: 8,
 
-    color: theme.colors.surface,
+      paddingHorizontal:
+        11,
 
-    fontSize: 9,
-    fontWeight: "500",
-  },
+      borderBottomWidth:
+        1,
 
-  registerButtonArrow: {
-    width: 38,
-    height: 38,
+      borderBottomColor:
+        theme.colors
+          .inputBg,
+    },
 
-    borderRadius: 12,
+    actionsLeft: {
+      flexDirection:
+        "row",
 
-    alignItems: "center",
-    justifyContent: "center",
+      alignItems:
+        "center",
 
-    backgroundColor: theme.colors.action,
-  },
-  // ==========================================================
-  // LOADING / ERRO / LOCALIZAÇÃO
-  // ==========================================================
+      gap: 3,
+    },
 
-  stateContainer: {
-    flex: 1,
+    actionIconButton: {
+      width: 34,
+      height: 36,
 
-    alignItems: "center",
-    justifyContent: "center",
+      borderRadius:
+        18,
 
-    paddingHorizontal: 30,
-  },
+      alignItems:
+        "center",
 
-  stateIcon: {
-    width: 76,
-    height: 76,
+      justifyContent:
+        "center",
+    },
 
-    borderRadius: 38,
+    forceButton: {
+      minWidth: 68,
+      minHeight: 44,
 
-    alignItems: "center",
-    justifyContent: "center",
+      flexDirection:
+        "row",
 
-    marginBottom: 16,
+      alignItems:
+        "center",
 
-    backgroundColor: theme.colors.semantic.success.bg,
-  },
+      justifyContent:
+        "center",
 
-  errorIcon: {
-    backgroundColor: theme.colors.semantic.danger.bg,
-  },
+      gap: 6,
 
-  stateTitle: {
-    marginTop: 14,
+      paddingHorizontal:
+        11,
 
-    color: theme.colors.textTitle,
+      borderRadius:
+        22,
 
-    fontSize: 18,
-    fontWeight: "900",
+      backgroundColor:
+        "transparent",
+    },
 
-    textAlign: "center",
-  },
+    forceButtonActive: {
+      backgroundColor:
+        theme.colors
+          .semantic
+          .success
+          .bg,
+    },
 
-  stateDescription: {
-    maxWidth: 300,
+    forceButtonLoading: {
+      opacity: 0.52,
+    },
 
-    marginTop: 8,
+    forceButtonPressed: {
+      transform: [
+        {
+          scale: 0.96,
+        },
+      ],
+    },
 
-    color: theme.colors.textBody,
+    echoIcon: {
+      width: 29,
+      height: 29,
+    },
 
-    fontSize: 12,
-    lineHeight: 19,
+    echoCount: {
+      minWidth: 13,
 
-    textAlign: "center",
-  },
+      color:
+        theme.colors
+          .textBody,
 
-  stateButton: {
-    minHeight: 48,
+      fontSize: 11,
 
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+      fontWeight:
+        "800",
 
-    gap: 7,
+      textAlign:
+        "center",
+    },
 
-    marginTop: 22,
+    echoCountActive: {
+      color:
+        theme.colors
+          .action,
+    },
 
-    paddingHorizontal: 20,
+    commentsCount: {
+      flexShrink: 1,
 
-    borderRadius: theme.radius.button,
+      color:
+        theme.colors
+          .textBody,
 
-    backgroundColor: theme.colors.brand,
+      fontSize: 9,
 
-    ...theme.shadows.buttonGlow,
-  },
+      fontWeight:
+        "600",
 
-  stateButtonText: {
-    color: theme.colors.surface,
+      textAlign:
+        "right",
+    },
 
-    fontSize: 12,
-    fontWeight: "800",
-  },
+    // ========================================================
+    // DESCRIÇÃO
+    // ========================================================
 
-  buttonPressed: {
-    opacity: 0.78,
-  },
-});
+    captionContainer: {
+      paddingHorizontal:
+        13,
 
+      paddingTop: 11,
+
+      paddingBottom:
+        12,
+    },
+
+    captionText: {
+      color:
+        theme.colors
+          .textTitle,
+
+      fontSize: 12,
+
+      lineHeight: 18,
+
+      fontWeight:
+        "500",
+    },
+
+    postMetaRow: {
+      minHeight: 30,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "space-between",
+
+      gap: 12,
+
+      marginTop: 7,
+    },
+
+    postMetaLeft: {
+      flex: 1,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      minWidth: 0,
+
+      gap: 4,
+    },
+
+    postMetaText: {
+      color:
+        theme.colors
+          .textBody,
+
+      fontSize: 9,
+
+      fontWeight:
+        "600",
+    },
+
+    metaDot: {
+      width: 3,
+      height: 3,
+
+      marginHorizontal:
+        2,
+
+      borderRadius:
+        2,
+
+      backgroundColor:
+        theme.colors
+          .textBody,
+    },
+
+    moreButton: {
+      minHeight: 30,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      paddingHorizontal:
+        5,
+    },
+
+    moreText: {
+      color:
+        theme.colors
+          .brand,
+
+      fontSize: 11,
+
+      fontWeight:
+        "900",
+    },
+
+    // ========================================================
+    // DENÚNCIA
+    // ========================================================
+
+    reportOverlay: {
+      flex: 1,
+
+      justifyContent:
+        "flex-end",
+
+      backgroundColor:
+        "rgba(0, 0, 0, 0.38)",
+    },
+
+    reportSheet: {
+      paddingHorizontal:
+        theme.spacing
+          .globalMargin,
+
+      paddingTop: 10,
+
+      paddingBottom:
+        26,
+
+      borderTopLeftRadius:
+        24,
+
+      borderTopRightRadius:
+        24,
+
+      backgroundColor:
+        theme.colors
+          .surface,
+
+      ...theme.shadows
+        .elevation1,
+    },
+
+    reportHandle: {
+      width: 38,
+      height: 4,
+
+      alignSelf:
+        "center",
+
+      marginBottom:
+        15,
+
+      borderRadius:
+        2,
+
+      backgroundColor:
+        theme.colors
+          .inputBg,
+    },
+
+    reportHeader: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      marginBottom:
+        17,
+    },
+
+    reportHeaderIcon: {
+      width: 42,
+      height: 42,
+
+      borderRadius:
+        14,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        theme.colors
+          .semantic
+          .danger
+          .bg,
+    },
+
+    reportHeaderContent: {
+      flex: 1,
+
+      minWidth: 0,
+
+      marginLeft:
+        11,
+    },
+
+    reportTitle: {
+      color:
+        theme.colors
+          .textTitle,
+
+      fontSize: 16,
+
+      fontWeight:
+        "900",
+    },
+
+    reportDescription: {
+      marginTop: 3,
+
+      color:
+        theme.colors
+          .textBody,
+
+      fontSize: 11,
+
+      lineHeight: 16,
+    },
+
+    reportCloseButton: {
+      width: 38,
+      height: 38,
+
+      marginLeft: 8,
+
+      borderRadius:
+        19,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    reportReasons: {
+      gap: 8,
+    },
+
+    reportReasonButton: {
+      minHeight: 54,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      paddingHorizontal:
+        11,
+
+      borderRadius:
+        15,
+
+      backgroundColor:
+        theme.colors
+          .background,
+    },
+
+    reportReasonButtonPressed: {
+      opacity: 0.72,
+    },
+
+    reportReasonIcon: {
+      width: 34,
+      height: 34,
+
+      borderRadius:
+        11,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        theme.colors
+          .surface,
+    },
+
+    reportReasonText: {
+      flex: 1,
+
+      marginHorizontal:
+        10,
+
+      color:
+        theme.colors
+          .textTitle,
+
+      fontSize: 12,
+
+      lineHeight: 17,
+
+      fontWeight:
+        "700",
+    },
+
+    reportLoading: {
+      minHeight: 130,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 9,
+    },
+
+    reportLoadingText: {
+      color:
+        theme.colors
+          .textBody,
+
+      fontSize: 12,
+
+      fontWeight:
+        "600",
+    },
+
+    reportCancelButton: {
+      minHeight: 46,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginTop: 12,
+
+      borderRadius:
+        theme.radius
+          .button,
+
+      backgroundColor:
+        theme.colors
+          .inputBg,
+    },
+
+    reportCancelText: {
+      color:
+        theme.colors
+          .textBody,
+
+      fontSize: 12,
+
+      fontWeight:
+        "800",
+    },
+
+
+
+    // ========================================================
+    // EMPTY
+    // ========================================================
+
+    emptyContainer: {
+      alignItems:
+        "center",
+
+      paddingHorizontal:
+        25,
+
+      paddingVertical:
+        60,
+    },
+
+    emptyIcon: {
+      width: 72,
+      height: 72,
+
+      borderRadius:
+        36,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        theme.colors
+          .semantic
+          .success
+          .bg,
+    },
+
+    emptyTitle: {
+      marginTop: 17,
+
+      color:
+        theme.colors
+          .textTitle,
+
+      fontSize: 16,
+
+      fontWeight:
+        "900",
+
+      textAlign:
+        "center",
+    },
+
+    emptyText: {
+      maxWidth: 290,
+
+      marginTop: 7,
+
+      color:
+        theme.colors
+          .textBody,
+
+      fontSize: 12,
+
+      lineHeight: 18,
+
+      textAlign:
+        "center",
+    },
+
+    clearButton: {
+      minHeight: 40,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginTop: 18,
+
+      paddingHorizontal:
+        17,
+
+      borderRadius:
+        theme.radius
+          .button,
+
+      backgroundColor:
+        theme.colors
+          .inputBg,
+    },
+
+    clearButtonText: {
+      color:
+        theme.colors
+          .brand,
+
+      fontSize: 11,
+
+      fontWeight:
+        "800",
+    },
+
+    // ========================================================
+    // REGISTRAR OCORRÊNCIA
+    // ========================================================
+
+    registerButton: {
+      position:
+        "absolute",
+
+      left:
+        theme.spacing
+          .globalMargin,
+
+      right:
+        theme.spacing
+          .globalMargin,
+
+      bottom: 18,
+
+      minHeight: 66,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      paddingHorizontal:
+        12,
+
+      borderRadius:
+        21,
+
+      backgroundColor:
+        theme.colors
+          .brand,
+
+      ...theme.shadows
+        .buttonGlow,
+    },
+
+    registerButtonPressed: {
+      transform: [
+        {
+          scale:
+            0.985,
+        },
+      ],
+
+      opacity:
+        0.96,
+    },
+
+    registerButtonIcon: {
+      width: 43,
+      height: 43,
+
+      borderRadius:
+        14,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        theme.colors
+          .surface,
+    },
+
+    registerButtonContent: {
+      flex: 1,
+
+      marginLeft:
+        11,
+    },
+
+    registerButtonTitle: {
+      color:
+        theme.colors
+          .surface,
+
+      fontSize: 13,
+
+      fontWeight:
+        "900",
+    },
+
+    registerButtonSubtitle: {
+      marginTop: 2,
+
+      color:
+        theme.colors
+          .surface,
+
+      fontSize: 9,
+
+      fontWeight:
+        "500",
+    },
+
+    registerButtonArrow: {
+      width: 38,
+      height: 38,
+
+      borderRadius:
+        12,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        theme.colors
+          .action,
+    },
+
+    // ========================================================
+    // LOADING / ERRO / LOCALIZAÇÃO
+    // ========================================================
+
+    stateContainer: {
+      flex: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      paddingHorizontal:
+        30,
+    },
+
+    stateIcon: {
+      width: 76,
+      height: 76,
+
+      borderRadius:
+        38,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginBottom:
+        16,
+
+      backgroundColor:
+        theme.colors
+          .semantic
+          .success
+          .bg,
+    },
+
+    errorIcon: {
+      backgroundColor:
+        theme.colors
+          .semantic
+          .danger
+          .bg,
+    },
+
+    stateTitle: {
+      marginTop: 14,
+
+      color:
+        theme.colors
+          .textTitle,
+
+      fontSize: 18,
+
+      fontWeight:
+        "900",
+
+      textAlign:
+        "center",
+    },
+
+    stateDescription: {
+      maxWidth: 300,
+
+      marginTop: 8,
+
+      color:
+        theme.colors
+          .textBody,
+
+      fontSize: 12,
+
+      lineHeight: 19,
+
+      textAlign:
+        "center",
+    },
+
+    stateButton: {
+      minHeight: 48,
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      gap: 7,
+
+      marginTop: 22,
+
+      paddingHorizontal:
+        20,
+
+      borderRadius:
+        theme.radius
+          .button,
+
+      backgroundColor:
+        theme.colors
+          .brand,
+
+      ...theme.shadows
+        .buttonGlow,
+    },
+
+    stateButtonText: {
+      color:
+        theme.colors
+          .surface,
+
+      fontSize: 12,
+
+      fontWeight:
+        "800",
+    },
+
+    buttonPressed: {
+      opacity:
+        0.78,
+    },
+  });
 
 ================================================================================
 CAMINHO: mobile\src\screens\LoginScreen.tsx

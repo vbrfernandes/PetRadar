@@ -1856,6 +1856,7 @@ CAMINHO: backend\app\modules\ocorrencias\router.py
 
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     File,
     Form,
@@ -1962,7 +1963,10 @@ def _validar_proprietario(
             detail=mensagem,
         )
 
-@router.post("/", response_model=OcorrenciaResposta, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/", response_model=OcorrenciaResposta, status_code=status.HTTP_201_CREATED
+)
 async def criar_ocorrencia(
     tipo_ocorrencia: str = Form(...),
     status_badge: str = Form(...),
@@ -1986,13 +1990,10 @@ async def criar_ocorrencia(
     data_ocorrencia: datetime = Form(...),
     observacao: str | None = Form(None),
     conta_atual: Conta = Depends(obter_conta_atual),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
-        raise HTTPException(
-            status_code=422,
-            detail="Coordenadas inválidas."
-        )
+        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
 
     # =========================================================
     # FOTO DA OCORRÊNCIA
@@ -2002,19 +2003,13 @@ async def criar_ocorrencia(
 
     # Foto nova enviada pelo usuário
     if foto is not None:
-        url_foto = await upload_foto_pet(
-            foto,
-            pasta="ocorrencias"
-        )
+        url_foto = await upload_foto_pet(foto, pasta="ocorrencias")
 
     # Reutilizar foto de um pet já cadastrado
     elif id_pet is not None:
         query_pet = (
             select(Pet)
-            .join(
-                UsuarioFisico,
-                UsuarioFisico.id_usuario == Pet.id_usuario
-            )
+            .join(UsuarioFisico, UsuarioFisico.id_usuario == Pet.id_usuario)
             .where(
                 Pet.id_pet == id_pet,
                 UsuarioFisico.id_conta == conta_atual.id_conta,
@@ -2061,7 +2056,7 @@ async def criar_ocorrencia(
         data_ocorrencia=data_ocorrencia,
         localizacao=ST_GeomFromText(ponto_wkt, 4326),
         foto=url_foto,
-        observacao=observacao
+        observacao=observacao,
     )
 
     db.add(nova_ocorrencia)
@@ -2081,6 +2076,7 @@ async def criar_ocorrencia(
         "longitude": longitude,
     }
 
+
 from geoalchemy2.functions import (
     ST_GeomFromText,
     ST_DWithin,
@@ -2088,108 +2084,171 @@ from geoalchemy2.functions import (
     ST_Y,
 )
 
-@router.get(
-    "/proximas",
-    response_model=list[OcorrenciaResposta]
-)
+
+@router.get("/proximas", response_model=list[OcorrenciaResposta])
 async def listar_ocorrencias_proximas(
     lat: float = Query(..., ge=-90, le=90),
     lng: float = Query(..., ge=-180, le=180),
-    raio_km: float = Query(
-        10.0,
-        gt=0,
-        le=100
-    ),
+    raio_km: float = Query(10.0, gt=0, le=100),
+    modo: str = Query("proximidade", pattern="^(proximidade|eco)$"),
     limite: int = Query(100, ge=1, le=500),
-    db: AsyncSession = Depends(get_db)
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
 ):
     """
-    Retorna as ocorrências localizadas dentro do raio informado,
-    em quilômetros, a partir da localização do usuário.
+
+    Retorna as ocorrências do feed usando a localização do usuário
+    como referência para o cálculo de distância.
+
+    modo=proximidade:
+    limita ao raio informado e ordena por distância ASC,
+    depois por data da ocorrência DESC.
+
+    modo=eco:
+    não limita pelo raio e ordena por total de Ecos DESC,
+    distância ASC e data da ocorrência DESC.
 
     A coluna localizacao é armazenada como Geometry SRID 4326.
     Para calcular distância corretamente em metros, a geometria
-    é convertida para Geography antes do ST_DWithin.
+    é convertida para Geography.
+
     """
 
-    # ---------------------------------------------------------
+    # =========================================================
     # PONTO DA LOCALIZAÇÃO DO USUÁRIO
-    # ---------------------------------------------------------
+    # =========================================================
 
-    ponto_usuario_geometry = ST_GeomFromText(
-        f"POINT({lng} {lat})",
-        4326
-    )
+    ponto_usuario_geometry = ST_GeomFromText(f"POINT({lng} {lat})", 4326)
 
     ponto_usuario_geography = cast(
-        ponto_usuario_geometry,
-        Geography(
-            geometry_type="POINT",
-            srid=4326
-        )
+        ponto_usuario_geometry, Geography(geometry_type="POINT", srid=4326)
     )
 
-    # ---------------------------------------------------------
-    # CONVERSÃO DO RAIO
-    # ---------------------------------------------------------
+    # =========================================================
+    # RAIO
+    # =========================================================
 
     raio_metros = raio_km * 1000
 
-    # ---------------------------------------------------------
-    # LOCALIZAÇÃO DAS OCORRÊNCIAS COMO GEOGRAPHY
-    # ---------------------------------------------------------
+    # =========================================================
+    # LOCALIZAÇÃO DA OCORRÊNCIA
+    # =========================================================
 
     ocorrencia_geography = cast(
-        Ocorrencia.localizacao,
-        Geography(
-            geometry_type="POINT",
-            srid=4326
+        Ocorrencia.localizacao, Geography(geometry_type="POINT", srid=4326)
+    )
+
+    distancia_metros = func.ST_Distance(ocorrencia_geography, ponto_usuario_geography)
+
+    # =========================================================
+    # AUTOR
+    # =========================================================
+
+    autor_nome = func.coalesce(
+        UsuarioFisico.nome_completo,
+        ONG.nome_fantasia,
+        Conta.email,
+    ).label("autor_nome")
+
+    autor_foto = Conta.foto_perfil.label("autor_foto")
+
+    # =========================================================
+    # TOTAL DE FORÇAS
+    # =========================================================
+
+    total_forca = (
+        select(func.count(Interacao.id_interacao))
+        .where(
+            Interacao.id_ocorrencia == Ocorrencia.id_ocorrencia,
+            Interacao.tipo_interacao == "FORCA",
         )
+        .correlate(Ocorrencia)
+        .scalar_subquery()
+        .label("total_forca")
     )
 
-    distancia_metros = func.ST_Distance(
-        ocorrencia_geography,
-        ponto_usuario_geography
+    # =========================================================
+    # TOTAL DE COMENTÁRIOS
+    # =========================================================
+
+    total_comentarios = (
+        select(func.count(Comentario.id_comentario))
+        .where(Comentario.id_ocorrencia == Ocorrencia.id_ocorrencia)
+        .correlate(Ocorrencia)
+        .scalar_subquery()
+        .label("total_comentarios")
     )
 
-    # ---------------------------------------------------------
-    # CONSULTA ESPACIAL
-    # ---------------------------------------------------------
+    # =========================================================
+    # USUÁRIO ATUAL DEU FORÇA?
+    # =========================================================
+
+    total_forca_usuario = (
+        select(func.count(Interacao.id_interacao))
+        .where(
+            Interacao.id_ocorrencia == Ocorrencia.id_ocorrencia,
+            Interacao.id_conta == conta_atual.id_conta,
+            Interacao.tipo_interacao == "FORCA",
+        )
+        .correlate(Ocorrencia)
+        .scalar_subquery()
+        .label("total_forca_usuario")
+    )
+
+    # =========================================================
+    # CONSULTA
+    # =========================================================
 
     query = (
         select(
             Ocorrencia,
-            ST_Y(
-                Ocorrencia.localizacao
-            ).label("latitude"),
-            ST_X(
-                Ocorrencia.localizacao
-            ).label("longitude"),
+            ST_Y(Ocorrencia.localizacao).label("latitude"),
+            ST_X(Ocorrencia.localizacao).label("longitude"),
             distancia_metros.label("distancia_metros"),
+            autor_nome,
+            autor_foto,
+            total_forca,
+            total_comentarios,
+            total_forca_usuario,
         )
-        .where(
-            ST_DWithin(
-                ocorrencia_geography,
-                ponto_usuario_geography,
-                raio_metros
-            )
-        )
-        .order_by(
-            distancia_metros.asc(),
-            Ocorrencia.data_ocorrencia.desc()
-        )
-        .limit(limite)
+        .join(Conta, Conta.id_conta == Ocorrencia.id_conta)
+        .outerjoin(UsuarioFisico, UsuarioFisico.id_conta == Conta.id_conta)
+        .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
     )
+
+    if modo == "proximidade":
+        query = query.where(
+            ST_DWithin(ocorrencia_geography, ponto_usuario_geography, raio_metros)
+        ).order_by(distancia_metros.asc(), Ocorrencia.data_ocorrencia.desc())
+
+    else:
+        query = query.order_by(
+            total_forca.desc(),
+            distancia_metros.asc(),
+            Ocorrencia.data_ocorrencia.desc(),
+        )
+
+    query = query.limit(limite)
 
     resultado = await db.execute(query)
 
-    # ---------------------------------------------------------
-    # FORMATAÇÃO DA RESPOSTA
-    # ---------------------------------------------------------
+    # =========================================================
+    # RESPOSTA
+    # =========================================================
 
     ocorrencias = []
 
-    for ocorrencia, latitude, longitude, distancia_metros_resultado, in resultado.all():
+    for (
+        ocorrencia,
+        latitude,
+        longitude,
+        distancia_metros_resultado,
+        autor_nome_resultado,
+        autor_foto_resultado,
+        total_forca_resultado,
+        total_comentarios_resultado,
+        total_forca_usuario_resultado,
+    ) in resultado.all():
 
         ocorrencias.append(
             {
@@ -2201,25 +2260,211 @@ async def listar_ocorrencias_proximas(
                 "foto": ocorrencia.foto,
                 "nivel_urgencia": ocorrencia.nivel_urgencia,
                 "data_ocorrencia": ocorrencia.data_ocorrencia,
-                "endereco_localizacao": (
-                    ocorrencia.endereco_localizacao
-                ),
+                "endereco_localizacao": ocorrencia.endereco_localizacao,
+                "observacao": ocorrencia.observacao,
                 "latitude": float(latitude),
                 "longitude": float(longitude),
-                "distancia_km": round(
-                    float(distancia_metros_resultado) / 1000,
-                    3
-                ),
+                "distancia_km": round(float(distancia_metros_resultado) / 1000, 3),
+                "autor_nome": autor_nome_resultado,
+                "autor_foto": autor_foto_resultado,
+                "total_forca": int(total_forca_resultado or 0),
+                "total_comentarios": int(total_comentarios_resultado or 0),
+                "usuario_deu_forca": int(total_forca_usuario_resultado or 0) > 0,
             }
         )
 
     return ocorrencias
 
+
+# =============================================================
+# FORÇA
+# =============================================================
+
+
+@router.post("/{id_ocorrencia:int}/forca")
+async def alternar_forca_ocorrencia(
+    id_ocorrencia: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    # =========================================================
+    # 1. VERIFICA OCORRÊNCIA
+    # =========================================================
+
+    ocorrencia_existe = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(
+            Ocorrencia.id_ocorrencia == id_ocorrencia
+        )
+    )
+
+    if ocorrencia_existe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    # =========================================================
+    # 2. VERIFICA SE JÁ EXISTE FORÇA
+    # =========================================================
+
+    forca_existente = await db.scalar(
+        select(Interacao.id_interacao)
+        .where(
+            Interacao.id_ocorrencia == id_ocorrencia,
+            Interacao.id_conta == conta_atual.id_conta,
+            Interacao.tipo_interacao == "FORCA",
+        )
+        .limit(1)
+    )
+
+    # =========================================================
+    # 3. TOGGLE
+    # =========================================================
+
+    if forca_existente is not None:
+
+        # Remove qualquer duplicidade que
+        # eventualmente já exista no banco.
+        await db.execute(
+            delete(Interacao).where(
+                Interacao.id_ocorrencia == id_ocorrencia,
+                Interacao.id_conta == conta_atual.id_conta,
+                Interacao.tipo_interacao == "FORCA",
+            )
+        )
+
+        ativo = False
+
+    else:
+        nova_forca = Interacao(
+            id_conta=conta_atual.id_conta,
+            id_ocorrencia=id_ocorrencia,
+            tipo_interacao="FORCA",
+        )
+
+        db.add(nova_forca)
+
+        ativo = True
+
+    await db.commit()
+
+    # =========================================================
+    # 4. TOTAL ATUALIZADO
+    # =========================================================
+
+    total_forca = await db.scalar(
+        select(func.count(Interacao.id_interacao)).where(
+            Interacao.id_ocorrencia == id_ocorrencia,
+            Interacao.tipo_interacao == "FORCA",
+        )
+    )
+
+    return {
+        "ativo": ativo,
+        "total_forca": int(total_forca or 0),
+    }
+
+
+# =============================================================
+# DENÚNCIA DE OCORRÊNCIA
+# =============================================================
+
+
+@router.post("/{id_ocorrencia:int}/denuncias")
+async def denunciar_ocorrencia(
+    id_ocorrencia: int,
+    motivo: str = Body(
+        ...,
+        embed=True,
+        min_length=3,
+        max_length=500,
+    ),
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    # =========================================================
+    # 1. VALIDA MOTIVO
+    # =========================================================
+
+    motivo_limpo = motivo.strip()
+
+    if len(motivo_limpo) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Informe um motivo válido para a denúncia.",
+        )
+
+    # =========================================================
+    # 2. VERIFICA SE A OCORRÊNCIA EXISTE
+    # =========================================================
+
+    ocorrencia_existe = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(
+            Ocorrencia.id_ocorrencia == id_ocorrencia
+        )
+    )
+
+    if ocorrencia_existe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    # =========================================================
+    # 3. PROCURA DENÚNCIA ANTERIOR DO MESMO USUÁRIO
+    # =========================================================
+    #
+    # Evita criar várias denúncias iguais caso o usuário
+    # toque novamente.
+    #
+    # Se já existir, atualizamos o motivo e a data.
+    # =========================================================
+
+    denuncia_existente = await db.scalar(
+        select(Denuncia)
+        .where(
+            Denuncia.id_ocorrencia == id_ocorrencia,
+            Denuncia.id_conta == conta_atual.id_conta,
+        )
+        .order_by(Denuncia.id_denuncia.desc())
+        .limit(1)
+    )
+
+    if denuncia_existente is not None:
+        denuncia_existente.motivo = motivo_limpo
+
+        denuncia_existente.data_hora = datetime.utcnow()
+
+        await db.commit()
+
+        return {
+            "message": "Denúncia atualizada com sucesso.",
+        }
+
+    # =========================================================
+    # 4. CRIA NOVA DENÚNCIA
+    # =========================================================
+
+    nova_denuncia = Denuncia(
+        id_conta=conta_atual.id_conta,
+        id_ocorrencia=id_ocorrencia,
+        motivo=motivo_limpo,
+    )
+
+    db.add(nova_denuncia)
+
+    await db.commit()
+
+    return {
+        "message": "Denúncia enviada com sucesso.",
+    }
+
+
 @router.get("/minhas", response_model=list[OcorrenciaResposta])
 async def listar_minhas_ocorrencias(
     conta_atual: Conta = Depends(obter_conta_atual),
     limite: int = Query(100, ge=1, le=500),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     query = (
         select(
@@ -2227,12 +2472,8 @@ async def listar_minhas_ocorrencias(
             ST_Y(Ocorrencia.localizacao).label("latitude"),
             ST_X(Ocorrencia.localizacao).label("longitude"),
         )
-        .where(
-            Ocorrencia.id_conta == conta_atual.id_conta
-        )
-        .order_by(
-            Ocorrencia.data_ocorrencia.desc()
-        )
+        .where(Ocorrencia.id_conta == conta_atual.id_conta)
+        .order_by(Ocorrencia.data_ocorrencia.desc())
         .limit(limite)
     )
 
@@ -2342,9 +2583,7 @@ async def atualizar_ocorrencia(
         if "data_ocorrencia" in formulario:
             ocorrencia.data_ocorrencia = data_ocorrencia
 
-        localizacao_modificada = (
-            "latitude" in formulario or "longitude" in formulario
-        )
+        localizacao_modificada = "latitude" in formulario or "longitude" in formulario
         if localizacao_modificada:
             nova_latitude = (
                 latitude if "latitude" in formulario else float(latitude_atual)
@@ -2433,9 +2672,7 @@ async def excluir_ocorrencia(
                 delete(modelo).where(modelo.id_ocorrencia == id_ocorrencia)
             )
         await db.execute(
-            delete(Ocorrencia).where(
-                Ocorrencia.id_ocorrencia == id_ocorrencia
-            )
+            delete(Ocorrencia).where(Ocorrencia.id_ocorrencia == id_ocorrencia)
         )
         await db.commit()
     except Exception:
@@ -2445,13 +2682,9 @@ async def excluir_ocorrencia(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get(
-    "/{id_ocorrencia:int}",
-    response_model=OcorrenciaDetalheResposta
-)
+@router.get("/{id_ocorrencia:int}", response_model=OcorrenciaDetalheResposta)
 async def obter_ocorrencia_detalhada(
-    id_ocorrencia: int,
-    db: AsyncSession = Depends(get_db)
+    id_ocorrencia: int, db: AsyncSession = Depends(get_db)
 ):
     query = (
         select(
@@ -2459,15 +2692,8 @@ async def obter_ocorrencia_detalhada(
             ST_Y(Ocorrencia.localizacao).label("latitude"),
             ST_X(Ocorrencia.localizacao).label("longitude"),
         )
-        .options(
-            selectinload(
-                Ocorrencia.avistamentos
-            )
-        )
-        .where(
-            Ocorrencia.id_ocorrencia
-            == id_ocorrencia
-        )
+        .options(selectinload(Ocorrencia.avistamentos))
+        .where(Ocorrencia.id_ocorrencia == id_ocorrencia)
     )
 
     resultado = await db.execute(query)
@@ -2475,10 +2701,7 @@ async def obter_ocorrencia_detalhada(
     linha = resultado.one_or_none()
 
     if linha is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Ocorrência não encontrada."
-        )
+        raise HTTPException(status_code=404, detail="Ocorrência não encontrada.")
 
     ocorrencia, latitude, longitude = linha
     ocorrencia.latitude = float(latitude)
@@ -2599,19 +2822,42 @@ class OcorrenciaCriar(BaseModel):
 class OcorrenciaResposta(BaseModel):
     id_ocorrencia: int
     id_conta: int
+
     tipo_ocorrencia: str
     status_badge: str
     tipo_animal: str
+
     foto: str
+
     nivel_urgencia: str
     data_ocorrencia: datetime
+
     endereco_localizacao: str | None = None
+    observacao: str | None = None
+
     latitude: float
     longitude: float
+
     distancia_km: float | None = None
+
+    # =========================================================
+    # DADOS DO AUTOR PARA O FEED
+    # =========================================================
+
+    autor_nome: str | None = None
+    autor_foto: str | None = None
+
+    # =========================================================
+    # ENGAJAMENTO
+    # =========================================================
+
+    total_forca: int = 0
+    total_comentarios: int = 0
+    usuario_deu_forca: bool = False
 
     class Config:
         from_attributes = True
+
 
 class AvistamentoResposta(BaseModel):
     id_avistamento: int
