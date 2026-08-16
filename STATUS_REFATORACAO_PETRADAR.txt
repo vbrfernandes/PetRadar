@@ -30,7 +30,7 @@ Status:
 EM ANDAMENTO
 
 Subetapa atual:
-FASE 6A — movimentação estrutural de RegistrarPet para o domínio Pets.
+FASE 6B — extração de petService e pet.types.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -878,7 +878,9 @@ EM ANDAMENTO
 
 Subetapas:
 [X] RegistrarPet movido para o domínio Pets
-[ ] smoke test manual da Fase 6A
+[X] smoke test manual da Fase 6A
+[X] petService e pet.types extraídos
+[ ] smoke test manual da Fase 6B
 [ ] organização interna de Pets avaliada
 [ ] validação final da Fase 6
 
@@ -905,6 +907,30 @@ Subetapa Fase 6A — movimentação estrutural de RegistrarPet:
 * `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
 
 Smoke test Fase 6A:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 6B — petService e pet.types:
+* Criado `mobile/src/features/pets/types/pet.types.ts` somente com o contrato compartilhado real Pet.
+* Pet foi movido literalmente de RegistrarPet para pet.types.ts, preservando todos os campos, tipos, nulabilidade e comentários preexistentes.
+* Pet passou a possuir definição única e dois consumidores reais: RegistrarPet e petService.
+* TipoEspecie, FotoSelecionada e DetailRowProps permanecem locais em RegistrarPet porque continuam possuindo somente consumidor interno.
+* Nenhum PetCreatePayload, PetUpdatePayload, PetFormData, PetResponse, PetLostPayload, PetDetail ou outro contrato antecipado foi criado.
+* Criado `mobile/src/features/pets/services/petService.ts` usando o cliente HTTP existente de `mobile/src/services/api.ts`.
+* petService expõe somente os métodos getMyPets e createPet.
+* GET `/pets/meus` e POST `/pets/` foram centralizados em petService sem alteração de endpoint, método HTTP, tipo de resposta ou configuração multipart.
+* RegistrarPet deixou de importar diretamente api.ts e não realiza mais chamadas diretas api.get ou api.post relativas a Pets.
+* petService é o único ponto do frontend executável responsável por GET `/pets/meus` e POST `/pets/`.
+* A montagem integral do FormData permanece em RegistrarPet, incluindo normalização de nome, resolução de espécie, campos opcionais, porte, idade, foto e o `as any` preexistente do objeto React Native.
+* expo-image-picker, permissões, seleção da foto, edição, qualidade, filename e MIME type permanecem diretamente em RegistrarPet.
+* informarComoPerdido, CadastroOcorrencia e todos os campos do parâmetro pet permanecem diretamente em RegistrarPet e foram preservados.
+* Estados, loading, Alerts, logs, validações, atualização local da lista, modais, JSX, StyleSheet, textos, ícones, accessibility, cores, sombras e comportamento não foram alterados.
+* Backend, Profile, Feed, Map, Occurrences, Auth, navigation.types.ts, services/api.ts, theme/colors.ts, useAuthStore, App.tsx, dependências e package.json não foram alterados.
+* Nenhuma edição ou exclusão de pet foi implementada; nenhum endpoint adicional foi criado.
+* Nenhum componente visual, hook, styles separado, utils, constants, index.ts ou `.gitkeep` foi criado.
+* `npx tsc --noEmit` concluído com 0 erros.
+* `git diff --check` global retornou exit code 2 exclusivamente pelas 98 ocorrências preexistentes de trailing whitespace nos consolidados fora do escopo: 49 em codigo_frontend_consolidado.txt e 49 em codigo_projeto_consolidado.txt.
+
+Smoke test Fase 6B:
 PENDENTE DE VALIDAÇÃO MANUAL.
 
 ======================================================================
@@ -950,6 +976,8 @@ ETAPAS CONCLUÍDAS
 [X] Fase 5D — avaliação final e fechamento formal da Fase 5 — Profile
 [X] Fase 5 — Profile concluída
 [X] Fase 6A — RegistrarPet movido para `features/pets/components/`
+[X] Smoke test manual da Fase 6A aprovado pelo usuário
+[X] Fase 6B — Pet compartilhado e operações HTTP de Pets extraídos para pet.types e petService
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1167,15 +1195,18 @@ DECISÕES TOMADAS
 * `/ocorrencias/minhas` permanece diretamente em ProfileDetailScreen até a Fase 7 — Occurrences.
 * expo-image-picker permanece diretamente em ProfileDetailScreen até a Fase 10 — Infrastructure.
 * As pendências preexistentes de App.tsx permanecem reservadas para fases posteriores, especialmente Cleanup/App.
-* RegistrarPet foi movido primeiro para `features/pets/components/` com nome e implementação preservados; renomeações e extrações internas dependem da aprovação do smoke test da Fase 6A e de análise posterior do código real.
+* RegistrarPet foi movido primeiro para `features/pets/components/` com nome e implementação preservados; após a aprovação do smoke 6A, a Fase 6B ficou limitada à fronteira real de tipo e service.
 * A ausência de edição e exclusão de pet é comportamento atual preexistente e critério não aplicável nesta etapa; nenhum RF ou endpoint será criado durante a refatoração.
 * expo-image-picker, FormData, tipos, handlers, JSX e StyleSheet de Pets permanecem juntos em RegistrarPet durante a movimentação estrutural inicial.
+* Pet foi extraído para `features/pets/types/pet.types.ts` somente após adquirir dois consumidores reais: RegistrarPet e petService.
+* TipoEspecie, FotoSelecionada e DetailRowProps permanecem internos porque não possuem reuso concreto fora de RegistrarPet.
+* petService centraliza somente getMyPets e createPet; FormData, ImagePicker, validação, UI e integração com CadastroOcorrencia permanecem no componente.
 
 ======================================================================
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 6A antes de iniciar qualquer extração interna de Pets.
+Aguardar aprovação manual do smoke test da Fase 6B antes de avaliar qualquer extração visual ou hook de Pets.
 
 ======================================================================
 FASES
@@ -1232,10 +1263,11 @@ Subetapas concluídas:
 * Fase 5B — movimentação de ProfileDetailScreen.tsx para `features/profile/components/`.
 * Fase 5C — extração das quatro operações HTTP próprias de Profile para `features/profile/services/profileService.ts` e dos três tipos reutilizados para `features/profile/types/profile.types.ts`.
 * Fase 5D — avaliação final da organização interna e fechamento formal da Fase 5 — Profile, sem alteração de código funcional.
-* Fase 6A — movimentação estrutural de RegistrarPet.tsx para `features/pets/components/`, com smoke test manual pendente.
+* Fase 6A — movimentação estrutural de RegistrarPet.tsx para `features/pets/components/`, aprovada manualmente pelo usuário.
+* Fase 6B — extração do contrato Pet para `features/pets/types/pet.types.ts` e das duas operações HTTP para `features/pets/services/petService.ts`, com smoke test manual pendente.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/pets/components/RegistrarPet.tsx` e seu consumidor `mobile/src/features/profile/components/ProfileDetailScreen.tsx`.
+`mobile/src/features/pets/components/RegistrarPet.tsx`, `mobile/src/features/pets/services/petService.ts` e `mobile/src/features/pets/types/pet.types.ts`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1244,7 +1276,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 6A antes de iniciar qualquer extração interna de Pets.
+Aguardar aprovação manual do smoke test da Fase 6B antes de avaliar qualquer extração visual ou hook de Pets.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

@@ -18,7 +18,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import * as ImagePicker from "expo-image-picker";
 
-import api from "../../../services/api";
 import { theme } from "../../../theme/colors";
 
 import { useNavigation } from '@react-navigation/native';
@@ -31,28 +30,8 @@ import type {
     AppTabParamList,
 } from '../../../navigation/navigation.types';
 
-interface Pet {
-    id_pet: number;
-    id_usuario: number;
-
-    nome: string;
-    especie: string;
-
-    raca: string | null;
-
-    // ALTERE AQUI
-    sexo: string | null;
-
-    // ALTERE AQUI
-    cor: string | null;
-
-    porte: string | null;
-
-    // ALTERE AQUI
-    idade: string | null;
-
-    foto: string | null;
-}
+import { petService } from "../services/petService";
+import type { Pet } from "../types/pet.types";
 
 type TipoEspecie = "Cachorro" | "Gato" | "Outro";
 interface FotoSelecionada {
@@ -130,7 +109,7 @@ export default function RegistrarPet() {
         try {
             setLoading(true);
 
-            const response = await api.get<Pet[]>("/pets/meus");
+            const response = await petService.getMyPets();
 
             setPets(Array.isArray(response.data) ? response.data : []);
         } catch (error: any) {
@@ -309,11 +288,7 @@ export default function RegistrarPet() {
                 } as any);
             }
 
-            const response = await api.post<Pet>("/pets/", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const response = await petService.createPet(formData);
 
             setPets((petsAtuais) => [response.data, ...petsAtuais]);
 
