@@ -14,10 +14,7 @@ import {
   View,
 } from "react-native";
 
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
@@ -27,6 +24,8 @@ import { useAuthStore } from "../../../store/useAuthStore";
 import { theme } from "../../../theme/colors";
 
 import { occurrenceService } from "../services/occurrenceService";
+
+import OccurrenceCommentsModal from "./comments/OccurrenceCommentsModal";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -116,9 +115,7 @@ const COLORS = {
   imageOverlay: "rgba(15, 23, 42, 0.24)",
 };
 
-function normalizarTexto(
-  valor: string | null | undefined
-): string | null {
+function normalizarTexto(valor: string | null | undefined): string | null {
   if (!valor) {
     return null;
   }
@@ -167,8 +164,7 @@ function formatarDataHora(data: string) {
 }
 
 function formatarDataHoraParaApi(date = new Date()) {
-  const doisDigitos = (valor: number) =>
-    String(valor).padStart(2, "0");
+  const doisDigitos = (valor: number) => String(valor).padStart(2, "0");
 
   return (
     `${date.getFullYear()}-` +
@@ -180,10 +176,7 @@ function formatarDataHoraParaApi(date = new Date()) {
   );
 }
 
-function mensagemErroApi(
-  error: unknown,
-  mensagemPadrao: string
-) {
+function mensagemErroApi(error: unknown, mensagemPadrao: string) {
   if (
     axios.isAxiosError<{
       detail?: string;
@@ -221,20 +214,14 @@ function getStatusColors(status: string) {
 function getUrgencyColors(urgencia: string) {
   const normalized = urgencia?.toUpperCase() || "";
 
-  if (
-    normalized.includes("CRÍT") ||
-    normalized.includes("CRIT")
-  ) {
+  if (normalized.includes("CRÍT") || normalized.includes("CRIT")) {
     return {
       text: COLORS.danger,
       background: COLORS.dangerBg,
     };
   }
 
-  if (
-    normalized.includes("ALTA") ||
-    normalized.includes("ALTO")
-  ) {
+  if (normalized.includes("ALTA") || normalized.includes("ALTO")) {
     return {
       text: COLORS.warning,
       background: COLORS.warningBg,
@@ -253,20 +240,14 @@ interface SectionHeaderProps {
   action?: React.ReactNode;
 }
 
-function SectionHeader({
-  title,
-  subtitle,
-  action,
-}: SectionHeaderProps) {
+function SectionHeader({ title, subtitle, action }: SectionHeaderProps) {
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.sectionHeaderContent}>
         <Text style={styles.sectionTitle}>{title}</Text>
 
         {subtitle ? (
-          <Text style={styles.sectionSubtitle}>
-            {subtitle}
-          </Text>
+          <Text style={styles.sectionSubtitle}>{subtitle}</Text>
         ) : null}
       </View>
 
@@ -293,10 +274,10 @@ function DetailsCard({ items }: DetailsCardProps) {
     }))
     .filter(
       (
-        item
+        item,
       ): item is DetailItem & {
         valueNormalized: string;
-      } => item.valueNormalized !== null
+      } => item.valueNormalized !== null,
     );
 
   if (itensValidos.length === 0) {
@@ -309,22 +290,13 @@ function DetailsCard({ items }: DetailsCardProps) {
         <React.Fragment key={`${item.label}-${index}`}>
           <View style={styles.detailRow}>
             <View style={styles.detailIcon}>
-              <Ionicons
-                name={item.icon}
-                size={19}
-                color={COLORS.primary}
-              />
+              <Ionicons name={item.icon} size={19} color={COLORS.primary} />
             </View>
 
             <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>
-                {item.label}
-              </Text>
+              <Text style={styles.detailLabel}>{item.label}</Text>
 
-              <Text
-                style={styles.detailValue}
-                numberOfLines={3}
-              >
+              <Text style={styles.detailValue} numberOfLines={3}>
                 {item.valueNormalized}
               </Text>
             </View>
@@ -346,12 +318,7 @@ interface CareButtonProps {
   onPress: (tipo: TipoCuidado) => void;
 }
 
-function CareButton({
-  tipo,
-  disabled,
-  loading,
-  onPress,
-}: CareButtonProps) {
+function CareButton({ tipo, disabled, loading, onPress }: CareButtonProps) {
   const agua = tipo === "AGUA";
   const label = agua ? "Água" : "Comida";
 
@@ -370,10 +337,7 @@ function CareButton({
     >
       <View style={styles.careButtonIcon}>
         {loading ? (
-          <ActivityIndicator
-            size="small"
-            color={COLORS.primary}
-          />
+          <ActivityIndicator size="small" color={COLORS.primary} />
         ) : (
           <MaterialCommunityIcons
             name={agua ? "water" : "food"}
@@ -383,9 +347,7 @@ function CareButton({
         )}
       </View>
 
-      <Text style={styles.careButtonTitle}>
-        {label}
-      </Text>
+      <Text style={styles.careButtonTitle}>{label}</Text>
 
       <Text style={styles.careButtonSubtitle}>
         {loading ? "Registrando..." : "Registrar agora"}
@@ -399,10 +361,7 @@ interface CareInfoProps {
   cuidado: CuidadoOcorrencia | null;
 }
 
-function CareInfo({
-  tipo,
-  cuidado,
-}: CareInfoProps) {
+function CareInfo({ tipo, cuidado }: CareInfoProps) {
   const agua = tipo === "AGUA";
 
   return (
@@ -421,23 +380,14 @@ function CareInfo({
         </Text>
 
         <Text style={styles.careInfoDate}>
-          {cuidado
-            ? formatarDataHora(cuidado.data_cuidado)
-            : "Não registrada"}
+          {cuidado ? formatarDataHora(cuidado.data_cuidado) : "Não registrada"}
         </Text>
 
         {cuidado ? (
           <View style={styles.authorRow}>
-            <Ionicons
-              name="person-outline"
-              size={13}
-              color={COLORS.textBody}
-            />
+            <Ionicons name="person-outline" size={13} color={COLORS.textBody} />
 
-            <Text
-              style={styles.careInfoAuthor}
-              numberOfLines={1}
-            >
+            <Text style={styles.careInfoAuthor} numberOfLines={1}>
               {cuidado.usuario.nome}
             </Text>
           </View>
@@ -454,13 +404,9 @@ export default function OccurrenceDetailDrawer({
   onEdit,
   onDeleted,
 }: OccurrenceDetailDrawerProps) {
-  const translateX = useRef(
-    new Animated.Value(DRAWER_WIDTH)
-  ).current;
+  const translateX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
 
-  const overlayOpacity = useRef(
-    new Animated.Value(0)
-  ).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   const cuidadoEmRegistro = useRef(false);
   const exclusaoEmAndamento = useRef(false);
@@ -468,36 +414,27 @@ export default function OccurrenceDetailDrawer({
   const user = useAuthStore((state) => state.user);
 
   const [mounted, setMounted] = useState(false);
-  const [occurrence, setOccurrence] =
-    useState<OcorrenciaDetalhe | null>(null);
+  const [occurrence, setOccurrence] = useState<OcorrenciaDetalhe | null>(null);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [
-    tipoCuidadoCarregando,
-    setTipoCuidadoCarregando,
-  ] = useState<TipoCuidado | null>(null);
+  const [tipoCuidadoCarregando, setTipoCuidadoCarregando] =
+    useState<TipoCuidado | null>(null);
 
-  const [erroCuidado, setErroCuidado] =
-    useState<string | null>(null);
+  const [erroCuidado, setErroCuidado] = useState<string | null>(null);
 
-  const [historicoVisivel, setHistoricoVisivel] =
-    useState(false);
+  const [historicoVisivel, setHistoricoVisivel] = useState(false);
 
-  const [historico, setHistorico] =
-    useState<CuidadoOcorrencia[] | null>(null);
+  const [historico, setHistorico] = useState<CuidadoOcorrencia[] | null>(null);
 
-  const [
-    carregandoHistorico,
-    setCarregandoHistorico,
-  ] = useState(false);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
 
-  const [erroHistorico, setErroHistorico] =
-    useState<string | null>(null);
+  const [erroHistorico, setErroHistorico] = useState<string | null>(null);
 
   const [excluindo, setExcluindo] = useState(false);
+
+  const [comentariosVisiveis, setComentariosVisiveis] = useState(false);
 
   useEffect(() => {
     if (!visible || occurrenceId === null) {
@@ -516,6 +453,7 @@ export default function OccurrenceDetailDrawer({
     setErroHistorico(null);
     setTipoCuidadoCarregando(null);
     setExcluindo(false);
+    setComentariosVisiveis(false);
 
     cuidadoEmRegistro.current = false;
     exclusaoEmAndamento.current = false;
@@ -539,9 +477,8 @@ export default function OccurrenceDetailDrawer({
 
     const carregarDetalhes = async () => {
       try {
-        const response = await occurrenceService.getById<OcorrenciaDetalhe>(
-          occurrenceId
-        );
+        const response =
+          await occurrenceService.getById<OcorrenciaDetalhe>(occurrenceId);
 
         if (ativo) {
           setOccurrence(response.data);
@@ -549,15 +486,15 @@ export default function OccurrenceDetailDrawer({
       } catch (err: unknown) {
         console.warn(
           "[OccurrenceDetailDrawer] Erro ao carregar ocorrência:",
-          err
+          err,
         );
 
         if (ativo) {
           setError(
             mensagemErroApi(
               err,
-              "Não foi possível carregar os detalhes da ocorrência."
-            )
+              "Não foi possível carregar os detalhes da ocorrência.",
+            ),
           );
         }
       } finally {
@@ -572,12 +509,7 @@ export default function OccurrenceDetailDrawer({
     return () => {
       ativo = false;
     };
-  }, [
-    visible,
-    occurrenceId,
-    translateX,
-    overlayOpacity,
-  ]);
+  }, [visible, occurrenceId, translateX, overlayOpacity]);
 
   const limparEstado = () => {
     cuidadoEmRegistro.current = false;
@@ -596,6 +528,7 @@ export default function OccurrenceDetailDrawer({
     setCarregandoHistorico(false);
     setErroHistorico(null);
     setExcluindo(false);
+    setComentariosVisiveis(false);
   };
 
   const animarFechamento = (aposFechar?: () => void) => {
@@ -622,9 +555,7 @@ export default function OccurrenceDetailDrawer({
     animarFechamento();
   };
 
-  const registrarCuidadoAgora = async (
-    tipo: TipoCuidado
-  ) => {
+  const registrarCuidadoAgora = async (tipo: TipoCuidado) => {
     if (!occurrence || cuidadoEmRegistro.current) {
       return;
     }
@@ -640,12 +571,11 @@ export default function OccurrenceDetailDrawer({
         {
           tipo_cuidado: tipo,
           data_cuidado: formatarDataHoraParaApi(),
-        }
+        },
       );
 
       const novoCuidado = response.data;
-      const chave =
-        tipo === "AGUA" ? "agua" : "comida";
+      const chave = tipo === "AGUA" ? "agua" : "comida";
 
       setOccurrence((atual) => {
         if (!atual) {
@@ -661,18 +591,12 @@ export default function OccurrenceDetailDrawer({
         };
       });
 
-      setHistorico((atual) =>
-        atual ? [novoCuidado, ...atual] : atual
-      );
+      setHistorico((atual) => (atual ? [novoCuidado, ...atual] : atual));
     } catch (err: unknown) {
-      const cuidado =
-        tipo === "AGUA" ? "a água" : "a comida";
+      const cuidado = tipo === "AGUA" ? "a água" : "a comida";
 
       setErroCuidado(
-        mensagemErroApi(
-          err,
-          `Não foi possível registrar ${cuidado}.`
-        )
+        mensagemErroApi(err, `Não foi possível registrar ${cuidado}.`),
       );
     } finally {
       cuidadoEmRegistro.current = false;
@@ -681,10 +605,7 @@ export default function OccurrenceDetailDrawer({
   };
 
   const carregarHistorico = async () => {
-    if (
-      !occurrence ||
-      carregandoHistorico
-    ) {
+    if (!occurrence || carregandoHistorico) {
       return;
     }
 
@@ -692,19 +613,14 @@ export default function OccurrenceDetailDrawer({
       setCarregandoHistorico(true);
       setErroHistorico(null);
 
-      const response = await api.get<
-        CuidadoOcorrencia[]
-      >(
-        `/ocorrencias/${occurrence.id_ocorrencia}/cuidados/historico`
+      const response = await api.get<CuidadoOcorrencia[]>(
+        `/ocorrencias/${occurrence.id_ocorrencia}/cuidados/historico`,
       );
 
       setHistorico(response.data);
     } catch (err: unknown) {
       setErroHistorico(
-        mensagemErroApi(
-          err,
-          "Não foi possível carregar o histórico."
-        )
+        mensagemErroApi(err, "Não foi possível carregar o histórico."),
       );
     } finally {
       setCarregandoHistorico(false);
@@ -803,12 +719,10 @@ export default function OccurrenceDetailDrawer({
     : getUrgencyColors("");
 
   const tituloOcorrencia =
-    normalizarTexto(occurrence?.tipo_ocorrencia) ||
-    "Ocorrência";
+    normalizarTexto(occurrence?.tipo_ocorrencia) || "Ocorrência";
 
   const nomeAnimal =
-    normalizarTexto(occurrence?.tipo_animal) ||
-    "Animal não informado";
+    normalizarTexto(occurrence?.tipo_animal) || "Animal não informado";
 
   const ehProprietario = Boolean(
     occurrence && Number(user?.id) === occurrence.id_conta,
@@ -843,48 +757,35 @@ export default function OccurrenceDetailDrawer({
           visible={historicoVisivel}
           transparent
           animationType="fade"
-          onRequestClose={() =>
-            setHistoricoVisivel(false)
-          }
+          onRequestClose={() => setHistoricoVisivel(false)}
         >
           <View style={styles.historyBackdrop}>
             <View style={styles.historyModal}>
               <View style={styles.historyHeader}>
                 <View style={styles.historyHeaderContent}>
-                  <Text style={styles.historyTitle}>
-                    Histórico de cuidados
-                  </Text>
+                  <Text style={styles.historyTitle}>Histórico de cuidados</Text>
 
                   <Text style={styles.historySubtitle}>
-                    Água e comida registradas nesta
-                    ocorrência.
+                    Água e comida registradas nesta ocorrência.
                   </Text>
                 </View>
 
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Fechar histórico"
-                  onPress={() =>
-                    setHistoricoVisivel(false)
-                  }
+                  onPress={() => setHistoricoVisivel(false)}
                   style={({ pressed }) => [
                     styles.closeHistoryButton,
                     pressed && styles.pressed,
                   ]}
                 >
-                  <Ionicons
-                    name="close"
-                    size={21}
-                    color={COLORS.textTitle}
-                  />
+                  <Ionicons name="close" size={21} color={COLORS.textTitle} />
                 </Pressable>
               </View>
 
               {carregandoHistorico ? (
                 <View style={styles.historyState}>
-                  <ActivityIndicator
-                    color={COLORS.primary}
-                  />
+                  <ActivityIndicator color={COLORS.primary} />
 
                   <Text style={styles.historyStateText}>
                     Carregando histórico...
@@ -900,16 +801,12 @@ export default function OccurrenceDetailDrawer({
                     />
                   </View>
 
-                  <Text style={styles.historyErrorText}>
-                    {erroHistorico}
-                  </Text>
+                  <Text style={styles.historyErrorText}>{erroHistorico}</Text>
 
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Tentar novamente"
-                    onPress={() =>
-                      void carregarHistorico()
-                    }
+                    onPress={() => void carregarHistorico()}
                     style={({ pressed }) => [
                       styles.retryButton,
                       pressed && styles.pressed,
@@ -921,56 +818,35 @@ export default function OccurrenceDetailDrawer({
                       color={COLORS.primary}
                     />
 
-                    <Text style={styles.retryButtonText}>
-                      Tentar novamente
-                    </Text>
+                    <Text style={styles.retryButtonText}>Tentar novamente</Text>
                   </Pressable>
                 </View>
               ) : historico?.length ? (
                 <ScrollView
                   showsVerticalScrollIndicator={false}
-                  contentContainerStyle={
-                    styles.historyList
-                  }
+                  contentContainerStyle={styles.historyList}
                 >
                   {historico.map((item, index) => {
-                    const agua =
-                      item.tipo_cuidado === "AGUA";
+                    const agua = item.tipo_cuidado === "AGUA";
 
                     return (
-                      <React.Fragment
-                        key={item.id_historico}
-                      >
+                      <React.Fragment key={item.id_historico}>
                         <View style={styles.historyItem}>
-                          <View
-                            style={styles.historyItemIcon}
-                          >
+                          <View style={styles.historyItemIcon}>
                             <MaterialCommunityIcons
-                              name={
-                                agua ? "water" : "food"
-                              }
+                              name={agua ? "water" : "food"}
                               size={21}
                               color={COLORS.primary}
                             />
                           </View>
 
-                          <View
-                            style={
-                              styles.historyItemContent
-                            }
-                          >
-                            <Text
-                              style={styles.historyItemTitle}
-                            >
+                          <View style={styles.historyItemContent}>
+                            <Text style={styles.historyItemTitle}>
                               {agua ? "Água" : "Comida"}
                             </Text>
 
-                            <Text
-                              style={styles.historyItemDate}
-                            >
-                              {formatarDataHora(
-                                item.data_cuidado
-                              )}
+                            <Text style={styles.historyItemDate}>
+                              {formatarDataHora(item.data_cuidado)}
                             </Text>
 
                             <View style={styles.authorRow}>
@@ -981,32 +857,22 @@ export default function OccurrenceDetailDrawer({
                               />
 
                               <Text
-                                style={
-                                  styles.historyItemAuthor
-                                }
+                                style={styles.historyItemAuthor}
                                 numberOfLines={1}
                               >
                                 {item.usuario.nome}
                               </Text>
                             </View>
 
-                            <Text
-                              style={
-                                styles.historyRegistered
-                              }
-                            >
+                            <Text style={styles.historyRegistered}>
                               Registrado em{" "}
-                              {formatarDataHora(
-                                item.data_registro
-                              )}
+                              {formatarDataHora(item.data_registro)}
                             </Text>
                           </View>
                         </View>
 
                         {index < historico.length - 1 ? (
-                          <View
-                            style={styles.historyDivider}
-                          />
+                          <View style={styles.historyDivider} />
                         ) : null}
                       </React.Fragment>
                     );
@@ -1027,14 +893,19 @@ export default function OccurrenceDetailDrawer({
                   </Text>
 
                   <Text style={styles.historyStateText}>
-                    Os registros de água e comida
-                    aparecerão aqui.
+                    Os registros de água e comida aparecerão aqui.
                   </Text>
                 </View>
               )}
             </View>
           </View>
         </Modal>
+
+        <OccurrenceCommentsModal
+          visible={comentariosVisiveis}
+          occurrenceId={occurrence?.id_ocorrencia ?? null}
+          onClose={() => setComentariosVisiveis(false)}
+        />
 
         <Animated.View
           style={[
@@ -1045,10 +916,7 @@ export default function OccurrenceDetailDrawer({
             },
           ]}
         >
-          <SafeAreaView
-            edges={["top", "bottom"]}
-            style={styles.safeArea}
-          >
+          <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
             <View style={styles.header}>
               <Pressable
                 accessibilityRole="button"
@@ -1068,10 +936,7 @@ export default function OccurrenceDetailDrawer({
               </Pressable>
 
               <View style={styles.headerContent}>
-                <Text
-                  style={styles.headerTitle}
-                  numberOfLines={1}
-                >
+                <Text style={styles.headerTitle} numberOfLines={1}>
                   Ocorrência
                 </Text>
 
@@ -1095,13 +960,9 @@ export default function OccurrenceDetailDrawer({
                   />
                 </View>
 
-                <ActivityIndicator
-                  color={COLORS.primary}
-                />
+                <ActivityIndicator color={COLORS.primary} />
 
-                <Text style={styles.loadingTitle}>
-                  Carregando ocorrência
-                </Text>
+                <Text style={styles.loadingTitle}>Carregando ocorrência</Text>
 
                 <Text style={styles.loadingText}>
                   Buscando os dados registrados.
@@ -1117,13 +978,9 @@ export default function OccurrenceDetailDrawer({
                   />
                 </View>
 
-                <Text style={styles.errorTitle}>
-                  Não foi possível carregar
-                </Text>
+                <Text style={styles.errorTitle}>Não foi possível carregar</Text>
 
-                <Text style={styles.errorText}>
-                  {error}
-                </Text>
+                <Text style={styles.errorText}>{error}</Text>
 
                 <Pressable
                   accessibilityRole="button"
@@ -1134,9 +991,7 @@ export default function OccurrenceDetailDrawer({
                     pressed && styles.pressed,
                   ]}
                 >
-                  <Text style={styles.errorButtonText}>
-                    Fechar
-                  </Text>
+                  <Text style={styles.errorButtonText}>Fechar</Text>
                 </Pressable>
               </View>
             ) : occurrence ? (
@@ -1161,9 +1016,7 @@ export default function OccurrenceDetailDrawer({
                           color={COLORS.primary}
                         />
 
-                        <Text
-                          style={styles.photoPlaceholderText}
-                        >
+                        <Text style={styles.photoPlaceholderText}>
                           Foto não disponível
                         </Text>
                       </View>
@@ -1178,35 +1031,48 @@ export default function OccurrenceDetailDrawer({
                         color={COLORS.white}
                       />
 
-                      <Text
-                        style={styles.photoOccurrenceTagText}
-                      >
+                      <Text style={styles.photoOccurrenceTagText}>
                         {tituloOcorrencia}
                       </Text>
                     </View>
 
-                    <View style={styles.photoIdTag}>
-                      <Text style={styles.photoIdTagText}>
-                        #{occurrence.id_ocorrencia}
-                      </Text>
+                    <View style={styles.photoActions}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Abrir comentários da ocorrência"
+                        accessibilityHint="Abre a conversa da comunidade sobre esta ocorrência"
+                        hitSlop={6}
+                        onPress={() => setComentariosVisiveis(true)}
+                        style={({ pressed }) => [
+                          styles.photoCommentButton,
+
+                          pressed && styles.photoCommentButtonPressed,
+                        ]}
+                      >
+                        <Ionicons
+                          name="chatbubble-outline"
+                          size={20}
+                          color={COLORS.primary}
+                        />
+                      </Pressable>
+
+                      <View style={styles.photoIdTag}>
+                        <Text style={styles.photoIdTagText}>
+                          #{occurrence.id_ocorrencia}
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
                   <View style={styles.heroContent}>
                     <View style={styles.heroHeading}>
                       <View style={styles.heroHeadingText}>
-                        <Text
-                          style={styles.animalName}
-                          numberOfLines={1}
-                        >
+                        <Text style={styles.animalName} numberOfLines={1}>
                           {nomeAnimal}
                         </Text>
 
                         {normalizarTexto(occurrence.raca) ? (
-                          <Text
-                            style={styles.animalBreed}
-                            numberOfLines={1}
-                          >
+                          <Text style={styles.animalBreed} numberOfLines={1}>
                             {occurrence.raca}
                           </Text>
                         ) : null}
@@ -1216,8 +1082,7 @@ export default function OccurrenceDetailDrawer({
                         style={[
                           styles.statusBadge,
                           {
-                            backgroundColor:
-                              statusColors.background,
+                            backgroundColor: statusColors.background,
                           },
                         ]}
                       >
@@ -1225,8 +1090,7 @@ export default function OccurrenceDetailDrawer({
                           style={[
                             styles.statusDot,
                             {
-                              backgroundColor:
-                                statusColors.text,
+                              backgroundColor: statusColors.text,
                             },
                           ]}
                         />
@@ -1260,9 +1124,8 @@ export default function OccurrenceDetailDrawer({
                           </Text>
 
                           <Text style={styles.summaryValue}>
-                            {normalizarTexto(
-                              occurrence.endereco_localizacao
-                            ) || "Localização não informada"}
+                            {normalizarTexto(occurrence.endereco_localizacao) ||
+                              "Localização não informada"}
                           </Text>
                         </View>
                       </View>
@@ -1284,9 +1147,7 @@ export default function OccurrenceDetailDrawer({
                           </Text>
 
                           <Text style={styles.summaryValue}>
-                            {formatarData(
-                              occurrence.data_ocorrencia
-                            )}
+                            {formatarData(occurrence.data_ocorrencia)}
                           </Text>
                         </View>
                       </View>
@@ -1297,8 +1158,7 @@ export default function OccurrenceDetailDrawer({
                         style={[
                           styles.urgencyBadge,
                           {
-                            backgroundColor:
-                              urgencyColors.background,
+                            backgroundColor: urgencyColors.background,
                           },
                         ]}
                       >
@@ -1316,8 +1176,7 @@ export default function OccurrenceDetailDrawer({
                             },
                           ]}
                         >
-                          Urgência:{" "}
-                          {occurrence.nivel_urgencia}
+                          Urgência: {occurrence.nivel_urgencia}
                         </Text>
                       </View>
                     </View>
@@ -1367,10 +1226,8 @@ export default function OccurrenceDetailDrawer({
                     />
                   </View>
 
-                  {(occurrence.saude_critica ||
-                    normalizarTexto(
-                      occurrence.saude_detalhes
-                    )) ? (
+                  {occurrence.saude_critica ||
+                    normalizarTexto(occurrence.saude_detalhes) ? (
                     <View style={styles.section}>
                       <SectionHeader
                         title="Estado de saúde"
@@ -1413,10 +1270,9 @@ export default function OccurrenceDetailDrawer({
                             style={[
                               styles.alertTitle,
                               {
-                                color:
-                                  occurrence.saude_critica
-                                    ? COLORS.danger
-                                    : COLORS.textTitle,
+                                color: occurrence.saude_critica
+                                  ? COLORS.danger
+                                  : COLORS.textTitle,
                               },
                             ]}
                           >
@@ -1426,9 +1282,7 @@ export default function OccurrenceDetailDrawer({
                           </Text>
 
                           <Text style={styles.alertText}>
-                            {normalizarTexto(
-                              occurrence.saude_detalhes
-                            ) ||
+                            {normalizarTexto(occurrence.saude_detalhes) ||
                               "Existe uma informação de saúde registrada para este animal."}
                           </Text>
                         </View>
@@ -1436,10 +1290,8 @@ export default function OccurrenceDetailDrawer({
                     </View>
                   ) : null}
 
-                  {(occurrence.deficiencia ||
-                    normalizarTexto(
-                      occurrence.deficiencia_detalhes
-                    )) ? (
+                  {occurrence.deficiencia ||
+                    normalizarTexto(occurrence.deficiencia_detalhes) ? (
                     <View style={styles.section}>
                       <SectionHeader
                         title="Necessidades especiais"
@@ -1461,9 +1313,7 @@ export default function OccurrenceDetailDrawer({
                           </Text>
 
                           <Text style={styles.specialCareText}>
-                            {normalizarTexto(
-                              occurrence.deficiencia_detalhes
-                            ) ||
+                            {normalizarTexto(occurrence.deficiencia_detalhes) ||
                               "Existe uma deficiência registrada para este animal."}
                           </Text>
                         </View>
@@ -1491,9 +1341,7 @@ export default function OccurrenceDetailDrawer({
                             color={COLORS.primary}
                           />
 
-                          <Text
-                            style={styles.historyButtonText}
-                          >
+                          <Text style={styles.historyButtonText}>
                             Histórico
                           </Text>
                         </Pressable>
@@ -1504,24 +1352,15 @@ export default function OccurrenceDetailDrawer({
                       <View style={styles.careButtonRow}>
                         <CareButton
                           tipo="AGUA"
-                          disabled={
-                            tipoCuidadoCarregando !== null
-                          }
-                          loading={
-                            tipoCuidadoCarregando === "AGUA"
-                          }
+                          disabled={tipoCuidadoCarregando !== null}
+                          loading={tipoCuidadoCarregando === "AGUA"}
                           onPress={registrarCuidadoAgora}
                         />
 
                         <CareButton
                           tipo="COMIDA"
-                          disabled={
-                            tipoCuidadoCarregando !== null
-                          }
-                          loading={
-                            tipoCuidadoCarregando ===
-                            "COMIDA"
-                          }
+                          disabled={tipoCuidadoCarregando !== null}
+                          loading={tipoCuidadoCarregando === "COMIDA"}
                           onPress={registrarCuidadoAgora}
                         />
                       </View>
@@ -1541,33 +1380,23 @@ export default function OccurrenceDetailDrawer({
                       ) : null}
                     </View>
 
-                    <Text style={styles.subsectionTitle}>
-                      Últimos cuidados
-                    </Text>
+                    <Text style={styles.subsectionTitle}>Últimos cuidados</Text>
 
                     <View style={styles.careInfoCard}>
                       <CareInfo
                         tipo="AGUA"
-                        cuidado={
-                          occurrence.cuidados_atuais?.agua ||
-                          null
-                        }
+                        cuidado={occurrence.cuidados_atuais?.agua || null}
                       />
 
                       <View style={styles.careInfoDivider} />
 
                       <CareInfo
                         tipo="COMIDA"
-                        cuidado={
-                          occurrence.cuidados_atuais?.comida ||
-                          null
-                        }
+                        cuidado={occurrence.cuidados_atuais?.comida || null}
                       />
                     </View>
 
-                    {normalizarTexto(
-                      occurrence.cuidados_iniciais
-                    ) ? (
+                    {normalizarTexto(occurrence.cuidados_iniciais) ? (
                       <View style={styles.legacyCareCard}>
                         <Ionicons
                           name="information-circle-outline"
@@ -1576,16 +1405,13 @@ export default function OccurrenceDetailDrawer({
                         />
 
                         <Text style={styles.legacyCareText}>
-                          Registro inicial:{" "}
-                          {occurrence.cuidados_iniciais}
+                          Registro inicial: {occurrence.cuidados_iniciais}
                         </Text>
                       </View>
                     ) : null}
                   </View>
 
-                  {normalizarTexto(
-                    occurrence.observacao
-                  ) ? (
+                  {normalizarTexto(occurrence.observacao) ? (
                     <View style={styles.section}>
                       <SectionHeader
                         title="Observações da ocorrência"
@@ -1686,8 +1512,7 @@ export default function OccurrenceDetailDrawer({
                       />
 
                       <Text style={styles.footerText}>
-                        Ocorrência #
-                        {occurrence.id_ocorrencia}
+                        Ocorrência #{occurrence.id_ocorrencia}
                       </Text>
                     </View>
                   </View>
@@ -1826,7 +1651,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 14,
     bottom: 14,
-    maxWidth: "72%",
+    maxWidth: "58%",
     minHeight: 34,
     flexDirection: "row",
     alignItems: "center",
@@ -1844,16 +1669,54 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 
-  photoIdTag: {
+  photoActions: {
     position: "absolute",
     right: 14,
     bottom: 14,
-    minHeight: 34,
+
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 8,
+  },
+
+  photoCommentButton: {
+    width: 38,
+    height: 38,
+
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 10,
+
     borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.55)",
+  },
+
+  photoCommentButtonPressed: {
+    opacity: 0.82,
+
+    transform: [
+      {
+        scale: 0.94,
+      },
+    ],
+  },
+
+  photoIdTag: {
+    minHeight: 38,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    paddingHorizontal: 10,
+
+    borderRadius: 12,
+
+    backgroundColor:
+      "rgba(255, 255, 255, 0.92)",
   },
 
   photoIdTagText: {

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -30,7 +29,14 @@ import AnimalSection from "../components/form/AnimalSection";
 import DisabilitySection from "../components/form/DisabilitySection";
 import HealthSection from "../components/form/HealthSection";
 import InitialCareSection from "../components/form/InitialCareSection";
+import LocationSection, {
+  type SugestaoEndereco,
+} from "../components/form/LocationSection";
 import OccurrenceFormSection from "../components/form/OccurrenceFormSection";
+import PhotoSection from "../components/form/PhotoSection";
+import ReviewSection, {
+  type ReviewItem,
+} from "../components/form/ReviewSection";
 import OccurrenceTypeSection, {
   type OccurrenceTypeOption,
 } from "../components/form/OccurrenceTypeSection";
@@ -87,24 +93,6 @@ const criarNomeArquivo = (uri: string) => {
   const nome = uri.split("/").pop() || `ocorrencia-${Date.now()}.jpg`;
   return nome.includes(".") ? nome : `${nome}.jpg`;
 };
-
-interface SugestaoEndereco {
-  id: string;
-
-  geometry: {
-    type: "Point";
-    coordinates: [number, number];
-  };
-
-  properties: {
-    mapbox_id: string;
-    feature_type: string;
-    name: string;
-    name_preferred?: string;
-    place_formatted?: string;
-    full_address?: string;
-  };
-}
 
 interface RespostaGeocodingMapbox {
   type: "FeatureCollection";
@@ -762,6 +750,61 @@ export default function CadastroOcorrenciaScreen({
     ? `${formatarDataCurta(comidaRegistrada)} ${formatarHora(comidaRegistrada)}`
     : "Não registrada";
 
+  const itensRevisao: ReviewItem[] = [
+    { label: "Tipo de ocorrência", value: nomeTipoOcorrencia },
+    { label: "Animal", value: nomeTipoAnimal },
+    ...(ehPet
+      ? [
+          {
+            label: "Raça",
+            value:
+              racaConhecida === true
+                ? raca
+                : racaConhecida === false
+                  ? "Não sei"
+                  : "Não informada",
+          },
+        ]
+      : []),
+    { label: "Sexo", value: sexo },
+    { label: "Cor", value: cor || "Não informada" },
+    { label: "Porte", value: porte },
+    { label: "Idade", value: idade },
+    { label: "Endereço", value: endereco },
+    {
+      label: "Data da ocorrência",
+      value: dataOcorrenciaTexto || "Hoje",
+    },
+    {
+      label: "Saúde crítica",
+      value: saudeCritica
+        ? problemasSelecionados.length > 0
+          ? `Sim — ${problemasSelecionados.join(", ")}`
+          : "Sim"
+        : "Não",
+    },
+    {
+      label: "Deficiência",
+      value: deficiencia
+        ? deficienciasSelecionadas.length > 0
+          ? `Sim — ${deficienciasSelecionadas.join(", ")}`
+          : "Sim"
+        : "Não",
+    },
+    { label: "Urgência", value: nivelUrgencia },
+    {
+      label: "Cuidados",
+      value: cuidadosFormatados || "Nenhum cuidado registrado",
+    },
+    {
+      label: "Foto",
+      value: fotoUri ? "Foto adicionada" : "Foto não adicionada",
+    },
+    ...(observacao.trim()
+      ? [{ label: "Observação", value: observacao.trim() }]
+      : []),
+  ];
+
   const handleSalvar = async () => {
     if (!validarFormulario()) {
       return;
@@ -947,15 +990,6 @@ export default function CadastroOcorrenciaScreen({
     }
   };
 
-  const renderResumo = (label: string, value: string) => (
-    <View style={styles.reviewItem}>
-      <Text style={styles.reviewLabel}>{label}</Text>
-      <Text style={styles.reviewValue} numberOfLines={3}>
-        {value || "Não informado"}
-      </Text>
-    </View>
-  );
-
   if (modoEdicao && carregandoOcorrencia) {
     return (
       <SafeAreaView style={styles.container}>
@@ -1088,136 +1122,16 @@ export default function CadastroOcorrenciaScreen({
             title="Localização e tempo"
             subtitle="Onde e quando o animal foi visto?"
           >
-
-            <Text style={styles.fieldLabel}>
-              Endereço visto pela última vez *
-            </Text>
-
-            <View style={[styles.inputContainer, styles.addressInput]}>
-              <Ionicons
-                name="location-outline"
-                size={20}
-                color={theme.colors.brand}
-                style={styles.inputIcon}
-              />
-
-              <TextInput
-                style={styles.input}
-                value={endereco}
-                onChangeText={alterarEnderecoManual}
-                placeholder="Rua, número, bairro e cidade"
-                placeholderTextColor={theme.colors.textBody}
-                multiline
-              />
-
-              {buscandoEndereco && (
-                <ActivityIndicator
-                  size="small"
-                  color={theme.colors.brand}
-                  style={styles.addressLoading}
-                />
-              )}
-            </View>
-
-            {sugestoesEndereco.length > 0 && (
-              <View style={styles.addressSuggestions}>
-                {sugestoesEndereco.map((sugestao, index) => {
-                  const titulo =
-                    sugestao.properties.name_preferred ||
-                    sugestao.properties.name;
-
-                  const subtitulo =
-                    sugestao.properties.place_formatted ||
-                    sugestao.properties.full_address;
-
-                  return (
-                    <React.Fragment key={sugestao.id}>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`Selecionar endereço ${titulo}`}
-                        onPress={() => selecionarSugestaoEndereco(sugestao)}
-                        style={({ pressed }) => [
-                          styles.addressSuggestionItem,
-                          pressed && styles.pressed,
-                        ]}
-                      >
-                        <View style={styles.addressSuggestionIcon}>
-                          <Ionicons
-                            name="location-outline"
-                            size={18}
-                            color={theme.colors.brand}
-                          />
-                        </View>
-
-                        <View style={styles.addressSuggestionContent}>
-                          <Text
-                            style={styles.addressSuggestionTitle}
-                            numberOfLines={1}
-                          >
-                            {titulo}
-                          </Text>
-
-                          {subtitulo ? (
-                            <Text
-                              style={styles.addressSuggestionSubtitle}
-                              numberOfLines={2}
-                            >
-                              {subtitulo}
-                            </Text>
-                          ) : null}
-                        </View>
-
-                        <Ionicons
-                          name="chevron-forward"
-                          size={17}
-                          color={theme.colors.textBody}
-                        />
-                      </Pressable>
-
-                      {index < sugestoesEndereco.length - 1 && (
-                        <View style={styles.addressSuggestionDivider} />
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </View>
-            )}
-
-            <Pressable
-              accessibilityRole="button"
-              onPress={obterLocalizacaoAtual}
-              disabled={localizando}
-              style={({ pressed }) => [
-                styles.locationButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              {localizando ? (
-                <ActivityIndicator color={theme.colors.brand} />
-              ) : (
-                <Ionicons
-                  name="navigate-outline"
-                  size={19}
-                  color={theme.colors.brand}
-                />
-              )}
-
-              <Text style={styles.locationButtonText}>
-                {localizando
-                  ? "Obtendo localização..."
-                  : latitude !== null
-                    ? "Localização marcada"
-                    : "Usar minha localização"}
-              </Text>
-
-              {latitude !== null && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={19}
-                  color={theme.colors.semantic.success.text}
-                />
-              )}
-            </Pressable>
+            <LocationSection
+              endereco={endereco}
+              sugestoesEndereco={sugestoesEndereco}
+              buscandoEndereco={buscandoEndereco}
+              localizando={localizando}
+              localizacaoMarcada={latitude !== null}
+              onEnderecoChange={alterarEnderecoManual}
+              onSugestaoPress={selecionarSugestaoEndereco}
+              onUsarLocalizacaoPress={obterLocalizacaoAtual}
+            />
 
             <Text style={[styles.fieldLabel, styles.fieldLabelSpacing]}>
               Data da ocorrência
@@ -1425,57 +1339,7 @@ export default function CadastroOcorrenciaScreen({
             title="Foto obrigatória"
             subtitle="Visualização da foto • toque para trocar/adicionar."
           >
-
-            <Pressable
-              accessibilityRole="button"
-              onPress={selecionarFoto}
-              style={({ pressed }) => [
-                styles.photoArea,
-                fotoUri && styles.photoAreaFilled,
-                pressed && styles.pressed,
-              ]}
-            >
-              {fotoUri ? (
-                <>
-                  <Image
-                    source={{
-                      uri: fotoUri,
-                    }}
-                    style={styles.photoPreview}
-                  />
-
-                  <View style={styles.photoOverlay}>
-                    <View style={styles.photoOverlayButton}>
-                      <Ionicons
-                        name="camera-outline"
-                        size={19}
-                        color={theme.colors.surface}
-                      />
-
-                      <Text style={styles.photoOverlayText}>
-                        Trocar / adicionar foto
-                      </Text>
-                    </View>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View style={styles.photoIcon}>
-                    <Ionicons
-                      name="camera-outline"
-                      size={28}
-                      color={theme.colors.brand}
-                    />
-                  </View>
-
-                  <Text style={styles.photoTitle}>Adicionar foto</Text>
-
-                  <Text style={styles.photoDescription}>
-                    Toque para escolher uma imagem da galeria
-                  </Text>
-                </>
-              )}
-            </Pressable>
+            <PhotoSection fotoUri={fotoUri} onPress={selecionarFoto} />
           </OccurrenceFormSection>
 
           {/* ===================================================== */}
@@ -1513,90 +1377,7 @@ export default function CadastroOcorrenciaScreen({
             title="Revisão"
             subtitle="Confira as informações antes de registrar a ocorrência."
           >
-
-            <View style={styles.reviewCard}>
-              <View style={styles.reviewHeader}>
-                <View style={styles.reviewHeaderIcon}>
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={22}
-                    color={theme.colors.brand}
-                  />
-                </View>
-
-                <View style={styles.reviewHeaderContent}>
-                  <Text style={styles.reviewHeaderTitle}>Tudo pronto?</Text>
-
-                  <Text style={styles.reviewHeaderText}>
-                    Revise os dados abaixo antes de enviar.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.reviewDivider} />
-
-              {renderResumo("Tipo de ocorrência", nomeTipoOcorrencia)}
-
-              {renderResumo("Animal", nomeTipoAnimal)}
-
-              {ehPet &&
-                renderResumo(
-                  "Raça",
-                  racaConhecida === true
-                    ? raca
-                    : racaConhecida === false
-                      ? "Não sei"
-                      : "Não informada",
-                )}
-
-              {renderResumo("Sexo", sexo)}
-
-              {renderResumo("Cor", cor || "Não informada")}
-
-              {renderResumo("Porte", porte)}
-
-              {renderResumo("Idade", idade)}
-
-              {renderResumo("Endereço", endereco)}
-
-              {renderResumo(
-                "Data da ocorrência",
-                dataOcorrenciaTexto || "Hoje",
-              )}
-
-              {renderResumo(
-                "Saúde crítica",
-                saudeCritica
-                  ? problemasSelecionados.length > 0
-                    ? `Sim — ${problemasSelecionados.join(", ")}`
-                    : "Sim"
-                  : "Não",
-              )}
-
-              {renderResumo(
-                "Deficiência",
-                deficiencia
-                  ? deficienciasSelecionadas.length > 0
-                    ? `Sim — ${deficienciasSelecionadas.join(", ")}`
-                    : "Sim"
-                  : "Não",
-              )}
-
-              {renderResumo("Urgência", nivelUrgencia)}
-
-              {renderResumo(
-                "Cuidados",
-                cuidadosFormatados || "Nenhum cuidado registrado",
-              )}
-
-              {renderResumo(
-                "Foto",
-                fotoUri ? "Foto adicionada" : "Foto não adicionada",
-              )}
-
-              {observacao.trim() &&
-                renderResumo("Observação", observacao.trim())}
-            </View>
+            <ReviewSection items={itensRevisao} />
           </OccurrenceFormSection>
 
           <View style={styles.footerNote}>
@@ -1936,159 +1717,10 @@ const styles = StyleSheet.create({
 
   ...occurrenceFormSharedStyles,
 
-  addressInput: {
-    alignItems: "flex-start",
-    paddingTop: 3,
-    paddingBottom: 3,
-  },
-
-  addressLoading: {
-    marginTop: 14,
-    marginLeft: 8,
-  },
-
-  addressSuggestions: {
-    marginTop: -4,
-    marginBottom: 12,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.10)",
-    backgroundColor: theme.colors.surface,
-    overflow: "hidden",
-    ...theme.shadows.elevation1,
-  },
-
-  addressSuggestionItem: {
-    minHeight: 64,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-
-  addressSuggestionIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-    backgroundColor: "rgba(31, 92, 77, 0.06)",
-  },
-
-  addressSuggestionContent: {
-    flex: 1,
-    paddingRight: 8,
-  },
-
-  addressSuggestionTitle: {
-    color: theme.colors.textTitle,
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 3,
-  },
-
-  addressSuggestionSubtitle: {
-    color: theme.colors.textBody,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-
-  addressSuggestionDivider: {
-    height: 1,
-    marginLeft: 58,
-    backgroundColor: "rgba(31, 92, 77, 0.08)",
-  },
-
   sectionDivider: {
     height: 1,
     backgroundColor: "rgba(31, 92, 77, 0.08)",
     marginVertical: 20,
-  },
-
-  locationButton: {
-    minHeight: 48,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.14)",
-    backgroundColor: "rgba(31, 92, 77, 0.05)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-  },
-
-  locationButtonText: {
-    color: theme.colors.brand,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-
-  photoArea: {
-    height: 210,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: "rgba(31, 92, 77, 0.22)",
-    backgroundColor: "rgba(31, 92, 77, 0.035)",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-
-  photoAreaFilled: {
-    borderStyle: "solid",
-    borderColor: "rgba(31, 92, 77, 0.12)",
-  },
-
-  photoIcon: {
-    width: 58,
-    height: 58,
-    borderRadius: 20,
-    backgroundColor: "rgba(31, 92, 77, 0.09)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 11,
-  },
-
-  photoTitle: {
-    color: theme.colors.textTitle,
-    fontSize: 15,
-    fontWeight: "800",
-  },
-
-  photoDescription: {
-    color: theme.colors.textBody,
-    fontSize: 12,
-    marginTop: 4,
-  },
-
-  photoPreview: {
-    width: "100%",
-    height: "100%",
-  },
-
-  photoOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: 12,
-    backgroundColor: "rgba(0,0,0,0.32)",
-    alignItems: "center",
-  },
-
-  photoOverlayButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-
-  photoOverlayText: {
-    color: theme.colors.surface,
-    fontSize: 13,
-    fontWeight: "800",
   },
 
   urgencyList: {
@@ -2289,73 +1921,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: "right",
     marginTop: -5,
-  },
-
-  reviewCard: {
-    backgroundColor: theme.colors.background,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.08)",
-    overflow: "hidden",
-  },
-
-  reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-  },
-
-  reviewHeaderIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: "rgba(31, 92, 77, 0.08)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  reviewHeaderContent: {
-    flex: 1,
-  },
-
-  reviewHeaderTitle: {
-    color: theme.colors.textTitle,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-
-  reviewHeaderText: {
-    color: theme.colors.textBody,
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 2,
-  },
-
-  reviewDivider: {
-    height: 1,
-    backgroundColor: "rgba(31, 92, 77, 0.08)",
-  },
-
-  reviewItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(31, 92, 77, 0.06)",
-  },
-
-  reviewLabel: {
-    color: theme.colors.textBody,
-    fontSize: 10,
-    fontWeight: "700",
-    marginBottom: 3,
-  },
-
-  reviewValue: {
-    color: theme.colors.textTitle,
-    fontSize: 13,
-    fontWeight: "700",
-    lineHeight: 18,
   },
 
   footerNote: {

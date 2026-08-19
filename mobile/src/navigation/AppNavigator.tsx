@@ -1,20 +1,20 @@
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text } from 'react-native';
-
-import MapScreen from '../screens/MapScreen';
-import FeedNoticias from '../features/feed/screens/FeedNoticias';
-import CadastroOcorrenciaScreen from '../features/occurrences/screens/CadastroOcorrenciaScreen';
-import type { AppTabParamList } from './navigation.types';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { View, Text } from "react-native";
+import MapScreen from "../screens/MapScreen";
+import FeedNoticias from "../features/feed/screens/FeedNoticias";
+import CadastroOcorrenciaScreen from "../features/occurrences/screens/CadastroOcorrenciaScreen";
+import type { AppTabParamList } from "./navigation.types";
+import ProcuraSeScreen from "../features/wanted/screens/ProcuraSeScreen";
 
 const SOSScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
     <Text>Alerta SOS</Text>
   </View>
 );
 
 const ProfileScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
     <Text>Meu Perfil</Text>
   </View>
 );
@@ -27,15 +27,12 @@ export default function AppNavigator() {
       tabBar={() => null}
       screenOptions={{
         headerShown: false,
-        tabBarHideOnKeyboard: true
+        tabBarHideOnKeyboard: true,
       }}
     >
       <AppTabs.Screen name="Mapa" component={MapScreen} />
-      <AppTabs.Screen
-        name="Feed"
-        component={FeedNoticias}
-      />
-
+      <AppTabs.Screen name="Feed" component={FeedNoticias} />
+      <AppTabs.Screen name="ProcuraSe" component={ProcuraSeScreen} />
       <AppTabs.Screen name="SOS" component={SOSScreen} />
       <AppTabs.Screen name="Perfil" component={ProfileScreen} />
       <AppTabs.Screen

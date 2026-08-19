@@ -38,6 +38,7 @@ ARQUITETURA DO PROJETO - BACKEND
 │   ├── 6ec9a90cf3ac_completar_modelos_der.py
 │   ├── 9dbaf88e4938_add_pet_profile_fields.py
 │   ├── a4b7c9d2e5f1_create_occurrence_care_history.py
+│   ├── b91c2d7e4f6a_add_comment_threads_crud.py
 │   ├── be3d516310b6_add_auth_verification_fields.py
 │   ├── d3a8b6c4e1f2_add_occurrence_spatial_index.py
 │   └── f7c1e4d2a9b0_secure_password_reset_codes.py
@@ -63,31 +64,32 @@ ROTAS E SEQUÊNCIA DOS ARQUIVOS INCLUÍDOS (ORDENADOS DE CIMA PARA BAIXO)
 06. backend\alembic\versions\6ec9a90cf3ac_completar_modelos_der.py
 07. backend\alembic\versions\9dbaf88e4938_add_pet_profile_fields.py
 08. backend\alembic\versions\a4b7c9d2e5f1_create_occurrence_care_history.py
-09. backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
-10. backend\alembic\versions\d3a8b6c4e1f2_add_occurrence_spatial_index.py
-11. backend\alembic\versions\f7c1e4d2a9b0_secure_password_reset_codes.py
-12. backend\app\core\cloudinary.py
-13. backend\app\core\config.py
-14. backend\app\core\database.py
-15. backend\app\core\deps.py
-16. backend\app\core\security.py
-17. backend\app\main.py
-18. backend\app\modules\auth\models.py
-19. backend\app\modules\auth\router.py
-20. backend\app\modules\auth\schemas.py
-21. backend\app\modules\auth\service.py
-22. backend\app\modules\chat\models.py
-23. backend\app\modules\engajamento\models.py
-24. backend\app\modules\ocorrencias\avistamento_router.py
-25. backend\app\modules\ocorrencias\models.py
-26. backend\app\modules\ocorrencias\router.py
-27. backend\app\modules\ocorrencias\schemas.py
-28. backend\app\modules\ong\models.py
-29. backend\app\modules\pets\models.py
-30. backend\app\modules\pets\router.py
-31. backend\app\modules\pets\schemas.py
-32. backend\docker-compose.yml
-33. backend\requirements.txt
+09. backend\alembic\versions\b91c2d7e4f6a_add_comment_threads_crud.py
+10. backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
+11. backend\alembic\versions\d3a8b6c4e1f2_add_occurrence_spatial_index.py
+12. backend\alembic\versions\f7c1e4d2a9b0_secure_password_reset_codes.py
+13. backend\app\core\cloudinary.py
+14. backend\app\core\config.py
+15. backend\app\core\database.py
+16. backend\app\core\deps.py
+17. backend\app\core\security.py
+18. backend\app\main.py
+19. backend\app\modules\auth\models.py
+20. backend\app\modules\auth\router.py
+21. backend\app\modules\auth\schemas.py
+22. backend\app\modules\auth\service.py
+23. backend\app\modules\chat\models.py
+24. backend\app\modules\engajamento\models.py
+25. backend\app\modules\ocorrencias\avistamento_router.py
+26. backend\app\modules\ocorrencias\models.py
+27. backend\app\modules\ocorrencias\router.py
+28. backend\app\modules\ocorrencias\schemas.py
+29. backend\app\modules\ong\models.py
+30. backend\app\modules\pets\models.py
+31. backend\app\modules\pets\router.py
+32. backend\app\modules\pets\schemas.py
+33. backend\docker-compose.yml
+34. backend\requirements.txt
 
 ================================================================================
 CÓDIGO-FONTE E SCRIPTS DE CONFIGURAÇÃO
@@ -694,6 +696,100 @@ def downgrade() -> None:
     )
     op.drop_table("historico_cuidados_ocorrencia")
 
+
+================================================================================
+CAMINHO: backend\alembic\versions\b91c2d7e4f6a_add_comment_threads_crud.py
+================================================================================
+
+"""add comment threads crud
+
+Revision ID: b91c2d7e4f6a
+Revises: 9dbaf88e4938
+"""
+
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+revision: str = "b91c2d7e4f6a"
+down_revision: Union[str, None] = "9dbaf88e4938"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    op.add_column(
+        "comentarios",
+        sa.Column(
+            "id_comentario_pai",
+            sa.Integer(),
+            nullable=True,
+        ),
+    )
+
+    op.add_column(
+        "comentarios",
+        sa.Column(
+            "editado_em",
+            sa.DateTime(),
+            nullable=True,
+        ),
+    )
+
+    op.add_column(
+        "comentarios",
+        sa.Column(
+            "excluido_em",
+            sa.DateTime(),
+            nullable=True,
+        ),
+    )
+
+    op.create_foreign_key(
+        "fk_comentarios_id_comentario_pai",
+        "comentarios",
+        "comentarios",
+        ["id_comentario_pai"],
+        ["id_comentario"],
+        ondelete="SET NULL",
+    )
+
+    op.create_index(
+        "ix_comentarios_id_comentario_pai",
+        "comentarios",
+        ["id_comentario_pai"],
+        unique=False,
+    )
+
+
+def downgrade() -> None:
+    op.drop_index(
+        "ix_comentarios_id_comentario_pai",
+        table_name="comentarios",
+    )
+
+    op.drop_constraint(
+        "fk_comentarios_id_comentario_pai",
+        "comentarios",
+        type_="foreignkey",
+    )
+
+    op.drop_column(
+        "comentarios",
+        "excluido_em",
+    )
+
+    op.drop_column(
+        "comentarios",
+        "editado_em",
+    )
+
+    op.drop_column(
+        "comentarios",
+        "id_comentario_pai",
+    )
 
 ================================================================================
 CAMINHO: backend\alembic\versions\be3d516310b6_add_auth_verification_fields.py
@@ -1662,35 +1758,82 @@ from sqlalchemy import String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
+
 class Interacao(Base):
     __tablename__ = "interacoes"
 
     id_interacao: Mapped[int] = mapped_column(primary_key=True, index=True)
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
-    id_ocorrencia: Mapped[int] = mapped_column(ForeignKey("ocorrencias.id_ocorrencia"), nullable=False)
-    
-    tipo_interacao: Mapped[str] = mapped_column(String(20), nullable=False) # FORCA | FAVORITO
+    id_ocorrencia: Mapped[int] = mapped_column(
+        ForeignKey("ocorrencias.id_ocorrencia"), nullable=False
+    )
+
+    tipo_interacao: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # FORCA | FAVORITO
     data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 
 class Comentario(Base):
     __tablename__ = "comentarios"
 
-    id_comentario: Mapped[int] = mapped_column(primary_key=True, index=True)
-    id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
-    id_ocorrencia: Mapped[int] = mapped_column(ForeignKey("ocorrencias.id_ocorrencia"), nullable=False)
-    
-    texto: Mapped[str] = mapped_column(Text, nullable=False)
-    data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    id_comentario: Mapped[int] = mapped_column(
+        primary_key=True,
+        index=True,
+    )
+
+    id_conta: Mapped[int] = mapped_column(
+        ForeignKey("contas.id_conta"),
+        nullable=False,
+    )
+
+    id_ocorrencia: Mapped[int] = mapped_column(
+        ForeignKey("ocorrencias.id_ocorrencia"),
+        nullable=False,
+    )
+
+    id_comentario_pai: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "comentarios.id_comentario",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    texto: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+
+    data_hora: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+    )
+
+    editado_em: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
+    excluido_em: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
 
 class Denuncia(Base):
     __tablename__ = "denuncias"
 
     id_denuncia: Mapped[int] = mapped_column(primary_key=True, index=True)
     id_conta: Mapped[int] = mapped_column(ForeignKey("contas.id_conta"), nullable=False)
-    id_ocorrencia: Mapped[int] = mapped_column(ForeignKey("ocorrencias.id_ocorrencia"), nullable=False)
-    
+    id_ocorrencia: Mapped[int] = mapped_column(
+        ForeignKey("ocorrencias.id_ocorrencia"), nullable=False
+    )
+
     motivo: Mapped[str] = mapped_column(Text, nullable=False)
     data_hora: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 
 ================================================================================
 CAMINHO: backend\app\modules\ocorrencias\avistamento_router.py
@@ -1887,6 +2030,9 @@ from app.modules.ocorrencias.models import (
 )
 from app.modules.engajamento.models import Comentario, Denuncia, Interacao
 from app.modules.ocorrencias.schemas import (
+    ComentarioAtualizar,
+    ComentarioCriar,
+    ComentarioResposta,
     CuidadoOcorrenciaCriar,
     CuidadoOcorrenciaResposta,
     OcorrenciaResposta,
@@ -1928,6 +2074,66 @@ def _query_cuidados_com_autor(id_ocorrencia: int):
         .outerjoin(UsuarioFisico, UsuarioFisico.id_conta == Conta.id_conta)
         .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
         .where(HistoricoCuidadoOcorrencia.id_ocorrencia == id_ocorrencia)
+    )
+
+
+def _serializar_comentario(
+    comentario: Comentario,
+    nome_autor: str,
+    foto_autor: str | None,
+    tipo_conta_autor: str,
+) -> dict:
+    return {
+        "id_comentario": comentario.id_comentario,
+        "id_ocorrencia": comentario.id_ocorrencia,
+        "id_conta": comentario.id_conta,
+        "id_comentario_pai": comentario.id_comentario_pai,
+        "texto": comentario.texto,
+        "data_hora": comentario.data_hora,
+        "editado_em": comentario.editado_em,
+        "excluido_em": comentario.excluido_em,
+        "autor": {
+            "id_conta": comentario.id_conta,
+            "nome": nome_autor,
+            "foto": foto_autor,
+            "tipo_conta": tipo_conta_autor,
+        },
+    }
+
+
+def _query_comentarios_com_autor(
+    id_ocorrencia: int,
+):
+    nome_autor = func.coalesce(
+        UsuarioFisico.nome_completo,
+        ONG.nome_fantasia,
+        Conta.email,
+    ).label("nome_autor")
+
+    foto_autor = Conta.foto_perfil.label("foto_autor")
+
+    tipo_conta_autor = Conta.tipo_conta.label("tipo_conta_autor")
+
+    return (
+        select(
+            Comentario,
+            nome_autor,
+            foto_autor,
+            tipo_conta_autor,
+        )
+        .join(
+            Conta,
+            Conta.id_conta == Comentario.id_conta,
+        )
+        .outerjoin(
+            UsuarioFisico,
+            UsuarioFisico.id_conta == Conta.id_conta,
+        )
+        .outerjoin(
+            ONG,
+            ONG.id_conta == Conta.id_conta,
+        )
+        .where(Comentario.id_ocorrencia == id_ocorrencia)
     )
 
 
@@ -2173,7 +2379,10 @@ async def listar_ocorrencias_proximas(
 
     total_comentarios = (
         select(func.count(Comentario.id_comentario))
-        .where(Comentario.id_ocorrencia == Ocorrencia.id_ocorrencia)
+        .where(
+            Comentario.id_ocorrencia == Ocorrencia.id_ocorrencia,
+            Comentario.excluido_em.is_(None),
+        )
         .correlate(Ocorrencia)
         .scalar_subquery()
         .label("total_comentarios")
@@ -2459,6 +2668,316 @@ async def denunciar_ocorrencia(
         "message": "Denúncia enviada com sucesso.",
     }
 
+
+# =============================================================
+# COMENTÁRIOS DA OCORRÊNCIA
+# =============================================================
+
+
+@router.get(
+    "/{id_ocorrencia:int}/comentarios",
+    response_model=list[ComentarioResposta],
+)
+async def listar_comentarios_ocorrencia(
+    id_ocorrencia: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    # Mantém a rota protegida por autenticação.
+    _ = conta_atual
+
+    ocorrencia_existe = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(
+            Ocorrencia.id_ocorrencia == id_ocorrencia
+        )
+    )
+
+    if ocorrencia_existe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    resultado = await db.execute(
+        _query_comentarios_com_autor(id_ocorrencia).order_by(
+            Comentario.data_hora.asc(),
+            Comentario.id_comentario.asc(),
+        )
+    )
+
+    return [
+        _serializar_comentario(
+            comentario,
+            nome_autor,
+            foto_autor,
+            tipo_conta_autor,
+        )
+        for (
+            comentario,
+            nome_autor,
+            foto_autor,
+            tipo_conta_autor,
+        ) in resultado.all()
+    ]
+
+
+@router.post(
+    "/{id_ocorrencia:int}/comentarios",
+    response_model=ComentarioResposta,
+    status_code=status.HTTP_201_CREATED,
+)
+async def criar_comentario_ocorrencia(
+    id_ocorrencia: int,
+    dados: ComentarioCriar,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    ocorrencia_existe = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(
+            Ocorrencia.id_ocorrencia == id_ocorrencia
+        )
+    )
+
+    if ocorrencia_existe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    texto = dados.texto.strip()
+
+    if not texto:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Escreva uma mensagem antes de enviar.",
+        )
+
+        id_comentario_pai: int | None = None
+
+    if dados.id_comentario_pai is not None:
+        comentario_alvo = await db.get(
+            Comentario,
+            dados.id_comentario_pai,
+        )
+
+        if (
+            comentario_alvo is None
+            or comentario_alvo.id_ocorrencia != id_ocorrencia
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Comentário respondido não encontrado.",
+            )
+
+        if comentario_alvo.excluido_em is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Não é possível responder a um comentário excluído.",
+            )
+
+        # =====================================================
+        # NÍVEL 0
+        #
+        # Comentário principal.
+        # A nova mensagem será uma resposta de nível 1.
+        # =====================================================
+
+        if comentario_alvo.id_comentario_pai is None:
+            id_comentario_pai = comentario_alvo.id_comentario
+
+        else:
+            # =================================================
+            # O comentário alvo já possui pai.
+            #
+            # Precisamos descobrir se ele é:
+            #
+            # nível 1 -> pode receber uma resposta final
+            # nível 2 -> não pode receber novas respostas
+            # =================================================
+
+            comentario_pai = await db.get(
+                Comentario,
+                comentario_alvo.id_comentario_pai,
+            )
+
+            if (
+                comentario_pai is None
+                or comentario_pai.id_ocorrencia != id_ocorrencia
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Estrutura de comentários inválida.",
+                )
+
+            # Se o pai também possui pai, comentario_alvo
+            # já está no último nível permitido.
+            if comentario_pai.id_comentario_pai is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Esta resposta já está no último nível permitido.",
+                )
+
+            if comentario_pai.excluido_em is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Não é possível responder a um comentário excluído.",
+                )
+
+            # comentario_alvo é uma resposta de nível 1.
+            # A nova resposta fica ligada diretamente a ela,
+            # formando o nível 2.
+            id_comentario_pai = comentario_alvo.id_comentario
+
+    novo_comentario = Comentario(
+        id_conta=conta_atual.id_conta,
+        id_ocorrencia=id_ocorrencia,
+        id_comentario_pai=id_comentario_pai,
+        texto=texto,
+    )
+
+    try:
+        db.add(novo_comentario)
+
+        await db.commit()
+
+        await db.refresh(novo_comentario)
+    except Exception:
+        await db.rollback()
+        raise
+
+    resultado = await db.execute(
+        _query_comentarios_com_autor(id_ocorrencia).where(
+            Comentario.id_comentario == novo_comentario.id_comentario
+        )
+    )
+
+
+    (
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    ) = resultado.one()
+
+    return _serializar_comentario(
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    )
+
+@router.patch(
+    "/{id_ocorrencia:int}/comentarios/{id_comentario:int}",
+    response_model=ComentarioResposta,
+)
+async def atualizar_comentario_ocorrencia(
+    id_ocorrencia: int,
+    id_comentario: int,
+    dados: ComentarioAtualizar,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    comentario = await db.get(
+        Comentario,
+        id_comentario,
+    )
+
+    if (
+        comentario is None
+        or comentario.id_ocorrencia != id_ocorrencia
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comentário não encontrado.",
+        )
+
+    if comentario.id_conta != conta_atual.id_conta:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você só pode editar seus próprios comentários.",
+        )
+
+    if comentario.excluido_em is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Comentário excluído não pode ser editado.",
+        )
+
+    texto = dados.texto.strip()
+
+    if not texto:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="O comentário não pode ficar vazio.",
+        )
+
+    comentario.texto = texto
+    comentario.editado_em = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(comentario)
+
+    resultado = await db.execute(
+        _query_comentarios_com_autor(
+            id_ocorrencia,
+        ).where(
+            Comentario.id_comentario
+            == id_comentario,
+        )
+    )
+
+    (
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    ) = resultado.one()
+
+    return _serializar_comentario(
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    )
+
+
+@router.delete(
+    "/{id_ocorrencia:int}/comentarios/{id_comentario:int}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def excluir_comentario_ocorrencia(
+    id_ocorrencia: int,
+    id_comentario: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    comentario = await db.get(
+        Comentario,
+        id_comentario,
+    )
+
+    if (
+        comentario is None
+        or comentario.id_ocorrencia != id_ocorrencia
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comentário não encontrado.",
+        )
+
+    if comentario.id_conta != conta_atual.id_conta:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você só pode excluir seus próprios comentários.",
+        )
+
+    if comentario.excluido_em is not None:
+        return
+
+    comentario.texto = ""
+    comentario.excluido_em = datetime.utcnow()
+
+    await db.commit()
 
 @router.get("/minhas", response_model=list[OcorrenciaResposta])
 async def listar_minhas_ocorrencias(
@@ -2797,6 +3316,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+
 class OcorrenciaCriar(BaseModel):
 
     tipo_ocorrencia: str
@@ -2818,6 +3338,7 @@ class OcorrenciaCriar(BaseModel):
     latitude: float
     longitude: float
     observacao: str | None = None
+
 
 class OcorrenciaResposta(BaseModel):
     id_ocorrencia: int
@@ -2891,6 +3412,46 @@ class CuidadoOcorrenciaResposta(BaseModel):
 class EstadoCuidadosResposta(BaseModel):
     agua: CuidadoOcorrenciaResposta | None = None
     comida: CuidadoOcorrenciaResposta | None = None
+
+
+class AutorComentarioResposta(BaseModel):
+    id_conta: int
+    nome: str
+    foto: str | None = None
+    tipo_conta: str
+
+
+class ComentarioCriar(BaseModel):
+    texto: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
+
+    id_comentario_pai: int | None = None
+
+
+class ComentarioAtualizar(BaseModel):
+    texto: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
+
+
+class ComentarioResposta(BaseModel):
+    id_comentario: int
+    id_ocorrencia: int
+    id_conta: int
+    id_comentario_pai: int | None = None
+    texto: str
+    data_hora: datetime
+    editado_em: datetime | None = None
+    excluido_em: datetime | None = None
+    autor: AutorComentarioResposta
+
+    class Config:
+        from_attributes = True
 
 
 class OcorrenciaDetalheResposta(BaseModel):

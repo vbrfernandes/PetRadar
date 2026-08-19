@@ -54,7 +54,8 @@ const DRAWER_WIDTH = Math.min(
 
 export type AppNavigationScreen =
     | "Mapa"
-    | "Feed";
+    | "Feed"
+    | "ProcuraSe";
 
 interface AppNavigationDrawerProps {
     visible: boolean;
@@ -70,6 +71,7 @@ interface AppNavigationDrawerProps {
 
     onNavigateMap: () => void;
     onNavigateFeed: () => void;
+    onNavigateProcuraSe: () => void;
 }
 
 interface DrawerItemProps {
@@ -104,10 +106,10 @@ function DrawerItem({
                 styles.drawerItem,
 
                 active &&
-                    styles.drawerItemActive,
+                styles.drawerItemActive,
 
                 pressed &&
-                    styles.drawerItemPressed,
+                styles.drawerItemPressed,
             ]}
         >
             <View
@@ -115,7 +117,7 @@ function DrawerItem({
                     styles.drawerItemIcon,
 
                     active &&
-                        styles.drawerItemIconActive,
+                    styles.drawerItemIconActive,
                 ]}
             >
                 <Ionicons
@@ -134,7 +136,7 @@ function DrawerItem({
                     styles.drawerItemText,
 
                     active &&
-                        styles.drawerItemTextActive,
+                    styles.drawerItemTextActive,
                 ]}
             >
                 {label}
@@ -169,6 +171,8 @@ export default function AppNavigationDrawer({
 
     onNavigateMap,
     onNavigateFeed,
+    onNavigateProcuraSe,
+
 }: AppNavigationDrawerProps) {
     const translateX = useRef(
         new Animated.Value(
@@ -333,6 +337,20 @@ export default function AppNavigationDrawer({
         );
     };
 
+    const handleProcuraSe = () => {
+        if (
+            activeScreen ===
+            "ProcuraSe"
+        ) {
+            onClose();
+
+            return;
+        }
+
+        fecharComAcao(
+            onNavigateProcuraSe,
+        );
+    };
     // ========================================================
     // NÃO RENDERIZAR QUANDO FECHADO
     // ========================================================
@@ -585,6 +603,13 @@ export default function AppNavigationDrawer({
                         <DrawerItem
                             icon="search-outline"
                             label="Procura-se"
+                            active={
+                                activeScreen ===
+                                "ProcuraSe"
+                            }
+                            onPress={
+                                handleProcuraSe
+                            }
                         />
 
                         <View

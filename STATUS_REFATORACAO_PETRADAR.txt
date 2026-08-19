@@ -24,13 +24,13 @@ commit Inicial de refatoração de codigo
 FASE ATUAL
 ==========
 
-FASE 7 — OCCURRENCES
+FASE 8 — MAP
 
 Status:
-EM ANDAMENTO
+AGUARDANDO INÍCIO
 
 Subetapa atual:
-FASE 7P — InitialCareSection.
+Aguardar início explícito da Fase 8 — Map.
 
 ======================================================================
 FASE 1 — NAVIGATION — CONCLUÍDA
@@ -1099,7 +1099,7 @@ FASE 7 — OCCURRENCES
 ====================
 
 Status:
-EM ANDAMENTO
+CONCLUÍDA
 
 Subetapas:
 [X] OccurrenceDetailDrawer movido para o domínio Occurrences
@@ -1151,8 +1151,20 @@ Subetapas:
 [X] smoke test manual da Fase 7O
 [X] InitialCareSection extraído para components/form
 [X] validação técnica da Fase 7P
-[ ] smoke test manual da Fase 7P
-[ ] validação final da Fase 7
+[X] smoke test manual da Fase 7P
+[X] LocationSection extraído para components/form
+[X] validação técnica da Fase 7Q
+[X] Smoke test manual da Fase 7Q aprovado pelo usuário
+[X] PhotoSection extraído para components/form
+[X] validação técnica da Fase 7R
+[X] Smoke test manual da Fase 7R aprovado pelo usuário
+[X] ReviewSection extraído para components/form
+[X] validação técnica da Fase 7S
+[X] Smoke test manual da Fase 7S aprovado pelo usuário
+[X] Organização interna de Occurrences avaliada
+[X] validação final da Fase 7
+[X] Fase 7T — fechamento formal da Fase 7 — Occurrences
+[X] Fase 7 — Occurrences concluída
 
 Subetapa Fase 7A — movimentação estrutural de OccurrenceDetailDrawer:
 * Movido `mobile/src/components/OccurrenceDetailDrawer.tsx` para `mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx`.
@@ -1489,7 +1501,115 @@ Subetapa Fase 7P — InitialCareSection:
 * `git diff --check` restrito aos arquivos da Fase 7P foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
 
 Smoke test Fase 7P:
-PENDENTE DE VALIDAÇÃO MANUAL.
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7Q — LocationSection:
+* Criado `mobile/src/features/occurrences/components/form/LocationSection.tsx` somente para receber a parte visual/controlada de localização e endereço da seção 3 — Localização e tempo.
+* O componente é stateless e controlado pelas props endereco, sugestoesEndereco, buscandoEndereco, localizando, localizacaoMarcada, onEnderecoChange, onSugestaoPress e onUsarLocalizacaoPress; nenhum hook, estado, fetch, Mapbox, debounce, expo-location, Alert, FormData, serviço ou navegação foi introduzido.
+* SugestaoEndereco foi movido sem alteração para LocationSection e exportado como contrato entre o componente e a CadastroOcorrenciaScreen; RespostaGeocodingMapbox permaneceu na Screen com features tipado como SugestaoEndereco[].
+* O conteúdo extraído preservou label, input, ícones, loading, lista e seleção de sugestões, divisores, botão de localização e os textos "Usar minha localização", "Obtendo localização..." e "Localização marcada".
+* O shell OccurrenceFormSection número 3 permaneceu na Screen, e toda a interface de Data da ocorrência continuou renderizada diretamente nela, sem alteração.
+* alterarEnderecoManual, selecionarSugestaoEndereco, buscarSugestoesEndereco, o useEffect de debounce de 450 ms e obterLocalizacaoAtual permaneceram integralmente na Screen.
+* MAPBOX_ACCESS_TOKEN, endpoint e parâmetros atuais do Mapbox, fetch, URLSearchParams, tratamento response.ok, logs, erros e fallbacks permaneceram integralmente na Screen.
+* expo-location, permissão, Accuracy.Balanced, obtenção de coordenadas, reverse geocoding e Alerts permaneceram integralmente na Screen.
+* Os estados de endereço, coordenadas, sugestões, busca, seleção, localização e data permaneceram integralmente na Screen; LocationSection recebe apenas localizacaoMarcada={latitude !== null}.
+* Os styles addressInput, addressLoading, addressSuggestions, addressSuggestionItem, addressSuggestionIcon, addressSuggestionContent, addressSuggestionTitle, addressSuggestionSubtitle, addressSuggestionDivider, locationButton e locationButtonText foram movidos com valores idênticos.
+* LocationSection reutiliza occurrenceFormSharedStyles para fieldLabel, inputContainer, inputIcon e input, e possui apenas o feedback local pressed com opacity 0.82.
+* fieldLabelSpacing, todos os styles dateChoice e dateModal, sectionDivider e styles.pressed permaneceram na Screen por possuírem consumidores reais fora da interface extraída.
+* Validações, FormData, payload, criação, edição, exclusão, data_ocorrencia, endereço, latitude, longitude, foto, observação, cuidados e prefill de Pet permaneceram intactos.
+* InitialCareSection e os demais componentes do formulário, occurrenceForm.styles.ts, occurrence.types.ts, occurrenceService, OccurrenceDetailDrawer, Feed, Map, Profile, Pets, navegação, theme, API, backend e dependências permaneceram intactos.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7Q foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7Q:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+Subetapa Fase 7R — PhotoSection:
+* Criado `mobile/src/features/occurrences/components/form/PhotoSection.tsx` somente para receber a interface visual/controlada da seção 7 — Foto.
+* O componente é stateless e recebe exclusivamente as props fotoUri e onPress; nenhum hook, estado, ImagePicker, Alert, FormData, service, navegação, validação, criação ou edição foi introduzido.
+* O Pressable principal, accessibilityRole, visual com e sem foto, Image, preview, overlay, ícones e os textos "Trocar / adicionar foto", "Adicionar foto" e "Toque para escolher uma imagem da galeria" foram movidos sem alteração.
+* O shell OccurrenceFormSection número 7, seu título e subtítulo permaneceram na CadastroOcorrenciaScreen.
+* selecionarFoto e o import direto de expo-image-picker permaneceram integralmente na Screen, incluindo mediaTypes ["images"], allowsEditing true, aspect [4, 3], quality 0.8, cancelamento, assets[0]?.uri, setFotoUri, Alert e tratamento de erro.
+* Os estados fotoUri, fotoOriginal e seus setters permaneceram na Screen; fotoOriginal não foi enviado ao componente visual.
+* O carregamento da edição preservou setFotoUri(occurrence.foto) e setFotoOriginal(occurrence.foto), e o prefill de Pet preservou setFotoUri(petOrigem.foto ?? null).
+* A validação obrigatória da foto, criarNomeArquivo, decisões de foto remota, foto original, foto proveniente de Pet e toda a construção do FormData permaneceram integralmente na Screen.
+* Os styles photoArea, photoAreaFilled, photoIcon, photoTitle, photoDescription, photoPreview, photoOverlay, photoOverlayButton e photoOverlayText foram movidos com valores idênticos.
+* PhotoSection possui somente o feedback local pressed com opacity 0.82; styles.pressed permaneceu na Screen por possuir outros consumidores reais.
+* O import Image foi removido somente da Screen após pesquisa objetiva confirmar que a seção extraída era seu único consumidor; ImagePicker, Ionicons, Pressable, View, Text, theme e Alert permaneceram por possuírem usos reais.
+* LocationSection, InitialCareSection e os demais componentes do formulário, occurrenceForm.styles.ts, occurrence.types.ts, occurrenceService, OccurrenceDetailDrawer, Feed, Map, Profile, Pets, navegação, theme, API, backend e dependências permaneceram intactos.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7R foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7R:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+[X] Smoke test manual da Fase 7R aprovado pelo usuário
+
+Subetapa Fase 7S — ReviewSection:
+* Criado `mobile/src/features/occurrences/components/form/ReviewSection.tsx` somente para receber o conteúdo visual/controlado da seção 9 — Revisão.
+* O componente é stateless e recebe exclusivamente a prop items; nenhum hook, estado, FormData, service, ImagePicker, Location, Mapbox, fetch, axios, Alert, navegação, rota, validação, criação ou edição foi introduzido.
+* O contrato exportado ReviewItem contém exclusivamente label e value como strings, e ReviewSectionProps contém exclusivamente items: ReviewItem[].
+* A CadastroOcorrenciaScreen prepara diretamente `const itensRevisao: ReviewItem[]`, sem useMemo, novo hook ou helper, e fornece somente esse array ao componente.
+* A ordem dos itens foi preservada: Tipo de ocorrência, Animal, Raça quando ehPet, Sexo, Cor, Porte, Idade, Endereço, Data da ocorrência, Saúde crítica, Deficiência, Urgência, Cuidados, Foto e Observação quando não vazia após trim.
+* As regras condicionais de Raça e Observação permaneceram na Screen, assim como todos os valores, fallbacks e formatações já existentes de Saúde crítica, Deficiência, Cuidados e Foto.
+* ReviewSection apenas mapeia os itens, usa labels únicas como key e preserva `numberOfLines={3}` e o fallback visual `value || "Não informado"`.
+* O cabeçalho com ícone checkmark-circle-outline, tamanho 22, cor atual, os textos "Tudo pronto?" e "Revise os dados abaixo antes de enviar." e o divisor foram preservados.
+* O shell OccurrenceFormSection número 9, com título e subtítulo existentes, permaneceu na CadastroOcorrenciaScreen.
+* O footerNote, o botão de submit, o botão de cancelar e todos os seus styles permaneceram integralmente na Screen.
+* O helper puramente visual renderResumo foi removido após o novo componente assumir seu único uso.
+* Os styles reviewCard, reviewHeader, reviewHeaderIcon, reviewHeaderContent, reviewHeaderTitle, reviewHeaderText, reviewDivider, reviewItem, reviewLabel e reviewValue foram movidos com valores idênticos.
+* handleSalvar, validarFormulario, FormData, occurrenceService.create, occurrenceService.update e as regras de criação e edição permaneceram intactos.
+* PhotoSection permaneceu intacto após a aprovação manual da Fase 7R; LocationSection e os demais componentes do formulário também não foram alterados.
+* occurrenceForm.styles.ts, occurrence.types.ts, occurrenceService, OccurrenceDetailDrawer, Feed, Map, Profile, Pets, navegação, theme, API, backend, dependências, endpoints e contratos permaneceram intactos.
+* Nenhum RF novo ou abstração adicional foi criado.
+* `npx tsc --noEmit` foi executado uma vez e concluído com 0 erros.
+* `git diff --check` restrito aos arquivos da Fase 7S foi concluído sem erros; os consolidados preexistentes permaneceram fora do escopo.
+
+Smoke test Fase 7S:
+APROVADO MANUALMENTE PELO USUÁRIO.
+
+[X] Smoke test manual da Fase 7S aprovado pelo usuário
+
+Subetapa Fase 7T — avaliação final e fechamento formal da Fase 7 — Occurrences:
+* A estrutura final real de `mobile/src/features/occurrences/` foi revisada e validada com código real em components, components/form, screens, services e types.
+* A estrutura final contém `components/OccurrenceDetailDrawer.tsx`; em `components/form/`, AnimalSection.tsx, AnimalTypeSelector.tsx, ChoiceButton.tsx, DisabilitySection.tsx, HealthSection.tsx, InitialCareSection.tsx, LocationSection.tsx, occurrenceForm.styles.ts, OccurrenceFormSection.tsx, OccurrenceTypeSection.tsx, PhotoSection.tsx, ReviewSection.tsx, SelectionChip.tsx e SelectionChipGroup.tsx; em `screens/`, CadastroOcorrenciaScreen.tsx; em `services/`, occurrenceService.ts; e em `types/`, occurrence.types.ts.
+* Não existem arquivos vazios, diretórios vazios, `.gitkeep`, `index.ts`, barrel exports ou wrappers artificiais no domínio Occurrences.
+* `mobile/src/screens/CadastroOcorrenciaScreen.tsx` e `mobile/src/components/OccurrenceDetailDrawer.tsx` não existem; os caminhos legados não coexistem com os atuais.
+* CadastroOcorrenciaScreen permanece a Screen coordenadora do formulário: mantém estados, route params, prefill de Pet, modos criação/edição, Mapbox/geocoding, expo-location, expo-image-picker, validações, FormData, chamadas ao occurrenceService, loadings, navegação e composição das seções.
+* A quantidade de estados da Screen não constitui, isoladamente, justificativa para extração; os estados e handlers restantes são específicos dessa orquestração.
+* OccurrenceDetailDrawer permanece responsável por carregar e apresentar detalhes, animação e fechamento, ações de edição/exclusão e UI atual de cuidados e histórico.
+* As chamadas diretas de Care em OccurrenceDetailDrawer e as operações de Engagement/Reports no Feed foram classificadas corretamente como responsabilidades reservadas à Fase 9 quando aplicável; não foram migradas nem adicionadas ao occurrenceService nesta subetapa.
+* OccurrenceFormSection permanece o shell visual das nove seções.
+* OccurrenceTypeSection e AnimalSection permanecem componentes controlados das respectivas seções; AnimalTypeSelector, ChoiceButton, SelectionChip e SelectionChipGroup permanecem elementos visuais reutilizados com consumidores reais.
+* HealthSection e DisabilitySection permanecem responsáveis pelas respectivas interfaces controladas de saúde crítica e deficiência.
+* InitialCareSection permanece responsável somente pela UI dos cuidados iniciais; as regras e estados continuam na Screen.
+* LocationSection permanece responsável somente pela UI de localização/endereço e não conhece Mapbox, fetch, debounce ou expo-location.
+* PhotoSection permanece responsável somente pela UI da foto e não conhece ImagePicker.
+* ReviewSection permanece responsável somente pela apresentação de ReviewItem[] e não conhece regras de negócio.
+* occurrenceForm.styles.ts contém somente styles compartilhados com reuso real entre a Screen e os componentes do formulário.
+* occurrenceService permanece com exatamente getById, getNearby, getMine, create, update e deleteById.
+* Consumidores confirmados: getById em CadastroOcorrenciaScreen e OccurrenceDetailDrawer; getNearby em FeedNoticias e MapScreen; getMine em ProfileDetailScreen; create/update em CadastroOcorrenciaScreen; deleteById em OccurrenceDetailDrawer.
+* occurrenceService continua usando `mobile/src/services/api.ts`; URLs, métodos HTTP, parâmetros, FormData, multipart, timeout, contratos runtime e respostas não foram alterados.
+* `services/api.ts` permaneceu no local atual e sua organização continua reservada para a Fase 10 — Infrastructure.
+* occurrence.types.ts permanece contendo somente TipoOcorrencia, TipoAnimal e OcorrenciaResumo, todos com consumidores reais.
+* OcorrenciaResumo continua compartilhado por Feed, Map, Profile e occurrenceService; TipoOcorrencia e TipoAnimal continuam compartilhados pelo formulário e seus componentes.
+* ReviewItem permaneceu local a ReviewSection e SugestaoEndereco permaneceu local a LocationSection; nenhum tipo puramente visual foi movido para occurrence.types.ts e nenhum supertipo artificial foi criado.
+* CadastroOcorrenciaScreen possui um único consumidor real em AppNavigator; OccurrenceDetailDrawer possui dois consumidores reais, FeedNoticias e MapScreen; todos os componentes form/ possuem consumidores reais dentro da composição do formulário.
+* A pesquisa de imports não encontrou caminhos antigos, imports quebrados ou imports mortos impeditivos do fechamento.
+* O uso direto de api em OccurrenceDetailDrawer foi mantido somente para Care/histórico; no Feed, os usos diretos restantes pertencem a Engagement/Reports; no Map, o uso direto restante pertence a `/auth/me`. Esses usos não são falhas do núcleo da Fase 7.
+* `useOccurrenceForm.ts` NÃO FOI CRIADO.
+* Decisão arquitetural definitiva: não criar useOccurrenceForm, hooks parciais, constants, utils, types adicionais, services artificiais ou wrappers adicionais nesta fase.
+* Justificativa: o hook teria somente CadastroOcorrenciaScreen como consumidor, não eliminaria duplicação e precisaria transportar a alta relação entre estados, side effects, route params, prefill de Pet, edição, localização, Mapbox/geocoding, debounce, mídia, validação, FormData, criação, atualização e navegação.
+* A criação do hook apenas deslocaria complexidade sem formar responsabilidade independente ou reuso concreto; sua ausência não constitui pendência da Fase 7.
+* Os smoke tests manuais das Fases 7A, 7B, 7C, 7D, 7E, 7F, 7G, 7H, 7I, 7J, 7K, 7L, 7M, 7N, 7O, 7P, 7Q, 7R e 7S foram aprovados pelo usuário.
+* `npx tsc --noEmit` foi executado uma vez no fechamento e concluído com 0 erros.
+* `git diff --check` global foi concluído sem erros; foram emitidos somente avisos de conversão futura LF/CRLF para STATUS_REFATORACAO_PETRADAR.txt e CadastroOcorrenciaScreen.tsx.
+* Os arquivos não rastreados LocationSection.tsx, PhotoSection.tsx e ReviewSection.tsx também foram verificados separadamente sem violações de whitespace.
+* As alterações preexistentes em codigo_frontend_consolidado.txt e codigo_projeto_consolidado.txt foram identificadas e preservadas; nenhum consolidado foi alterado nesta subetapa.
+* Esta subetapa alterou somente STATUS_REFATORACAO_PETRADAR.txt; nenhum código-fonte executável, backend, API, endpoint, contrato, Mapbox, dependência, configuração funcional ou RF foi alterado.
+* A Fase 7 — Occurrences foi encerrada formalmente. A Fase 8 — Map não foi iniciada.
 
 ======================================================================
 ETAPAS CONCLUÍDAS
@@ -1596,7 +1716,20 @@ ETAPAS CONCLUÍDAS
 [X] Smoke test manual da Fase 7O aprovado pelo usuário
 [X] Fase 7P — InitialCareSection extraído para `features/occurrences/components/form/`
 [X] Validação técnica da Fase 7P concluída
-[ ] Smoke test manual da Fase 7P
+[X] Smoke test manual da Fase 7P aprovado pelo usuário
+[X] Fase 7Q — LocationSection extraído para `features/occurrences/components/form/`
+[X] Validação técnica da Fase 7Q concluída
+[X] Smoke test manual da Fase 7Q aprovado pelo usuário
+[X] Fase 7R — PhotoSection extraído para `features/occurrences/components/form/`
+[X] Validação técnica da Fase 7R concluída
+[X] Smoke test manual da Fase 7R aprovado pelo usuário
+[X] Fase 7S — ReviewSection extraído para `features/occurrences/components/form/`
+[X] Validação técnica da Fase 7S concluída
+[X] Smoke test manual da Fase 7S aprovado pelo usuário
+[X] Organização interna de Occurrences avaliada
+[X] Validação final da Fase 7 concluída
+[X] Fase 7T — fechamento formal da Fase 7 — Occurrences
+[X] Fase 7 — Occurrences concluída
 
 ======================================================================
 VALIDAÇÕES DA BASELINE
@@ -1834,7 +1967,7 @@ DECISÕES TOMADAS
 PRÓXIMO PASSO
 =============
 
-Aguardar aprovação manual do smoke test da Fase 7P.
+Aguardar início explícito da Fase 8 — Map.
 
 ======================================================================
 FASES
@@ -1847,8 +1980,8 @@ FASES
 [X] Fase 4  — Feed — CONCLUÍDA
 [X] Fase 5  — Profile — CONCLUÍDA
 [X] Fase 6  — Pets — CONCLUÍDA
-[ ] Fase 7  — Occurrences — EM ANDAMENTO
-[ ] Fase 8  — Map
+[X] Fase 7  — Occurrences — CONCLUÍDA
+[ ] Fase 8  — Map — AGUARDANDO INÍCIO
 [ ] Fase 9  — Care / Engagement / Reports quando aplicável
 [ ] Fase 10 — Infrastructure
 [ ] Fase 11 — Shared
@@ -1859,13 +1992,13 @@ FASES
 [ ] Fase 16 — Limpeza final
 
 Última fase concluída:
-Fase 6 — Pets.
+Fase 7 — Occurrences.
 
 Fase atual:
-Fase 7 — Occurrences — EM ANDAMENTO.
+Fase 8 — Map — AGUARDANDO INÍCIO.
 
 Próxima fase:
-Smoke test manual da Fase 7P — PENDENTE.
+Fase 8 — Map — AGUARDANDO INÍCIO EXPLÍCITO.
 
 Subetapas concluídas:
 * Extração dos tipos de navegação para `src/navigation/navigation.types.ts`.
@@ -1913,10 +2046,14 @@ Subetapas concluídas:
 * Fase 7M — extração do conteúdo controlado da seção Sobre o animal para `features/occurrences/components/form/AnimalSection.tsx`, aprovada manualmente pelo usuário.
 * Fase 7N — extração da subseção controlada Saúde crítica para `features/occurrences/components/form/HealthSection.tsx` e centralização dos styles condicionais compartilhados, aprovada manualmente pelo usuário.
 * Fase 7O — extração da subseção controlada Deficiência para `features/occurrences/components/form/DisabilitySection.tsx`, aprovada manualmente pelo usuário.
-* Fase 7P — extração do conteúdo controlado da seção Cuidados iniciais para `features/occurrences/components/form/InitialCareSection.tsx`, com validação técnica concluída e smoke test manual pendente.
+* Fase 7P — extração do conteúdo controlado da seção Cuidados iniciais para `features/occurrences/components/form/InitialCareSection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7Q — extração da parte visual/controlada de localização e endereço para `features/occurrences/components/form/LocationSection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7R — extração da interface visual/controlada de foto para `features/occurrences/components/form/PhotoSection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7S — extração do conteúdo visual/controlado da revisão para `features/occurrences/components/form/ReviewSection.tsx`, aprovada manualmente pelo usuário.
+* Fase 7T — avaliação final da organização interna e fechamento formal da Fase 7 — Occurrences, sem alteração de código-fonte executável.
 
 Último arquivo alterado pela refatoração:
-`mobile/src/features/occurrences/components/form/InitialCareSection.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
+`mobile/src/features/occurrences/components/form/ReviewSection.tsx` e `mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx`.
 
 Arquivo de acompanhamento criado:
 STATUS_REFATORACAO_PETRADAR.txt
@@ -1925,7 +2062,7 @@ STATUS_REFATORACAO_PETRADAR.txt
 STATUS_REFATORACAO_PETRADAR.txt
 
 Próximo passo:
-Aguardar aprovação manual do smoke test da Fase 7P; não iniciar nova subetapa automaticamente.
+Aguardar início explícito da Fase 8 — Map; não mover MapScreen, alterar Mapbox ou criar `features/map` automaticamente.
 
 Pendências futuras de limpeza observadas no App.tsx e preservadas nesta tarefa:
 * AppStack

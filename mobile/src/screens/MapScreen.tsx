@@ -88,9 +88,9 @@ const normalizarRaioPesquisaKm = (valor: unknown): number => {
 
   return Number.isFinite(raioRecebido)
     ? Math.min(
-        MAX_SEARCH_RADIUS_KM,
-        Math.max(MIN_SEARCH_RADIUS_KM, raioRecebido),
-      )
+      MAX_SEARCH_RADIUS_KM,
+      Math.max(MIN_SEARCH_RADIUS_KM, raioRecebido),
+    )
     : DEFAULT_SEARCH_RADIUS_KM;
 };
 
@@ -643,9 +643,8 @@ export default function MapScreen() {
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Ocorrência de ${
-                  ocorrencia.tipo_animal || "animal"
-                }`}
+                accessibilityLabel={`Ocorrência de ${ocorrencia.tipo_animal || "animal"
+                  }`}
                 accessibilityHint="Mostra os detalhes desta ocorrência"
                 onPress={() => {
                   abrirDetalheOcorrencia(ocorrencia.id_ocorrencia);
@@ -1141,6 +1140,11 @@ export default function MapScreen() {
         }}
         onNavigateFeed={() => {
           navigation.navigate("Feed");
+        }}
+        onNavigateProcuraSe={() => {
+          navigation.navigate(
+            "ProcuraSe",
+          );
         }}
       />
 

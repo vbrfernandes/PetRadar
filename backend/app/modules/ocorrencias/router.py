@@ -31,6 +31,9 @@ from app.modules.ocorrencias.models import (
 )
 from app.modules.engajamento.models import Comentario, Denuncia, Interacao
 from app.modules.ocorrencias.schemas import (
+    ComentarioAtualizar,
+    ComentarioCriar,
+    ComentarioResposta,
     CuidadoOcorrenciaCriar,
     CuidadoOcorrenciaResposta,
     OcorrenciaResposta,
@@ -72,6 +75,66 @@ def _query_cuidados_com_autor(id_ocorrencia: int):
         .outerjoin(UsuarioFisico, UsuarioFisico.id_conta == Conta.id_conta)
         .outerjoin(ONG, ONG.id_conta == Conta.id_conta)
         .where(HistoricoCuidadoOcorrencia.id_ocorrencia == id_ocorrencia)
+    )
+
+
+def _serializar_comentario(
+    comentario: Comentario,
+    nome_autor: str,
+    foto_autor: str | None,
+    tipo_conta_autor: str,
+) -> dict:
+    return {
+        "id_comentario": comentario.id_comentario,
+        "id_ocorrencia": comentario.id_ocorrencia,
+        "id_conta": comentario.id_conta,
+        "id_comentario_pai": comentario.id_comentario_pai,
+        "texto": comentario.texto,
+        "data_hora": comentario.data_hora,
+        "editado_em": comentario.editado_em,
+        "excluido_em": comentario.excluido_em,
+        "autor": {
+            "id_conta": comentario.id_conta,
+            "nome": nome_autor,
+            "foto": foto_autor,
+            "tipo_conta": tipo_conta_autor,
+        },
+    }
+
+
+def _query_comentarios_com_autor(
+    id_ocorrencia: int,
+):
+    nome_autor = func.coalesce(
+        UsuarioFisico.nome_completo,
+        ONG.nome_fantasia,
+        Conta.email,
+    ).label("nome_autor")
+
+    foto_autor = Conta.foto_perfil.label("foto_autor")
+
+    tipo_conta_autor = Conta.tipo_conta.label("tipo_conta_autor")
+
+    return (
+        select(
+            Comentario,
+            nome_autor,
+            foto_autor,
+            tipo_conta_autor,
+        )
+        .join(
+            Conta,
+            Conta.id_conta == Comentario.id_conta,
+        )
+        .outerjoin(
+            UsuarioFisico,
+            UsuarioFisico.id_conta == Conta.id_conta,
+        )
+        .outerjoin(
+            ONG,
+            ONG.id_conta == Conta.id_conta,
+        )
+        .where(Comentario.id_ocorrencia == id_ocorrencia)
     )
 
 
@@ -317,7 +380,10 @@ async def listar_ocorrencias_proximas(
 
     total_comentarios = (
         select(func.count(Comentario.id_comentario))
-        .where(Comentario.id_ocorrencia == Ocorrencia.id_ocorrencia)
+        .where(
+            Comentario.id_ocorrencia == Ocorrencia.id_ocorrencia,
+            Comentario.excluido_em.is_(None),
+        )
         .correlate(Ocorrencia)
         .scalar_subquery()
         .label("total_comentarios")
@@ -603,6 +669,316 @@ async def denunciar_ocorrencia(
         "message": "Denúncia enviada com sucesso.",
     }
 
+
+# =============================================================
+# COMENTÁRIOS DA OCORRÊNCIA
+# =============================================================
+
+
+@router.get(
+    "/{id_ocorrencia:int}/comentarios",
+    response_model=list[ComentarioResposta],
+)
+async def listar_comentarios_ocorrencia(
+    id_ocorrencia: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    # Mantém a rota protegida por autenticação.
+    _ = conta_atual
+
+    ocorrencia_existe = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(
+            Ocorrencia.id_ocorrencia == id_ocorrencia
+        )
+    )
+
+    if ocorrencia_existe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    resultado = await db.execute(
+        _query_comentarios_com_autor(id_ocorrencia).order_by(
+            Comentario.data_hora.asc(),
+            Comentario.id_comentario.asc(),
+        )
+    )
+
+    return [
+        _serializar_comentario(
+            comentario,
+            nome_autor,
+            foto_autor,
+            tipo_conta_autor,
+        )
+        for (
+            comentario,
+            nome_autor,
+            foto_autor,
+            tipo_conta_autor,
+        ) in resultado.all()
+    ]
+
+
+@router.post(
+    "/{id_ocorrencia:int}/comentarios",
+    response_model=ComentarioResposta,
+    status_code=status.HTTP_201_CREATED,
+)
+async def criar_comentario_ocorrencia(
+    id_ocorrencia: int,
+    dados: ComentarioCriar,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    ocorrencia_existe = await db.scalar(
+        select(Ocorrencia.id_ocorrencia).where(
+            Ocorrencia.id_ocorrencia == id_ocorrencia
+        )
+    )
+
+    if ocorrencia_existe is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ocorrência não encontrada.",
+        )
+
+    texto = dados.texto.strip()
+
+    if not texto:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Escreva uma mensagem antes de enviar.",
+        )
+
+        id_comentario_pai: int | None = None
+
+    if dados.id_comentario_pai is not None:
+        comentario_alvo = await db.get(
+            Comentario,
+            dados.id_comentario_pai,
+        )
+
+        if (
+            comentario_alvo is None
+            or comentario_alvo.id_ocorrencia != id_ocorrencia
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Comentário respondido não encontrado.",
+            )
+
+        if comentario_alvo.excluido_em is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Não é possível responder a um comentário excluído.",
+            )
+
+        # =====================================================
+        # NÍVEL 0
+        #
+        # Comentário principal.
+        # A nova mensagem será uma resposta de nível 1.
+        # =====================================================
+
+        if comentario_alvo.id_comentario_pai is None:
+            id_comentario_pai = comentario_alvo.id_comentario
+
+        else:
+            # =================================================
+            # O comentário alvo já possui pai.
+            #
+            # Precisamos descobrir se ele é:
+            #
+            # nível 1 -> pode receber uma resposta final
+            # nível 2 -> não pode receber novas respostas
+            # =================================================
+
+            comentario_pai = await db.get(
+                Comentario,
+                comentario_alvo.id_comentario_pai,
+            )
+
+            if (
+                comentario_pai is None
+                or comentario_pai.id_ocorrencia != id_ocorrencia
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Estrutura de comentários inválida.",
+                )
+
+            # Se o pai também possui pai, comentario_alvo
+            # já está no último nível permitido.
+            if comentario_pai.id_comentario_pai is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Esta resposta já está no último nível permitido.",
+                )
+
+            if comentario_pai.excluido_em is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Não é possível responder a um comentário excluído.",
+                )
+
+            # comentario_alvo é uma resposta de nível 1.
+            # A nova resposta fica ligada diretamente a ela,
+            # formando o nível 2.
+            id_comentario_pai = comentario_alvo.id_comentario
+
+    novo_comentario = Comentario(
+        id_conta=conta_atual.id_conta,
+        id_ocorrencia=id_ocorrencia,
+        id_comentario_pai=id_comentario_pai,
+        texto=texto,
+    )
+
+    try:
+        db.add(novo_comentario)
+
+        await db.commit()
+
+        await db.refresh(novo_comentario)
+    except Exception:
+        await db.rollback()
+        raise
+
+    resultado = await db.execute(
+        _query_comentarios_com_autor(id_ocorrencia).where(
+            Comentario.id_comentario == novo_comentario.id_comentario
+        )
+    )
+
+
+    (
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    ) = resultado.one()
+
+    return _serializar_comentario(
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    )
+
+@router.patch(
+    "/{id_ocorrencia:int}/comentarios/{id_comentario:int}",
+    response_model=ComentarioResposta,
+)
+async def atualizar_comentario_ocorrencia(
+    id_ocorrencia: int,
+    id_comentario: int,
+    dados: ComentarioAtualizar,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+):
+    comentario = await db.get(
+        Comentario,
+        id_comentario,
+    )
+
+    if (
+        comentario is None
+        or comentario.id_ocorrencia != id_ocorrencia
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comentário não encontrado.",
+        )
+
+    if comentario.id_conta != conta_atual.id_conta:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você só pode editar seus próprios comentários.",
+        )
+
+    if comentario.excluido_em is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Comentário excluído não pode ser editado.",
+        )
+
+    texto = dados.texto.strip()
+
+    if not texto:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="O comentário não pode ficar vazio.",
+        )
+
+    comentario.texto = texto
+    comentario.editado_em = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(comentario)
+
+    resultado = await db.execute(
+        _query_comentarios_com_autor(
+            id_ocorrencia,
+        ).where(
+            Comentario.id_comentario
+            == id_comentario,
+        )
+    )
+
+    (
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    ) = resultado.one()
+
+    return _serializar_comentario(
+        comentario,
+        nome_autor,
+        foto_autor,
+        tipo_conta_autor,
+    )
+
+
+@router.delete(
+    "/{id_ocorrencia:int}/comentarios/{id_comentario:int}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def excluir_comentario_ocorrencia(
+    id_ocorrencia: int,
+    id_comentario: int,
+    conta_atual: Conta = Depends(obter_conta_atual),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    comentario = await db.get(
+        Comentario,
+        id_comentario,
+    )
+
+    if (
+        comentario is None
+        or comentario.id_ocorrencia != id_ocorrencia
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comentário não encontrado.",
+        )
+
+    if comentario.id_conta != conta_atual.id_conta:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você só pode excluir seus próprios comentários.",
+        )
+
+    if comentario.excluido_em is not None:
+        return
+
+    comentario.texto = ""
+    comentario.excluido_em = datetime.utcnow()
+
+    await db.commit()
 
 @router.get("/minhas", response_model=list[OcorrenciaResposta])
 async def listar_minhas_ocorrencias(

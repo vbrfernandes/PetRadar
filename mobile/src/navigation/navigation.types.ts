@@ -24,6 +24,7 @@ export interface PetOcorrenciaPrefill {
 export type AppTabParamList = {
   Mapa: undefined;
   Feed: undefined;
+  ProcuraSe: undefined;
   SOS: undefined;
   Perfil: undefined;
   CadastroOcorrencia:

@@ -1020,8 +1020,8 @@ export default function FeedNoticias() {
           modoFeed ===
             "PROXIMIDADE"
             ? normalizarTexto(
-                search,
-              )
+              search,
+            )
             : "";
 
         return ocorrencias.filter(
@@ -2034,6 +2034,11 @@ export default function FeedNoticias() {
         onNavigateFeed={() => {
           navigation.navigate(
             "Feed",
+          );
+        }}
+        onNavigateProcuraSe={() => {
+          navigation.navigate(
+            "ProcuraSe",
           );
         }}
       />
