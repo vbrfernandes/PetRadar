@@ -8,7 +8,7 @@ import { theme } from "../../../theme/colors";
 const PROCURA_SE_MODE_CAROUSEL_WIDTH =
   Dimensions.get("window").width - theme.spacing.globalMargin * 2;
 
-export { feedButtonPressedStyle as procuraSeButtonPressedStyle } from "../../feed/styles/feed.styles";
+export { feedButtonPressedStyle as procuraSeButtonPressedStyle } from "../../feed/styles/feedScreen.styles";
 
 export const procuraSeControlsStyles = StyleSheet.create({
   feedModeCarouselWrapper: {

@@ -1,5 +1,3 @@
-import React from "react";
-
 import {
   Image,
   Modal,
@@ -12,17 +10,14 @@ import {
   Ionicons,
 } from "@expo/vector-icons";
 
-import type {
-  AutorComentario,
-} from "../../types/occurrence.types";
+import type { AutorComentario } from "../../types/occurrenceComment.types";
 
 import {
   theme,
 } from "../../../../theme/colors";
 
-import {
-  commentAuthorModalStyles as styles,
-} from "../../styles/occurrenceComments.styles";
+import { commentAuthorModalStyles as styles } from "../../styles/comments/commentAuthor.styles";
+import { obterIniciais } from "../../utils/occurrenceComment.utils";
 
 interface CommentAuthorModalProps {
   visible: boolean;
@@ -31,33 +26,6 @@ interface CommentAuthorModalProps {
 }
 
 
-
-
-function obterIniciais(
-  nome: string,
-) {
-  const partes = nome
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (partes.length === 0) {
-    return "PR";
-  }
-
-  if (partes.length === 1) {
-    return partes[0]
-      .slice(0, 2)
-      .toUpperCase();
-  }
-
-  return (
-    partes[0][0] +
-    partes[
-      partes.length - 1
-    ][0]
-  ).toUpperCase();
-}
 
 
 export default function CommentAuthorModal({

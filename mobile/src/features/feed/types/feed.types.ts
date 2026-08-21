@@ -42,3 +42,18 @@ export type FiltroFeed =
 export type ModoFeed =
   | "PROXIMIDADE"
   | "ECO";
+
+export interface StatusVisual {
+  label: string;
+  textColor: string;
+  backgroundColor: string;
+}
+
+export interface ForcaResponse {
+  ativo: boolean;
+  total_forca: number;
+}
+
+export type RecarregarListaOcorrencias = () => void | Promise<void>;
+
+export type FeedLoadingMode = "normal" | "refresh";

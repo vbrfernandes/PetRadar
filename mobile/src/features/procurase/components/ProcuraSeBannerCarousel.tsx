@@ -4,4 +4,4 @@
 
 export {
   default,
-} from "../../feed/components/FeedBannerCarousel";
+} from "../../feed/components/banner/FeedBannerCarousel";

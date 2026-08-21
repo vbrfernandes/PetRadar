@@ -48,7 +48,7 @@ import type {
 import api from "../../../services/api";
 
 import OccurrenceDetailDrawer
-    from "../../occurrences/components/OccurrenceDetailDrawer";
+    from "../../occurrences/components/detail/OccurrenceDetailDrawer";
 import { occurrenceService }
     from "../../occurrences/services/occurrenceService";
 

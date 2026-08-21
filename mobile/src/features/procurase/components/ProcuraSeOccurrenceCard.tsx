@@ -4,4 +4,4 @@
 
 export {
   default,
-} from "../../feed/components/OccurrenceCard";
+} from "../../feed/components/card/OccurrenceCard";
