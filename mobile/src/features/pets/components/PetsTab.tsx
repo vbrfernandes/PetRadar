@@ -5,7 +5,6 @@ import {
     Alert,
     FlatList,
     Pressable,
-    StyleSheet,
     Text,
     View,
 } from "react-native";
@@ -29,23 +28,11 @@ import type { Pet } from "../types/pet.types";
 import PetCard from "./PetCard";
 import PetDetailModal from "./PetDetailModal";
 import PetFormModal from "./PetFormModal";
+import {
+    petsTabStyles as styles,
+} from "../styles/pets.styles";
 
-const COLORS = {
-    primary: theme.colors.brand,
-    action: theme.colors.action,
 
-    background: theme.colors.background,
-    textTitle: theme.colors.textTitle,
-    textBody: theme.colors.textBody,
-
-    success: theme.colors.semantic.success.text,
-    successBg: theme.colors.semantic.success.bg,
-
-    danger: theme.colors.semantic.danger.text,
-    dangerBg: theme.colors.semantic.danger.bg,
-
-    white: "#FFFFFF",
-};
 
 export default function PetsTab() {
     const navigation =
@@ -108,7 +95,7 @@ export default function PetsTab() {
     if (loading) {
         return (
             <View style={styles.stateContainer}>
-                <ActivityIndicator color={COLORS.primary} />
+                <ActivityIndicator color={theme.colors.brand} />
 
                 <Text style={styles.stateText}>Carregando seus pets...</Text>
             </View>
@@ -178,7 +165,7 @@ export default function PetsTab() {
                             ]}
                         >
                             <View style={styles.addButtonIcon}>
-                                <Ionicons name="add" size={22} color={COLORS.white} />
+                                <Ionicons name="add" size={22} color={theme.colors.surface} />
                             </View>
 
                             <View style={styles.addButtonContent}>
@@ -189,7 +176,7 @@ export default function PetsTab() {
                                 </Text>
                             </View>
 
-                            <Ionicons name="chevron-forward" size={20} color={COLORS.white} />
+                            <Ionicons name="chevron-forward" size={20} color={theme.colors.surface} />
                         </Pressable>
                     </>
                 }
@@ -199,7 +186,7 @@ export default function PetsTab() {
                             <MaterialCommunityIcons
                                 name="paw-outline"
                                 size={36}
-                                color={COLORS.primary}
+                                color={theme.colors.brand}
                             />
                         </View>
 
@@ -241,154 +228,3 @@ export default function PetsTab() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-
-    listContent: {
-        paddingHorizontal: 16,
-        paddingTop: 20,
-        paddingBottom: 40,
-    },
-
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 14,
-    },
-
-    title: {
-        fontSize: 18,
-        fontWeight: "800",
-        color: COLORS.textTitle,
-    },
-
-    subtitle: {
-        marginTop: 3,
-        fontSize: 12,
-        color: COLORS.textBody,
-    },
-
-    countBadge: {
-        minWidth: 30,
-        height: 30,
-        paddingHorizontal: 8,
-        borderRadius: 15,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: COLORS.successBg,
-    },
-
-    countText: {
-        fontSize: 12,
-        fontWeight: "800",
-        color: COLORS.primary,
-    },
-
-    addButton: {
-        minHeight: 70,
-        marginBottom: 18,
-        paddingHorizontal: 14,
-
-        borderRadius: 18,
-
-        flexDirection: "row",
-        alignItems: "center",
-
-        backgroundColor: COLORS.primary,
-
-        ...theme.shadows.elevation1,
-    },
-
-    addButtonIcon: {
-        width: 40,
-        height: 40,
-
-        borderRadius: 20,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        backgroundColor: "rgba(255,255,255,0.16)",
-    },
-
-    addButtonContent: {
-        flex: 1,
-        marginLeft: 12,
-    },
-
-    addButtonTitle: {
-        fontSize: 14,
-        fontWeight: "800",
-        color: COLORS.white,
-    },
-
-    addButtonSubtitle: {
-        marginTop: 2,
-        fontSize: 11,
-        color: "rgba(255,255,255,0.78)",
-    },
-
-    stateContainer: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 30,
-    },
-
-    stateText: {
-        marginTop: 10,
-        fontSize: 13,
-        color: COLORS.textBody,
-    },
-
-    emptyContainer: {
-        alignItems: "center",
-        paddingHorizontal: 24,
-        paddingVertical: 36,
-    },
-
-    emptyIcon: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        marginBottom: 14,
-
-        backgroundColor: COLORS.successBg,
-    },
-
-    emptyTitle: {
-        fontSize: 16,
-        fontWeight: "800",
-        color: COLORS.textTitle,
-    },
-
-    emptyText: {
-        marginTop: 6,
-
-        textAlign: "center",
-
-        fontSize: 12,
-        lineHeight: 18,
-
-        color: COLORS.textBody,
-    },
-
-    buttonPressed: {
-        opacity: 0.85,
-
-        transform: [
-            {
-                scale: 0.99,
-            },
-        ],
-    },
-
-});

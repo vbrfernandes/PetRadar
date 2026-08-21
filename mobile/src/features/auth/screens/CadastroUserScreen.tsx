@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -17,18 +16,12 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 
 import authService from '../services/authService';
+import { theme } from '../../../theme/colors';
 
-const COLORS = {
-  primary: '#1F5C4D',
-  primaryLight: '#E8F5E9',
-  accent: '#10B981',
-  background: '#F4F7F6',
-  surface: '#FFFFFF',
-  textTitle: '#1A1A1A',
-  textBody: '#666666',
-  border: '#E2E8F0',
-  placeholder: '#A0AEC0',
-};
+import {
+  cadastroUserStyles as styles,
+} from '../styles/auth.styles';
+
 
 export default function CadastroUsuarioScreen({ navigation }: any) {
   const [etapa, setEtapa] = useState<1 | 2>(1);
@@ -103,12 +96,12 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           
           <View style={styles.topRow}>
             <TouchableOpacity style={styles.backButton} onPress={() => etapa > 1 ? setEtapa(1) : navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.brand} />
             </TouchableOpacity>
             <Text style={styles.stepIndicator}>Etapa {etapa} de 2</Text>
           </View>
@@ -126,43 +119,43 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Nome Completo *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="Seu nome" placeholderTextColor={COLORS.placeholder} value={nome} onChangeText={setNome} />
+                    <Ionicons name="person-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Seu nome" placeholderTextColor={theme.colors.placeholder} value={nome} onChangeText={setNome} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>CPF *</Text>
                   <View style={styles.inputContainer}>
-                    <TextInput style={styles.input} placeholder="000.000.000-00" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={cpf} onChangeText={setCpf} />
+                    <TextInput style={styles.input} placeholder="000.000.000-00" placeholderTextColor={theme.colors.placeholder} keyboardType="numeric" value={cpf} onChangeText={setCpf} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Telefone *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="(00) 00000-0000" placeholderTextColor={COLORS.placeholder} keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
+                    <Ionicons name="call-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="(00) 00000-0000" placeholderTextColor={theme.colors.placeholder} keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
                   </View>
                 </View>
 
                 {/* SWITCH: POSSUI PET / CACHORRO */}
                 <View style={styles.switchRow}>
-                  <View style={{ flex: 1, paddingRight: 10 }}>
+                  <View style={styles.switchTextContent}>
                     <Text style={styles.switchLabel}>Possui cachorro / pet?</Text>
                     <Text style={styles.switchSublabel}>Ajuda a personalizar os alertas de resgate e animais perdidos.</Text>
                   </View>
                   <Switch
                     value={temPet}
                     onValueChange={setTemPet}
-                    trackColor={{ false: '#CBD5E1', true: COLORS.accent }}
+                    trackColor={{ false: theme.colors.disabled, true: theme.colors.accent }}
                   />
                 </View>
 
                 <TouchableOpacity style={styles.submitButton} onPress={avançarEtapa1}>
                   <View style={styles.buttonContent}>
                     <Text style={styles.submitButtonText}>Próximo: Dados de Acesso</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                    <Ionicons name="arrow-forward" size={20} color={theme.colors.surface} />
                   </View>
                 </TouchableOpacity>
               </>
@@ -173,18 +166,18 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>E-mail *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="seu@email.com" placeholderTextColor={COLORS.placeholder} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+                    <Ionicons name="mail-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="seu@email.com" placeholderTextColor={theme.colors.placeholder} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Senha *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={senha} onChangeText={setSenha} />
+                    <Ionicons name="lock-closed-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={theme.colors.placeholder} secureTextEntry={!showPassword} value={senha} onChangeText={setSenha} />
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textBody} />
+                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={theme.colors.textBody} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -192,18 +185,18 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Confirma Senha *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={confirmaSenha} onChangeText={setConfirmaSenha} />
+                    <Ionicons name="lock-closed-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={theme.colors.placeholder} secureTextEntry={!showPassword} value={confirmaSenha} onChangeText={setConfirmaSenha} />
                   </View>
                 </View>
 
                 <TouchableOpacity style={styles.submitButton} onPress={handleCadastro} disabled={loading}>
                   {loading ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={theme.colors.surface} />
                   ) : (
                     <View style={styles.buttonContent}>
                       <Text style={styles.submitButtonText}>Criar Conta</Text>
-                      <Ionicons name="checkmark-circle-outline" size={22} color="#FFF" />
+                      <Ionicons name="checkmark-circle-outline" size={22} color={theme.colors.surface} />
                     </View>
                   )}
                 </TouchableOpacity>
@@ -215,27 +208,3 @@ export default function CadastroUsuarioScreen({ navigation }: any) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  stepIndicator: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
-  header: { alignItems: 'center', marginBottom: 20 },
-  brandTitle: { fontSize: 26, fontWeight: '800', color: COLORS.primary },
-  brandTagline: { fontSize: 13, color: COLORS.textBody, marginTop: 4, textAlign: 'center' },
-  card: { backgroundColor: COLORS.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.primary, marginBottom: 16 },
-  inputWrapper: { marginBottom: 14 },
-  label: { fontSize: 12, fontWeight: '600', color: COLORS.textTitle, marginBottom: 6, textTransform: 'uppercase' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 14, paddingHorizontal: 16, height: 52, borderWidth: 1, borderColor: COLORS.border },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: COLORS.textTitle, fontWeight: '500' },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border, marginBottom: 14 },
-  switchLabel: { fontSize: 14, fontWeight: '600', color: COLORS.textTitle },
-  switchSublabel: { fontSize: 11, color: COLORS.textBody, marginTop: 2 },
-  submitButton: { backgroundColor: COLORS.primary, borderRadius: 16, height: 54, justifyContent: 'center', alignItems: 'center', marginTop: 12 },
-  buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-});

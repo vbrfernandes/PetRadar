@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
+import {
+  reviewSectionStyles as styles,
+} from "../../styles/occurrenceForm.styles";
 import { theme } from "../../../../theme/colors";
 
 export interface ReviewItem {
@@ -46,72 +48,3 @@ export default function ReviewSection({ items }: ReviewSectionProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  reviewCard: {
-    backgroundColor: theme.colors.background,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.08)",
-    overflow: "hidden",
-  },
-
-  reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-  },
-
-  reviewHeaderIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: "rgba(31, 92, 77, 0.08)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 11,
-  },
-
-  reviewHeaderContent: {
-    flex: 1,
-  },
-
-  reviewHeaderTitle: {
-    color: theme.colors.textTitle,
-    fontSize: 14,
-    fontWeight: "800",
-  },
-
-  reviewHeaderText: {
-    color: theme.colors.textBody,
-    fontSize: 11,
-    lineHeight: 15,
-    marginTop: 2,
-  },
-
-  reviewDivider: {
-    height: 1,
-    backgroundColor: "rgba(31, 92, 77, 0.08)",
-  },
-
-  reviewItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(31, 92, 77, 0.06)",
-  },
-
-  reviewLabel: {
-    color: theme.colors.textBody,
-    fontSize: 10,
-    fontWeight: "700",
-    marginBottom: 3,
-  },
-
-  reviewValue: {
-    color: theme.colors.textTitle,
-    fontSize: 13,
-    fontWeight: "700",
-    lineHeight: 18,
-  },
-});

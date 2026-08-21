@@ -4,7 +4,6 @@ import {
     Image,
     Modal,
     Pressable,
-    StyleSheet,
     Text,
     View,
 } from "react-native";
@@ -14,6 +13,9 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "../../../theme/colors";
 
 import type { Pet } from "../types/pet.types";
+import {
+    petDetailModalStyles as styles,
+} from "../styles/pets.styles";
 
 interface PetDetailModalProps {
     pet: Pet | null;
@@ -21,16 +23,7 @@ interface PetDetailModalProps {
     onReportLost: (pet: Pet) => void;
 }
 
-const COLORS = {
-    primary: theme.colors.brand,
-    surface: theme.colors.surface,
-    textTitle: theme.colors.textTitle,
-    textBody: theme.colors.textBody,
-    successBg: theme.colors.semantic.success.bg,
-    danger: theme.colors.semantic.danger.text,
-    white: "#FFFFFF",
-    soft: "#F8FAFC",
-};
+
 
 export default function PetDetailModal({
     pet,
@@ -53,7 +46,7 @@ export default function PetDetailModal({
                             onPress={onClose}
                             style={styles.closeButton}
                         >
-                            <Ionicons name="close" size={21} color={COLORS.textTitle} />
+                            <Ionicons name="close" size={21} color={theme.colors.textTitle} />
                         </Pressable>
                     </View>
 
@@ -72,7 +65,7 @@ export default function PetDetailModal({
                                         <MaterialCommunityIcons
                                             name="paw"
                                             size={48}
-                                            color={COLORS.primary}
+                                            color={theme.colors.brand}
                                         />
                                     </View>
                                 )}
@@ -99,7 +92,7 @@ export default function PetDetailModal({
                                     <MaterialCommunityIcons
                                         name="alert-circle-outline"
                                         size={22}
-                                        color={COLORS.white}
+                                        color={theme.colors.surface}
                                     />
 
                                     <View
@@ -127,7 +120,7 @@ export default function PetDetailModal({
                                     <Ionicons
                                         name="arrow-forward"
                                         size={20}
-                                        color={COLORS.white}
+                                        color={theme.colors.surface}
                                     />
                                 </Pressable>
                                 <DetailRow
@@ -197,176 +190,3 @@ function DetailRow({ label, value }: DetailRowProps) {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    modalBackdrop: {
-        flex: 1,
-
-        justifyContent: "flex-end",
-
-        backgroundColor: "rgba(15,23,42,0.56)",
-    },
-
-    detailContainer: {
-        padding: 20,
-
-        borderTopLeftRadius: 28,
-        borderTopRightRadius: 28,
-
-        backgroundColor: COLORS.surface,
-    },
-
-    detailHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-
-        marginBottom: 18,
-    },
-
-    detailTitle: {
-        fontSize: 18,
-        fontWeight: "800",
-        color: COLORS.textTitle,
-    },
-
-    closeButton: {
-        width: 40,
-        height: 40,
-
-        borderRadius: 20,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        backgroundColor: COLORS.soft,
-    },
-
-    detailPhotoWrapper: {
-        width: 130,
-        height: 130,
-
-        alignSelf: "center",
-
-        marginBottom: 14,
-
-        borderRadius: 65,
-
-        overflow: "hidden",
-
-        backgroundColor: COLORS.successBg,
-    },
-
-    detailPhoto: {
-        width: "100%",
-        height: "100%",
-    },
-
-    detailPlaceholder: {
-        flex: 1,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    detailPetName: {
-        marginBottom: 18,
-
-        textAlign: "center",
-
-        fontSize: 22,
-        fontWeight: "800",
-
-        color: COLORS.textTitle,
-    },
-
-    detailCard: {
-        marginBottom: 16,
-
-        borderRadius: 18,
-
-        overflow: "hidden",
-
-        backgroundColor: COLORS.soft,
-    },
-
-    detailRow: {
-        minHeight: 54,
-
-        paddingHorizontal: 16,
-
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(15,23,42,0.06)",
-    },
-
-    detailLabel: {
-        fontSize: 12,
-        fontWeight: "600",
-        color: COLORS.textBody,
-    },
-
-    detailValue: {
-        maxWidth: "60%",
-
-        textAlign: "right",
-
-        fontSize: 13,
-        fontWeight: "700",
-
-        color: COLORS.textTitle,
-    },
-
-    buttonPressed: {
-        opacity: 0.85,
-
-        transform: [
-            {
-                scale: 0.99,
-            },
-        ],
-    },
-
-    lostPetButton: {
-        minHeight: 62,
-
-        marginTop: 4,
-
-        paddingHorizontal: 16,
-
-        borderRadius: 16,
-
-        flexDirection: 'row',
-        alignItems: 'center',
-
-        backgroundColor:
-            COLORS.danger,
-
-        ...theme.shadows.elevation1,
-    },
-
-    lostPetButtonContent: {
-        flex: 1,
-
-        marginLeft: 12,
-    },
-
-    lostPetButtonTitle: {
-        fontSize: 13,
-        fontWeight: '800',
-
-        color: COLORS.white,
-    },
-
-    lostPetButtonSubtitle: {
-        marginTop: 2,
-
-        fontSize: 10,
-
-        color:
-            'rgba(255,255,255,0.78)',
-    },
-});

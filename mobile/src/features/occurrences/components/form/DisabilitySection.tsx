@@ -1,12 +1,13 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {  Text, View } from "react-native";
 
 import ChoiceButton from "./ChoiceButton";
 import SelectionChipGroup from "./SelectionChipGroup";
 import {
+  disabilitySectionStyles as styles,
   occurrenceConditionStyles,
   occurrenceFormSharedStyles,
-} from "./occurrenceForm.styles";
+} from "../../styles/occurrenceForm.styles";
 
 const deficiencias = [
   "Paralisia de membros",
@@ -63,8 +64,3 @@ export default function DisabilitySection({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  ...occurrenceFormSharedStyles,
-  ...occurrenceConditionStyles,
-});

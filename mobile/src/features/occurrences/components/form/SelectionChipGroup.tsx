@@ -1,6 +1,8 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
-
+import { View } from "react-native";
+import {
+  selectionChipGroupStyles as styles,
+} from "../../styles/occurrenceForm.styles";
 import SelectionChip from "./SelectionChip";
 
 interface SelectionChipGroupBaseProps {
@@ -45,12 +47,3 @@ export default function SelectionChipGroup(props: SelectionChipGroupProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  optionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 13,
-  },
-});

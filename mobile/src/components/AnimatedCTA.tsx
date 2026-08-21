@@ -1,7 +1,14 @@
 import React, { useRef } from 'react';
-import { Animated, TouchableWithoutFeedback, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme/colors';
 
+import {
+  Animated,
+  Text,
+  TouchableWithoutFeedback,
+} from 'react-native';
+
+import {
+  animatedCTAStyles as styles,
+} from './styles/components.styles';
 
 interface Props {
   title: string;
@@ -9,8 +16,14 @@ interface Props {
   style?: object;
 }
 
-export default function AnimatedCTA({ title, onPress, style }: Props) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+export default function AnimatedCTA({
+  title,
+  onPress,
+  style,
+}: Props) {
+  const scaleAnim = useRef(
+    new Animated.Value(1),
+  ).current;
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -34,25 +47,23 @@ export default function AnimatedCTA({ title, onPress, style }: Props) {
       onPressOut={handlePressOut}
       onPress={onPress}
     >
-      <Animated.View style={[styles.button, style, { transform: [{ scale: scaleAnim }] }]}>
-        <Text style={styles.text}>{title}</Text>
+      <Animated.View
+        style={[
+          styles.button,
+          style,
+          {
+            transform: [
+              {
+                scale: scaleAnim,
+              },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.text}>
+          {title}
+        </Text>
       </Animated.View>
     </TouchableWithoutFeedback>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: theme.colors.action,
-    borderRadius: theme.radius.button,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...theme.shadows.buttonGlow,
-  },
-  text: {
-    color: theme.colors.surface,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

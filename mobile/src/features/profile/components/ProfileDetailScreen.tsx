@@ -9,14 +9,12 @@ import React, {
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Image,
   ScrollView,
   TextInput,
   ActivityIndicator,
   Animated,
-  Dimensions,
   Modal,
   Easing,
   Alert,
@@ -49,32 +47,12 @@ import type {
   UserProfile,
 } from "../types/profile.types";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import {
+  PROFILE_DRAWER_WIDTH as DRAWER_WIDTH,
+  profileDetailStyles as styles,
+} from "../styles/profile.styles";
 
-const DRAWER_WIDTH = SCREEN_WIDTH * 0.88;
 
-const COLORS = {
-  primary: theme.colors.brand,
-  action: theme.colors.action,
-  background: theme.colors.background,
-  surface: theme.colors.surface,
-  textTitle: theme.colors.textTitle,
-  textBody: theme.colors.textBody,
-  border: theme.colors.inputBg,
-
-  success: theme.colors.semantic.success.text,
-  successBg: theme.colors.semantic.success.bg,
-
-  warning: theme.colors.semantic.warning.text,
-  warningBg: theme.colors.semantic.warning.bg,
-
-  danger: theme.colors.semantic.danger.text,
-  dangerBg: theme.colors.semantic.danger.bg,
-
-  white: "#FFFFFF",
-  muted: "#94A3B8",
-  soft: "#F8FAFC",
-};
 
 const MAX_PROFILE_RADIUS = 100;
 const MIN_PROFILE_RADIUS = 1;
@@ -130,14 +108,14 @@ const Avatar = React.memo(({ photoUri, loading, onPress }: AvatarProps) => {
           />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <Ionicons name="person" size={46} color={COLORS.primary} />
+            <Ionicons name="person" size={46} color={theme.colors.brand} />
           </View>
         )}
       </View>
 
       {loading && (
         <View style={styles.uploadingOverlay}>
-          <ActivityIndicator size="small" color={COLORS.white} />
+          <ActivityIndicator size="small" color={theme.colors.surface} />
 
           <Text style={styles.uploadingText}>Enviando...</Text>
         </View>
@@ -153,7 +131,7 @@ const Avatar = React.memo(({ photoUri, loading, onPress }: AvatarProps) => {
           <Ionicons
             name={hasPhoto ? "create-outline" : "add"}
             size={hasPhoto ? 17 : 23}
-            color={COLORS.white}
+            color={theme.colors.surface}
           />
         </View>
       )}
@@ -172,115 +150,135 @@ interface TabBarProps {
   mostrarPets: boolean;
 }
 
-const TabBar = React.memo(({ activeTab, onTabChange, mostrarPets }: TabBarProps) => (
-  <View style={styles.tabContainer}>
-    <Pressable
-      style={[
-        styles.tabButton,
-        activeTab === "perfil" && styles.tabButtonActive,
-      ]}
-      onPress={() => onTabChange("perfil")}
-      accessibilityRole="tab"
-      accessibilityState={{
-        selected: activeTab === "perfil",
-      }}
-    >
-      <View
-        style={[
-          styles.tabIconContainer,
-          activeTab === "perfil" && styles.tabIconContainerActive,
-        ]}
-      >
-        <Ionicons
-          name="person-outline"
-          size={18}
-          color={activeTab === "perfil" ? COLORS.primary : COLORS.textBody}
-        />
-      </View>
-
-      <Text
-        style={[styles.tabText, activeTab === "perfil" && styles.tabTextActive]}
-      >
-        Perfil
-      </Text>
-    </Pressable>
-
-    <Pressable
-      style={[
-        styles.tabButton,
-        activeTab === "ocorrencias" && styles.tabButtonActive,
-      ]}
-      onPress={() => onTabChange("ocorrencias")}
-      accessibilityRole="tab"
-      accessibilityState={{
-        selected: activeTab === "ocorrencias",
-      }}
-    >
-      <View
-        style={[
-          styles.tabIconContainer,
-          activeTab === "ocorrencias" && styles.tabIconContainerActive,
-        ]}
-      >
-        <MaterialCommunityIcons
-          name="paw-outline"
-          size={19}
-          color={activeTab === "ocorrencias" ? COLORS.primary : COLORS.textBody}
-        />
-      </View>
-
-      <Text
-        style={[
-          styles.tabText,
-          activeTab === "ocorrencias" && styles.tabTextActive,
-        ]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.85}
-      >
-        Ocorrências
-      </Text>
-    </Pressable>
-
-    {/* ===================================================== */}
-    {/* PETS */}
-    {/* ===================================================== */}
-
-    {mostrarPets && (
+const TabBar = React.memo(
+  ({ activeTab, onTabChange, mostrarPets }: TabBarProps) => (
+    <View style={styles.tabContainer}>
       <Pressable
         style={[
           styles.tabButton,
-          activeTab === "pets" && styles.tabButtonActive,
+          activeTab === "perfil" && styles.tabButtonActive,
         ]}
-        onPress={() => onTabChange("pets")}
+        onPress={() => onTabChange("perfil")}
         accessibilityRole="tab"
         accessibilityState={{
-          selected: activeTab === "pets",
+          selected: activeTab === "perfil",
         }}
-        accessibilityLabel="Meus pets"
       >
         <View
           style={[
             styles.tabIconContainer,
-            activeTab === "pets" && styles.tabIconContainerActive,
+            activeTab === "perfil" && styles.tabIconContainerActive,
           ]}
         >
-          <MaterialCommunityIcons
-            name="dog-side"
-            size={19}
-            color={activeTab === "pets" ? COLORS.primary : COLORS.textBody}
+          <Ionicons
+            name="person-outline"
+            size={18}
+            color={
+              activeTab === "perfil"
+                ? theme.colors.brand
+                : theme.colors.textBody
+            }
           />
         </View>
 
         <Text
-          style={[styles.tabText, activeTab === "pets" && styles.tabTextActive]}
+          style={[
+            styles.tabText,
+            activeTab === "perfil" && styles.tabTextActive,
+          ]}
         >
-          Pets
+          Perfil
         </Text>
       </Pressable>
-    )}
-  </View>
-));
+
+      <Pressable
+        style={[
+          styles.tabButton,
+          activeTab === "ocorrencias" && styles.tabButtonActive,
+        ]}
+        onPress={() => onTabChange("ocorrencias")}
+        accessibilityRole="tab"
+        accessibilityState={{
+          selected: activeTab === "ocorrencias",
+        }}
+      >
+        <View
+          style={[
+            styles.tabIconContainer,
+            activeTab === "ocorrencias" && styles.tabIconContainerActive,
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="paw-outline"
+            size={19}
+            color={
+              activeTab === "ocorrencias"
+                ? theme.colors.brand
+                : theme.colors.textBody
+            }
+          />
+        </View>
+
+        <Text
+          style={[
+            styles.tabText,
+            activeTab === "ocorrencias" && styles.tabTextActive,
+          ]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+        >
+          Ocorrências
+        </Text>
+      </Pressable>
+
+      {/* ===================================================== */}
+      {/* PETS */}
+      {/* ===================================================== */}
+
+      {mostrarPets && (
+        <Pressable
+          style={[
+            styles.tabButton,
+            activeTab === "pets" && styles.tabButtonActive,
+          ]}
+          onPress={() => onTabChange("pets")}
+          accessibilityRole="tab"
+          accessibilityState={{
+            selected: activeTab === "pets",
+          }}
+          accessibilityLabel="Meus pets"
+        >
+          <View
+            style={[
+              styles.tabIconContainer,
+              activeTab === "pets" && styles.tabIconContainerActive,
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="dog-side"
+              size={19}
+              color={
+                activeTab === "pets"
+                  ? theme.colors.brand
+                  : theme.colors.textBody
+              }
+            />
+          </View>
+
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "pets" && styles.tabTextActive,
+            ]}
+          >
+            Pets
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  ),
+);
 
 // ============================================================
 // INFO ROW
@@ -294,10 +292,15 @@ interface InfoRowProps {
 }
 
 const InfoRow = React.memo(
-  ({ icon, label, value, iconBackground = COLORS.successBg }: InfoRowProps) => (
+  ({
+    icon,
+    label,
+    value,
+    iconBackground = theme.colors.semantic.success.bg,
+  }: InfoRowProps) => (
     <View style={styles.infoRow}>
       <View style={[styles.infoIcon, { backgroundColor: iconBackground }]}>
-        <Ionicons name={icon} size={18} color={COLORS.primary} />
+        <Ionicons name={icon} size={18} color={theme.colors.brand} />
       </View>
 
       <View style={styles.infoContent}>
@@ -364,9 +367,13 @@ interface OcorrenciaCardProps {
 const OcorrenciaCard = React.memo(({ item, onPress }: OcorrenciaCardProps) => {
   const isPerdido = item.status_badge?.toUpperCase() === "PERDIDO";
 
-  const statusColor = isPerdido ? COLORS.danger : COLORS.warning;
+  const statusColor = isPerdido
+    ? theme.colors.semantic.danger.text
+    : theme.colors.semantic.warning.text;
 
-  const statusBackground = isPerdido ? COLORS.dangerBg : COLORS.warningBg;
+  const statusBackground = isPerdido
+    ? theme.colors.semantic.danger.bg
+    : theme.colors.semantic.warning.bg;
 
   return (
     <Pressable
@@ -386,7 +393,11 @@ const OcorrenciaCard = React.memo(({ item, onPress }: OcorrenciaCardProps) => {
           <Image source={{ uri: item.foto }} style={styles.occurrenceImage} />
         ) : (
           <View style={styles.occurrenceImagePlaceholder}>
-            <MaterialCommunityIcons name="paw" size={28} color={COLORS.muted} />
+            <MaterialCommunityIcons
+              name="paw"
+              size={28}
+              color={theme.colors.muted}
+            />
           </View>
         )}
       </View>
@@ -421,7 +432,11 @@ const OcorrenciaCard = React.memo(({ item, onPress }: OcorrenciaCardProps) => {
         <Text style={styles.animalName}>{item.tipo_animal || "Animal"}</Text>
 
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={14} color={COLORS.textBody} />
+          <Ionicons
+            name="location-outline"
+            size={14}
+            color={theme.colors.textBody}
+          />
 
           <Text style={styles.locationText} numberOfLines={1}>
             {item.endereco_localizacao || "Localização não informada"}
@@ -429,7 +444,7 @@ const OcorrenciaCard = React.memo(({ item, onPress }: OcorrenciaCardProps) => {
         </View>
       </View>
 
-      <Ionicons name="chevron-forward" size={20} color={COLORS.muted} />
+      <Ionicons name="chevron-forward" size={20} color={theme.colors.muted} />
     </Pressable>
   );
 });
@@ -472,7 +487,9 @@ export default function ProfileDetailScreen({
   const [endereco, setEndereco] = useState("");
   const [temPet, setTemPet] = useState(false);
 
-  const [minhasOcorrencias, setMinhasOcorrencias] = useState<OcorrenciaResumo[]>([]);
+  const [minhasOcorrencias, setMinhasOcorrencias] = useState<
+    OcorrenciaResumo[]
+  >([]);
 
   const translateX = useRef(new Animated.Value(DRAWER_WIDTH)).current;
 
@@ -787,10 +804,7 @@ export default function ProfileDetailScreen({
       onClose();
       logout();
 
-      Alert.alert(
-        "Conta excluída",
-        "Sua conta foi excluída permanentemente.",
-      );
+      Alert.alert("Conta excluída", "Sua conta foi excluída permanentemente.");
     } catch (error: unknown) {
       let detail: string | undefined;
 
@@ -876,7 +890,7 @@ export default function ProfileDetailScreen({
     if (loading) {
       return (
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={theme.colors.brand} />
 
           <Text style={styles.loadingText}>Carregando seu perfil...</Text>
         </View>
@@ -918,7 +932,7 @@ export default function ProfileDetailScreen({
                 <Ionicons
                   name="person-outline"
                   size={19}
-                  color={COLORS.primary}
+                  color={theme.colors.brand}
                 />
 
                 <TextInput
@@ -930,7 +944,7 @@ export default function ProfileDetailScreen({
                       ? "Nome da ONG"
                       : "Seu nome completo"
                   }
-                  placeholderTextColor={COLORS.muted}
+                  placeholderTextColor={theme.colors.muted}
                   autoCapitalize="words"
                   accessibilityLabel={
                     profile?.tipo_conta === "ONG"
@@ -948,7 +962,7 @@ export default function ProfileDetailScreen({
                 <Ionicons
                   name="call-outline"
                   size={19}
-                  color={COLORS.primary}
+                  color={theme.colors.brand}
                 />
 
                 <TextInput
@@ -956,7 +970,7 @@ export default function ProfileDetailScreen({
                   value={telefone}
                   onChangeText={setTelefone}
                   placeholder="(00) 00000-0000"
-                  placeholderTextColor={COLORS.muted}
+                  placeholderTextColor={theme.colors.muted}
                   keyboardType="phone-pad"
                   accessibilityLabel="Telefone"
                 />
@@ -972,7 +986,7 @@ export default function ProfileDetailScreen({
                     <Ionicons
                       name="location-outline"
                       size={19}
-                      color={COLORS.primary}
+                      color={theme.colors.brand}
                     />
 
                     <TextInput
@@ -980,7 +994,7 @@ export default function ProfileDetailScreen({
                       value={raio}
                       onChangeText={setRaio}
                       placeholder="10"
-                      placeholderTextColor={COLORS.muted}
+                      placeholderTextColor={theme.colors.muted}
                       keyboardType="number-pad"
                       maxLength={3}
                       accessibilityLabel="Raio de pesquisa em quilômetros"
@@ -1000,7 +1014,7 @@ export default function ProfileDetailScreen({
                     <MaterialCommunityIcons
                       name="paw-outline"
                       size={21}
-                      color={COLORS.primary}
+                      color={theme.colors.brand}
                     />
                   </View>
 
@@ -1030,7 +1044,7 @@ export default function ProfileDetailScreen({
                   <Ionicons
                     name="location-outline"
                     size={19}
-                    color={COLORS.primary}
+                    color={theme.colors.brand}
                     style={styles.multilineIcon}
                   />
 
@@ -1039,7 +1053,7 @@ export default function ProfileDetailScreen({
                     value={endereco}
                     onChangeText={setEndereco}
                     placeholder="Endereço da instituição"
-                    placeholderTextColor={COLORS.muted}
+                    placeholderTextColor={theme.colors.muted}
                     multiline
                     numberOfLines={3}
                     textAlignVertical="top"
@@ -1063,13 +1077,13 @@ export default function ProfileDetailScreen({
               accessibilityLabel="Salvar alterações"
             >
               {saving ? (
-                <ActivityIndicator color={COLORS.white} />
+                <ActivityIndicator color={theme.colors.surface} />
               ) : (
                 <>
                   <Ionicons
                     name="checkmark-circle-outline"
                     size={21}
-                    color={COLORS.white}
+                    color={theme.colors.surface}
                   />
 
                   <Text style={styles.primaryButtonText}>
@@ -1115,7 +1129,11 @@ export default function ProfileDetailScreen({
             accessibilityRole="button"
             accessibilityLabel="Editar perfil"
           >
-            <Ionicons name="create-outline" size={18} color={COLORS.primary} />
+            <Ionicons
+              name="create-outline"
+              size={18}
+              color={theme.colors.brand}
+            />
 
             <Text style={styles.editButtonText}>Editar</Text>
           </TouchableOpacity>
@@ -1165,7 +1183,9 @@ export default function ProfileDetailScreen({
                 label="Possui pet"
                 value={profile?.tem_pet ? "Sim" : "Não"}
                 iconBackground={
-                  profile?.tem_pet ? COLORS.successBg : COLORS.warningBg
+                  profile?.tem_pet
+                    ? theme.colors.semantic.success.bg
+                    : theme.colors.semantic.warning.bg
                 }
               />
             </View>
@@ -1215,7 +1235,7 @@ export default function ProfileDetailScreen({
             <Ionicons
               name="shield-checkmark-outline"
               size={21}
-              color={COLORS.primary}
+              color={theme.colors.brand}
             />
           </View>
 
@@ -1237,7 +1257,7 @@ export default function ProfileDetailScreen({
               <Ionicons
                 name="trash-outline"
                 size={20}
-                color={COLORS.danger}
+                color={theme.colors.semantic.danger.text}
               />
             </View>
 
@@ -1258,7 +1278,11 @@ export default function ProfileDetailScreen({
             accessibilityLabel="Excluir minha conta"
             accessibilityHint="Abre a confirmação de exclusão permanente da conta"
           >
-            <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+            <Ionicons
+              name="trash-outline"
+              size={18}
+              color={theme.colors.semantic.danger.text}
+            />
             <Text style={styles.deleteAccountButtonText}>
               Excluir minha conta
             </Text>
@@ -1321,7 +1345,7 @@ export default function ProfileDetailScreen({
             style={[
               styles.header,
               {
-                paddingTop: insets.top + 8, // 
+                paddingTop: insets.top + 8, //
               },
             ]}
           >
@@ -1335,7 +1359,7 @@ export default function ProfileDetailScreen({
               <Ionicons
                 name="chevron-back"
                 size={23}
-                color={COLORS.textTitle}
+                color={theme.colors.textTitle}
               />
             </TouchableOpacity>
 
@@ -1355,7 +1379,7 @@ export default function ProfileDetailScreen({
               <Ionicons
                 name="log-out-outline"
                 size={21}
-                color={COLORS.danger}
+                color={theme.colors.semantic.danger.text}
               />
             </TouchableOpacity>
           </View>
@@ -1366,11 +1390,11 @@ export default function ProfileDetailScreen({
                 <MaterialCommunityIcons
                   name="paw"
                   size={30}
-                  color={COLORS.primary}
+                  color={theme.colors.brand}
                 />
               </View>
 
-              <ActivityIndicator size="small" color={COLORS.primary} />
+              <ActivityIndicator size="small" color={theme.colors.brand} />
 
               <Text style={styles.loadingText}>Carregando seu perfil...</Text>
             </View>
@@ -1413,7 +1437,7 @@ export default function ProfileDetailScreen({
                         : "add-circle-outline"
                     }
                     size={13}
-                    color={COLORS.textBody}
+                    color={theme.colors.textBody}
                   />
 
                   <Text style={styles.photoHint}>
@@ -1452,8 +1476,8 @@ export default function ProfileDetailScreen({
                       <RefreshControl
                         refreshing={refreshing}
                         onRefresh={carregarDados}
-                        tintColor={COLORS.primary}
-                        colors={[COLORS.primary]}
+                        tintColor={theme.colors.brand}
+                        colors={[theme.colors.brand]}
                       />
                     }
                     ListHeaderComponent={
@@ -1481,7 +1505,7 @@ export default function ProfileDetailScreen({
                           <MaterialCommunityIcons
                             name="paw-outline"
                             size={34}
-                            color={COLORS.primary}
+                            color={theme.colors.brand}
                           />
                         </View>
 
@@ -1533,7 +1557,7 @@ export default function ProfileDetailScreen({
                 <Ionicons
                   name="warning-outline"
                   size={26}
-                  color={COLORS.danger}
+                  color={theme.colors.semantic.danger.text}
                 />
               </View>
 
@@ -1550,7 +1574,7 @@ export default function ProfileDetailScreen({
                 <Ionicons
                   name="lock-closed-outline"
                   size={19}
-                  color={COLORS.textBody}
+                  color={theme.colors.textBody}
                 />
 
                 <TextInput
@@ -1558,7 +1582,7 @@ export default function ProfileDetailScreen({
                   value={deletePassword}
                   onChangeText={setDeletePassword}
                   placeholder="Digite sua senha atual"
-                  placeholderTextColor={COLORS.textBody}
+                  placeholderTextColor={theme.colors.textBody}
                   secureTextEntry={!showDeletePassword}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -1576,9 +1600,11 @@ export default function ProfileDetailScreen({
                   }
                 >
                   <Ionicons
-                    name={showDeletePassword ? "eye-off-outline" : "eye-outline"}
+                    name={
+                      showDeletePassword ? "eye-off-outline" : "eye-outline"
+                    }
                     size={20}
-                    color={COLORS.textBody}
+                    color={theme.colors.textBody}
                   />
                 </Pressable>
               </View>
@@ -1607,13 +1633,16 @@ export default function ProfileDetailScreen({
                   accessibilityLabel="Excluir conta definitivamente"
                 >
                   {deletingAccount ? (
-                    <ActivityIndicator size="small" color={COLORS.surface} />
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.surface}
+                    />
                   ) : (
                     <>
                       <Ionicons
                         name="trash-outline"
                         size={18}
-                        color={COLORS.surface}
+                        color={theme.colors.surface}
                       />
                       <Text style={styles.deleteModalConfirmText}>
                         Excluir definitivamente
@@ -1629,1320 +1658,3 @@ export default function ProfileDetailScreen({
     </Modal>
   );
 }
-
-// ============================================================
-// ESTILOS
-// ============================================================
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "rgba(15, 23, 42, 0.52)",
-  },
-
-  backdrop: {
-    flex: 1,
-  },
-
-  drawerContainer: {
-    width: DRAWER_WIDTH,
-    height: "100%",
-    backgroundColor: COLORS.background,
-
-    borderTopLeftRadius: 28,
-    borderBottomLeftRadius: 28,
-
-    overflow: "hidden",
-
-    ...theme.shadows.elevation1,
-  },
-
-  // ==========================================================
-  // HEADER
-  // ==========================================================
-
-  header: {
-  minHeight: 74, // 
-
-  paddingBottom: 10, // 
-  paddingHorizontal: 16,
-
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-
-  backgroundColor: COLORS.surface,
-
-  borderBottomWidth: 1,
-  borderBottomColor:
-    'rgba(15, 23, 42, 0.06)',
-},
-
-  headerButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: COLORS.soft,
-  },
-
-  logoutHeaderButton: {
-    backgroundColor: COLORS.dangerBg,
-  },
-
-  headerTitleContainer: {
-    flex: 1,
-    alignItems: "center",
-  },
-
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: COLORS.textTitle,
-    letterSpacing: -0.2,
-  },
-
-  headerSubtitle: {
-    marginTop: 1,
-    fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.textBody,
-  },
-
-  // ==========================================================
-  // HERO
-  // ==========================================================
-
-  profileHero: {
-    alignItems: "center",
-
-    paddingTop: 24,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-
-    backgroundColor: COLORS.surface,
-
-    overflow: "hidden",
-
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-  },
-
-  heroGlow: {
-    position: "absolute",
-
-    width: 180,
-    height: 180,
-
-    borderRadius: 90,
-
-    top: -100,
-
-    backgroundColor: COLORS.successBg,
-  },
-
-  avatarWrapper: {
-    position: "relative",
-    marginBottom: 12,
-  },
-
-  avatarRing: {
-    width: 104,
-    height: 104,
-
-    borderRadius: 52,
-
-    padding: 4,
-
-    backgroundColor: COLORS.successBg,
-
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.15)",
-
-    ...theme.shadows.elevation1,
-  },
-
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 48,
-  },
-
-  avatarPlaceholder: {
-    flex: 1,
-
-    borderRadius: 48,
-
-    backgroundColor: COLORS.soft,
-
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  uploadingOverlay: {
-    ...StyleSheet.absoluteFill,
-
-    borderRadius: 52,
-
-    backgroundColor: "rgba(15, 23, 42, 0.68)",
-
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  uploadingText: {
-    marginTop: 6,
-
-    fontSize: 10,
-    fontWeight: "700",
-
-    color: COLORS.white,
-  },
-
-  photoActionBadge: {
-    position: "absolute",
-
-    right: 0,
-    bottom: 0,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    borderWidth: 3,
-    borderColor: COLORS.surface,
-
-    ...theme.shadows.buttonGlow,
-  },
-
-  photoAddBadge: {
-    width: 38,
-    height: 38,
-
-    borderRadius: 19,
-
-    backgroundColor: COLORS.primary,
-  },
-
-  photoEditBadge: {
-    width: 36,
-    height: 36,
-
-    borderRadius: 18,
-
-    backgroundColor: COLORS.primary,
-  },
-
-  profileName: {
-    maxWidth: "90%",
-
-    fontSize: 22,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-
-    letterSpacing: -0.5,
-  },
-
-  profileEmail: {
-    maxWidth: "90%",
-
-    marginTop: 4,
-
-    fontSize: 13,
-    fontWeight: "500",
-
-    color: COLORS.textBody,
-  },
-
-  profileMeta: {
-    marginTop: 12,
-  },
-
-  accountBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-
-    borderRadius: 100,
-
-    backgroundColor: COLORS.successBg,
-  },
-
-  accountBadgeDot: {
-    width: 7,
-    height: 7,
-
-    borderRadius: 4,
-
-    marginRight: 7,
-
-    backgroundColor: COLORS.primary,
-  },
-
-  accountBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-
-    color: COLORS.primary,
-  },
-
-  photoActionHint: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    marginTop: 9,
-  },
-
-  photoHint: {
-    marginLeft: 4,
-
-    fontSize: 10,
-    fontWeight: "500",
-
-    color: COLORS.textBody,
-  },
-
-  // ==========================================================
-  // TABS
-  // ==========================================================
-
-  tabContainer: {
-    flexDirection: "row",
-
-    marginHorizontal: 12, //
-    marginTop: 14,
-
-    padding: 4,
-
-    borderRadius: 16,
-
-    backgroundColor: "rgba(15, 23, 42, 0.045)",
-  },
-  tabButton: {
-    flex: 1,
-
-    minHeight: 48,
-
-    borderRadius: 13,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    paddingHorizontal: 3, // 
-
-    minWidth: 0,
-
-    position: "relative", // 
-  },
-  tabButtonActive: {
-    backgroundColor: COLORS.surface,
-
-    ...theme.shadows.elevation1,
-  },
-
-  tabIconContainer: {
-    width: 26, //
-    height: 26, //
-
-    borderRadius: 9,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    flexShrink: 0, //
-  },
-
-  tabIconContainerActive: {
-    backgroundColor: COLORS.successBg,
-  },
-
-  tabText: {
-    marginLeft: 4,
-
-    fontSize: 11, // 
-    fontWeight: "600",
-
-    color: COLORS.textBody,
-
-    flexShrink: 1,
-
-    includeFontPadding: false, // 
-  },
-
-  tabTextActive: {
-    color: COLORS.primary,
-    fontWeight: "800",
-  },
-
-  // ==========================================================
-  // CONTENT
-  // ==========================================================
-
-  contentContainer: {
-    flex: 1,
-  },
-
-  profileScrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-
-  editScrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-
-  // ==========================================================
-  // SECTIONS
-  // ==========================================================
-
-  sectionHeader: {
-    flexDirection: "row",
-
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-
-    marginBottom: 14,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-
-    letterSpacing: -0.3,
-  },
-
-  sectionSubtitle: {
-    marginTop: 3,
-
-    fontSize: 12,
-    lineHeight: 17,
-
-    color: COLORS.textBody,
-  },
-
-  cardSectionTitle: {
-    marginTop: 24,
-    marginBottom: 10,
-
-    fontSize: 14,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  // ==========================================================
-  // EDIT BUTTON
-  // ==========================================================
-
-  editButton: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-
-    borderRadius: 12,
-
-    backgroundColor: COLORS.successBg,
-  },
-
-  editButtonText: {
-    marginLeft: 5,
-
-    fontSize: 12,
-    fontWeight: "800",
-
-    color: COLORS.primary,
-  },
-
-  // ==========================================================
-  // INFO CARD
-  // ==========================================================
-
-  infoCard: {
-    backgroundColor: COLORS.surface,
-
-    borderRadius: 20,
-
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-
-    borderWidth: 1,
-    borderColor: "rgba(15, 23, 42, 0.055)",
-
-    ...theme.shadows.elevation1,
-  },
-
-  infoRow: {
-    minHeight: 72,
-
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  infoIcon: {
-    width: 40,
-    height: 40,
-
-    borderRadius: 13,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    marginRight: 12,
-  },
-
-  infoContent: {
-    flex: 1,
-  },
-
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-
-    color: COLORS.textBody,
-
-    marginBottom: 3,
-  },
-
-  infoValue: {
-    fontSize: 14,
-    lineHeight: 19,
-
-    fontWeight: "700",
-
-    color: COLORS.textTitle,
-  },
-
-  infoDivider: {
-    height: 1,
-
-    marginLeft: 52,
-
-    backgroundColor: "rgba(15, 23, 42, 0.06)",
-  },
-
-  // ==========================================================
-  // ACCOUNT CARD
-  // ==========================================================
-
-  accountCard: {
-    flexDirection: "row",
-
-    marginTop: 24,
-    padding: 16,
-
-    borderRadius: 18,
-
-    backgroundColor: COLORS.successBg,
-
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.08)",
-  },
-
-  accountIcon: {
-    width: 40,
-    height: 40,
-
-    borderRadius: 13,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: COLORS.surface,
-  },
-
-  accountContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
-
-  accountTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-
-    color: COLORS.primary,
-  },
-
-  accountDescription: {
-    marginTop: 3,
-
-    fontSize: 11,
-    lineHeight: 16,
-
-    color: COLORS.textBody,
-  },
-
-  manageAccountLabel: {
-    marginTop: 24,
-    marginBottom: 10,
-
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-
-    color: COLORS.textBody,
-  },
-
-  deleteAccountCard: {
-    padding: 16,
-
-    borderRadius: 18,
-
-    backgroundColor: COLORS.surface,
-
-    borderWidth: 1,
-    borderColor: COLORS.dangerBg,
-
-    ...theme.shadows.elevation1,
-  },
-
-  deleteAccountHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  deleteAccountIcon: {
-    width: 40,
-    height: 40,
-
-    borderRadius: 13,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: COLORS.dangerBg,
-  },
-
-  deleteAccountContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
-
-  deleteAccountTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  deleteAccountDescription: {
-    marginTop: 3,
-
-    fontSize: 11,
-    lineHeight: 16,
-
-    color: COLORS.textBody,
-  },
-
-  deleteAccountButton: {
-    minHeight: 46,
-
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-
-    marginTop: 14,
-
-    borderRadius: 14,
-
-    backgroundColor: COLORS.dangerBg,
-
-    borderWidth: 1,
-    borderColor: COLORS.danger,
-  },
-
-  deleteAccountButtonText: {
-    marginLeft: 7,
-
-    fontSize: 13,
-    fontWeight: "800",
-
-    color: COLORS.danger,
-  },
-
-  // ==========================================================
-  // DELETE ACCOUNT MODAL
-  // ==========================================================
-
-  deleteModalOverlay: {
-    flex: 1,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    paddingHorizontal: 20,
-
-    backgroundColor: "rgba(15, 23, 42, 0.62)",
-  },
-
-  deleteModalBackdrop: {
-    ...StyleSheet.absoluteFill,
-  },
-
-  deleteModalCard: {
-    width: "100%",
-    maxWidth: 420,
-
-    padding: 22,
-
-    borderRadius: 22,
-
-    backgroundColor: COLORS.surface,
-
-    ...theme.shadows.elevation1,
-  },
-
-  deleteModalIcon: {
-    width: 52,
-    height: 52,
-
-    borderRadius: 17,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: COLORS.dangerBg,
-  },
-
-  deleteModalTitle: {
-    marginTop: 16,
-
-    fontSize: 20,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  deleteModalDescription: {
-    marginTop: 8,
-
-    fontSize: 13,
-    lineHeight: 19,
-
-    color: COLORS.textBody,
-  },
-
-  deletePasswordLabel: {
-    marginTop: 20,
-    marginBottom: 8,
-
-    fontSize: 12,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  deletePasswordWrapper: {
-    minHeight: 52,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingLeft: 14,
-
-    borderRadius: 14,
-
-    borderWidth: 1,
-    borderColor: COLORS.dangerBg,
-
-    backgroundColor: COLORS.surface,
-  },
-
-  deletePasswordInput: {
-    flex: 1,
-
-    marginLeft: 10,
-    paddingVertical: 0,
-
-    fontSize: 14,
-
-    color: COLORS.textTitle,
-  },
-
-  deletePasswordToggle: {
-    width: 48,
-    minHeight: 50,
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  deleteModalActions: {
-    marginTop: 20,
-    gap: 10,
-  },
-
-  deleteModalCancelButton: {
-    minHeight: 48,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    borderRadius: 14,
-
-    backgroundColor: COLORS.surface,
-
-    borderWidth: 1,
-    borderColor: COLORS.dangerBg,
-  },
-
-  deleteModalCancelText: {
-    fontSize: 13,
-    fontWeight: "700",
-
-    color: COLORS.textBody,
-  },
-
-  deleteModalConfirmButton: {
-    minHeight: 50,
-
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-
-    borderRadius: 14,
-
-    backgroundColor: COLORS.danger,
-  },
-
-  deleteModalButtonDisabled: {
-    opacity: 0.7,
-  },
-
-  deleteModalConfirmText: {
-    marginLeft: 7,
-
-    fontSize: 13,
-    fontWeight: "800",
-
-    color: COLORS.surface,
-  },
-
-  // ==========================================================
-  // EDITING
-  // ==========================================================
-
-  editingIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-
-    borderRadius: 100,
-
-    backgroundColor: COLORS.warningBg,
-  },
-
-  editingDot: {
-    width: 6,
-    height: 6,
-
-    borderRadius: 3,
-
-    marginRight: 5,
-
-    backgroundColor: COLORS.warning,
-  },
-
-  editingText: {
-    fontSize: 10,
-    fontWeight: "800",
-
-    color: COLORS.warning,
-  },
-
-  formCard: {
-    padding: 16,
-
-    borderRadius: 20,
-
-    backgroundColor: COLORS.surface,
-
-    borderWidth: 1,
-    borderColor: "rgba(15, 23, 42, 0.055)",
-
-    ...theme.shadows.elevation1,
-  },
-
-  inputGroup: {
-    marginBottom: 18,
-  },
-
-  inputLabel: {
-    marginBottom: 8,
-
-    fontSize: 12,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  inputWrapper: {
-    minHeight: 50,
-
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingHorizontal: 14,
-
-    borderRadius: 14,
-
-    borderWidth: 1,
-    borderColor: "rgba(15, 23, 42, 0.08)",
-
-    backgroundColor: COLORS.soft,
-  },
-
-  inputWrapperMultiline: {
-    alignItems: "flex-start",
-    paddingTop: 13,
-  },
-
-  multilineIcon: {
-    marginTop: 2,
-  },
-
-  input: {
-    flex: 1,
-
-    marginLeft: 10,
-
-    paddingVertical: 0,
-
-    fontSize: 14,
-    fontWeight: "600",
-
-    color: COLORS.textTitle,
-  },
-
-  multilineInput: {
-    minHeight: 76,
-
-    paddingTop: 0,
-
-    lineHeight: 20,
-  },
-
-  inputSuffix: {
-    marginLeft: 6,
-
-    fontSize: 13,
-    fontWeight: "800",
-
-    color: COLORS.primary,
-  },
-
-  helperText: {
-    marginTop: 7,
-
-    fontSize: 11,
-    lineHeight: 16,
-
-    color: COLORS.textBody,
-  },
-
-  preferenceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingTop: 4,
-  },
-
-  preferenceIcon: {
-    width: 42,
-    height: 42,
-
-    borderRadius: 13,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: COLORS.successBg,
-  },
-
-  preferenceContent: {
-    flex: 1,
-
-    marginHorizontal: 12,
-  },
-
-  preferenceTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  preferenceDescription: {
-    marginTop: 2,
-
-    fontSize: 11,
-    lineHeight: 16,
-
-    color: COLORS.textBody,
-  },
-
-  // ==========================================================
-  // SWITCH
-  // ==========================================================
-
-  switchTrack: {
-    width: 52,
-    height: 30,
-
-    padding: 2,
-
-    borderRadius: 15,
-
-    justifyContent: "center",
-
-    backgroundColor: "#CBD5E1",
-  },
-
-  switchTrackActive: {
-    backgroundColor: COLORS.primary,
-  },
-
-  switchThumb: {
-    width: 26,
-    height: 26,
-
-    borderRadius: 13,
-
-    backgroundColor: COLORS.white,
-
-    shadowColor: "#000",
-
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-
-    elevation: 3,
-  },
-
-  // ==========================================================
-  // ACTIONS
-  // ==========================================================
-
-  editActions: {
-    marginTop: 16,
-    gap: 10,
-  },
-
-  primaryButton: {
-    minHeight: 52,
-
-    flexDirection: "row",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    borderRadius: 15,
-
-    backgroundColor: COLORS.primary,
-
-    ...theme.shadows.buttonGlow,
-  },
-
-  primaryButtonDisabled: {
-    opacity: 0.65,
-  },
-
-  primaryButtonText: {
-    marginLeft: 8,
-
-    fontSize: 14,
-    fontWeight: "800",
-
-    color: COLORS.white,
-  },
-
-  secondaryButton: {
-    minHeight: 48,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    borderRadius: 15,
-
-    backgroundColor: COLORS.soft,
-
-    borderWidth: 1,
-    borderColor: "rgba(15, 23, 42, 0.06)",
-  },
-
-  secondaryButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-
-    color: COLORS.textBody,
-  },
-
-  // ==========================================================
-  // LOADING
-  // ==========================================================
-
-  loadingContainer: {
-    flex: 1,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    paddingBottom: 60,
-  },
-
-  loadingContent: {
-    flex: 1,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    paddingVertical: 50,
-  },
-
-  loadingIcon: {
-    width: 62,
-    height: 62,
-
-    borderRadius: 31,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    marginBottom: 16,
-
-    backgroundColor: COLORS.successBg,
-  },
-
-  loadingText: {
-    marginTop: 12,
-
-    fontSize: 13,
-    fontWeight: "600",
-
-    color: COLORS.textBody,
-  },
-
-  // ==========================================================
-  // OCORRÊNCIAS
-  // ==========================================================
-
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-
-  occurrencesHeader: {
-    flexDirection: "row",
-
-    alignItems: "center",
-    justifyContent: "space-between",
-
-    marginBottom: 14,
-  },
-
-  occurrenceCountBadge: {
-    minWidth: 34,
-    height: 34,
-
-    paddingHorizontal: 9,
-
-    borderRadius: 17,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: COLORS.successBg,
-  },
-
-  occurrenceCountText: {
-    fontSize: 12,
-    fontWeight: "800",
-
-    color: COLORS.primary,
-  },
-
-  occurrenceCard: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    marginBottom: 12,
-    padding: 12,
-
-    borderRadius: 18,
-
-    backgroundColor: COLORS.surface,
-
-    borderWidth: 1,
-    borderColor: "rgba(15, 23, 42, 0.055)",
-
-    ...theme.shadows.elevation1,
-  },
-
-  occurrenceCardPressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.99 }],
-  },
-
-  occurrenceImageWrapper: {
-    width: 76,
-    height: 76,
-
-    borderRadius: 15,
-
-    overflow: "hidden",
-
-    backgroundColor: COLORS.soft,
-  },
-
-  occurrenceImage: {
-    width: "100%",
-    height: "100%",
-  },
-
-  occurrenceImagePlaceholder: {
-    flex: 1,
-
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  occurrenceInfo: {
-    flex: 1,
-
-    marginLeft: 12,
-    marginRight: 7,
-  },
-
-  occurrenceTopRow: {
-    flexDirection: "row",
-
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-
-    borderRadius: 8,
-  },
-
-  statusDot: {
-    width: 6,
-    height: 6,
-
-    borderRadius: 3,
-
-    marginRight: 5,
-  },
-
-  statusBadgeText: {
-    fontSize: 9,
-    fontWeight: "900",
-  },
-
-  urgencyText: {
-    maxWidth: 80,
-
-    fontSize: 10,
-    fontWeight: "600",
-
-    color: COLORS.textBody,
-  },
-
-  animalName: {
-    marginTop: 8,
-
-    fontSize: 15,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  locationRow: {
-    flexDirection: "row",
-
-    alignItems: "center",
-
-    marginTop: 4,
-  },
-
-  locationText: {
-    flex: 1,
-
-    marginLeft: 3,
-
-    fontSize: 10,
-
-    color: COLORS.textBody,
-  },
-
-  // ==========================================================
-  // EMPTY STATE
-  // ==========================================================
-
-  emptyContainer: {
-    alignItems: "center",
-
-    paddingHorizontal: 30,
-    paddingTop: 60,
-  },
-
-  emptyIcon: {
-    width: 76,
-    height: 76,
-
-    borderRadius: 38,
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    backgroundColor: COLORS.successBg,
-  },
-
-  emptyTitle: {
-    marginTop: 18,
-
-    fontSize: 16,
-    fontWeight: "800",
-
-    color: COLORS.textTitle,
-  },
-
-  emptyText: {
-    maxWidth: 280,
-
-    marginTop: 7,
-
-    fontSize: 12,
-    lineHeight: 18,
-
-    textAlign: "center",
-
-    color: COLORS.textBody,
-  },
-});

@@ -51,4 +51,3 @@ export interface CriarComentarioPayload {
 export interface AtualizarComentarioPayload {
   texto: string;
 }
-

@@ -7,7 +7,6 @@ import {
     Modal,
     Pressable,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     View,
@@ -21,6 +20,9 @@ import { theme } from "../../../theme/colors";
 
 import { petService } from "../services/petService";
 import type { Pet } from "../types/pet.types";
+import {
+    petFormModalStyles as styles,
+} from "../styles/pets.styles";
 
 type TipoEspecie = "Cachorro" | "Gato" | "Outro";
 
@@ -36,17 +38,7 @@ interface PetFormModalProps {
     onPetCreated: (pet: Pet) => void;
 }
 
-const COLORS = {
-    primary: theme.colors.brand,
-    surface: theme.colors.surface,
-    textTitle: theme.colors.textTitle,
-    textBody: theme.colors.textBody,
-    border: theme.colors.inputBg,
-    successBg: theme.colors.semantic.success.bg,
-    white: "#FFFFFF",
-    muted: "#94A3B8",
-    soft: "#F8FAFC",
-};
+
 
 export default function PetFormModal({
     visible,
@@ -283,7 +275,7 @@ export default function PetFormModal({
                             accessibilityLabel="Fechar cadastro"
                             style={styles.closeButton}
                         >
-                            <Ionicons name="close" size={21} color={COLORS.textTitle} />
+                            <Ionicons name="close" size={21} color={theme.colors.textTitle} />
                         </Pressable>
                     </View>
 
@@ -304,7 +296,7 @@ export default function PetFormModal({
                                     <MaterialCommunityIcons
                                         name="camera-plus-outline"
                                         size={34}
-                                        color={COLORS.primary}
+                                        color={theme.colors.brand}
                                     />
 
                                     <Text style={styles.photoTitle}>Adicionar foto</Text>
@@ -317,13 +309,13 @@ export default function PetFormModal({
                         <Text style={styles.label}>Nome *</Text>
 
                         <View style={styles.inputContainer}>
-                            <Ionicons name="paw-outline" size={19} color={COLORS.primary} />
+                            <Ionicons name="paw-outline" size={19} color={theme.colors.brand} />
 
                             <TextInput
                                 value={nome}
                                 onChangeText={setNome}
                                 placeholder="Nome do pet"
-                                placeholderTextColor={COLORS.muted}
+                                placeholderTextColor={theme.colors.muted}
                                 style={styles.input}
                                 autoCapitalize="words"
                             />
@@ -350,7 +342,7 @@ export default function PetFormModal({
                                                     : "paw-outline"
                                         }
                                         size={20}
-                                        color={especie === item ? COLORS.white : COLORS.primary}
+                                        color={especie === item ? theme.colors.surface : theme.colors.brand}
                                     />
 
                                     <Text
@@ -373,14 +365,14 @@ export default function PetFormModal({
                                     <MaterialCommunityIcons
                                         name="paw-outline"
                                         size={19}
-                                        color={COLORS.primary}
+                                        color={theme.colors.brand}
                                     />
 
                                     <TextInput
                                         value={especieOutro}
                                         onChangeText={setEspecieOutro}
                                         placeholder="Ex.: Coelho, ave, furão..."
-                                        placeholderTextColor={COLORS.muted}
+                                        placeholderTextColor={theme.colors.muted}
                                         style={styles.input}
                                         autoCapitalize="sentences"
                                         maxLength={50}
@@ -394,14 +386,14 @@ export default function PetFormModal({
                             <MaterialCommunityIcons
                                 name="paw-outline"
                                 size={19}
-                                color={COLORS.primary}
+                                color={theme.colors.brand}
                             />
 
                             <TextInput
                                 value={raca}
                                 onChangeText={setRaca}
                                 placeholder="Ex.: Border Collie"
-                                placeholderTextColor={COLORS.muted}
+                                placeholderTextColor={theme.colors.muted}
                                 style={styles.input}
                                 autoCapitalize="words"
                             />
@@ -437,14 +429,14 @@ export default function PetFormModal({
                             <Ionicons
                                 name="color-palette-outline"
                                 size={19}
-                                color={COLORS.primary}
+                                color={theme.colors.brand}
                             />
 
                             <TextInput
                                 value={cor}
                                 onChangeText={setCor}
                                 placeholder="Ex.: Preto e branco"
-                                placeholderTextColor={COLORS.muted}
+                                placeholderTextColor={theme.colors.muted}
                                 style={styles.input}
                                 autoCapitalize="sentences"
                                 maxLength={50}
@@ -505,13 +497,13 @@ export default function PetFormModal({
                             style={[styles.saveButton, saving && styles.saveButtonDisabled]}
                         >
                             {saving ? (
-                                <ActivityIndicator color={COLORS.white} />
+                                <ActivityIndicator color={theme.colors.surface} />
                             ) : (
                                 <>
                                     <Ionicons
                                         name="checkmark-circle-outline"
                                         size={21}
-                                        color={COLORS.white}
+                                        color={theme.colors.surface}
                                     />
 
                                     <Text style={styles.saveButtonText}>Cadastrar pet</Text>
@@ -524,221 +516,3 @@ export default function PetFormModal({
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    modalBackdrop: {
-        flex: 1,
-
-        justifyContent: "flex-end",
-
-        backgroundColor: "rgba(15,23,42,0.56)",
-    },
-
-    modalContainer: {
-        maxHeight: "88%",
-
-        padding: 20,
-
-        borderTopLeftRadius: 28,
-        borderTopRightRadius: 28,
-
-        backgroundColor: COLORS.surface,
-    },
-
-    modalHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-
-        marginBottom: 20,
-    },
-
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: "800",
-        color: COLORS.textTitle,
-    },
-
-    modalSubtitle: {
-        marginTop: 3,
-        fontSize: 12,
-        color: COLORS.textBody,
-    },
-
-    closeButton: {
-        width: 40,
-        height: 40,
-
-        borderRadius: 20,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        backgroundColor: COLORS.soft,
-    },
-
-    photoSelector: {
-        width: 116,
-        height: 116,
-
-        alignSelf: "center",
-
-        marginBottom: 22,
-
-        borderRadius: 58,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        overflow: "hidden",
-
-        borderWidth: 2,
-        borderColor: COLORS.successBg,
-
-        backgroundColor: COLORS.soft,
-    },
-
-    selectedPhoto: {
-        width: "100%",
-        height: "100%",
-    },
-
-    photoTitle: {
-        marginTop: 5,
-
-        fontSize: 11,
-        fontWeight: "700",
-
-        color: COLORS.primary,
-    },
-
-    photoHint: {
-        marginTop: 2,
-
-        fontSize: 9,
-
-        color: COLORS.textBody,
-    },
-
-    label: {
-        marginTop: 15,
-        marginBottom: 7,
-
-        fontSize: 12,
-        fontWeight: "700",
-
-        color: COLORS.textTitle,
-    },
-
-    inputContainer: {
-        minHeight: 52,
-
-        paddingHorizontal: 14,
-
-        borderRadius: 14,
-
-        flexDirection: "row",
-        alignItems: "center",
-
-        borderWidth: 1,
-        borderColor: COLORS.border,
-
-        backgroundColor: COLORS.soft,
-    },
-
-    input: {
-        flex: 1,
-
-        marginLeft: 10,
-
-        fontSize: 14,
-
-        color: COLORS.textTitle,
-    },
-
-    optionContainer: {
-        flexDirection: "row",
-        gap: 8,
-    },
-
-    optionButton: {
-        flex: 1,
-
-        minHeight: 48,
-
-        flexDirection: "row",
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        gap: 7,
-
-        borderRadius: 14,
-
-        borderWidth: 1,
-        borderColor: COLORS.border,
-
-        backgroundColor: COLORS.soft,
-    },
-
-    sizeButton: {
-        flex: 1,
-
-        minHeight: 44,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        borderRadius: 14,
-
-        borderWidth: 1,
-        borderColor: COLORS.border,
-
-        backgroundColor: COLORS.soft,
-    },
-
-    optionButtonActive: {
-        borderColor: COLORS.primary,
-        backgroundColor: COLORS.primary,
-    },
-
-    optionText: {
-        fontSize: 12,
-        fontWeight: "700",
-        color: COLORS.textBody,
-    },
-
-    optionTextActive: {
-        color: COLORS.white,
-    },
-
-    saveButton: {
-        minHeight: 54,
-
-        marginTop: 26,
-        marginBottom: 20,
-
-        borderRadius: 16,
-
-        flexDirection: "row",
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        gap: 8,
-
-        backgroundColor: COLORS.primary,
-
-        ...theme.shadows.buttonGlow,
-    },
-
-    saveButtonDisabled: {
-        opacity: 0.6,
-    },
-
-    saveButtonText: {
-        fontSize: 14,
-        fontWeight: "800",
-        color: COLORS.white,
-    },
-});

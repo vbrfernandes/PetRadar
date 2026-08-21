@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -14,17 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import authService from '../services/authService';
+import { theme } from '../../../theme/colors';
 
-const COLORS = {
-  primary: '#1F5C4D',
-  primaryLight: '#E8F5E9',
-  background: '#F4F7F6',
-  surface: '#FFFFFF',
-  textTitle: '#1A1A1A',
-  textBody: '#666666',
-  border: '#E2E8F0',
-  placeholder: '#A0AEC0',
-};
+import {
+  esqueceuSenhaStyles as styles,
+} from '../styles/auth.styles';
 
 export default function EsqueceuSenhaScreen({ navigation }: any) {
   const [etapa, setEtapa] = useState<1 | 2>(1);
@@ -85,12 +78,12 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           
           <View style={styles.topRow}>
             <TouchableOpacity style={styles.backButton} onPress={() => etapa === 2 ? setEtapa(1) : navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.brand} />
             </TouchableOpacity>
             <Text style={styles.stepIndicator}>Passo {etapa} de 2</Text>
           </View>
@@ -110,11 +103,11 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>E-mail Cadastrado</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <Ionicons name="mail-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="seu@email.com"
-                      placeholderTextColor={COLORS.placeholder}
+                      placeholderTextColor={theme.colors.placeholder}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       value={email}
@@ -125,7 +118,7 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
 
                 <TouchableOpacity style={styles.submitButton} onPress={handleSolicitarCodigo} disabled={loading}>
                   {loading ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={theme.colors.surface} />
                   ) : (
                     <Text style={styles.submitButtonText}>Enviar Código</Text>
                   )}
@@ -136,11 +129,11 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Código de Verificação (6 dígitos)</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="key-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <Ionicons name="key-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="123456"
-                      placeholderTextColor={COLORS.placeholder}
+                      placeholderTextColor={theme.colors.placeholder}
                       keyboardType="numeric"
                       maxLength={6}
                       value={codigo}
@@ -152,17 +145,17 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Nova Senha</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <Ionicons name="lock-closed-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="••••••••"
-                      placeholderTextColor={COLORS.placeholder}
+                      placeholderTextColor={theme.colors.placeholder}
                       secureTextEntry={!showPassword}
                       value={novaSenha}
                       onChangeText={setNovaSenha}
                     />
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textBody} />
+                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={theme.colors.textBody} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -170,11 +163,11 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Confirmar Nova Senha</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
+                    <Ionicons name="lock-closed-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="••••••••"
-                      placeholderTextColor={COLORS.placeholder}
+                      placeholderTextColor={theme.colors.placeholder}
                       secureTextEntry={!showPassword}
                       value={confirmaSenha}
                       onChangeText={setConfirmaSenha}
@@ -184,7 +177,7 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
 
                 <TouchableOpacity style={styles.submitButton} onPress={handleRedefinirSenha} disabled={loading}>
                   {loading ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={theme.colors.surface} />
                   ) : (
                     <Text style={styles.submitButtonText}>Redefinir Senha</Text>
                   )}
@@ -197,22 +190,3 @@ export default function EsqueceuSenhaScreen({ navigation }: any) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  stepIndicator: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
-  header: { alignItems: 'center', marginBottom: 24 },
-  brandTitle: { fontSize: 26, fontWeight: '800', color: COLORS.primary },
-  brandTagline: { fontSize: 14, color: COLORS.textBody, marginTop: 6, textAlign: 'center', paddingHorizontal: 10 },
-  card: { backgroundColor: COLORS.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)' },
-  inputWrapper: { marginBottom: 16 },
-  label: { fontSize: 12, fontWeight: '600', color: COLORS.textTitle, marginBottom: 6, textTransform: 'uppercase' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 14, paddingHorizontal: 16, height: 52, borderWidth: 1, borderColor: COLORS.border },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: COLORS.textTitle, fontWeight: '500' },
-  submitButton: { backgroundColor: COLORS.primary, borderRadius: 16, height: 54, justifyContent: 'center', alignItems: 'center', marginTop: 12 },
-  submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-});

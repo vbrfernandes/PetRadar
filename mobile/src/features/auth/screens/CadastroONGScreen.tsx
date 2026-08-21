@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -19,18 +18,12 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 
 import authService from '../services/authService';
+import { theme } from '../../../theme/colors';
 
-const COLORS = {
-  primary: '#1F5C4D',
-  primaryLight: '#E8F5E9',
-  accent: '#10B981',
-  background: '#F4F7F6',
-  surface: '#FFFFFF',
-  textTitle: '#1A1A1A',
-  textBody: '#666666',
-  border: '#E2E8F0',
-  placeholder: '#A0AEC0',
-};
+import {
+  cadastroONGStyles as styles,
+} from '../styles/auth.styles';
+
 
 export default function CadastroONGScreen({ navigation }: any) {
   const [etapa, setEtapa] = useState<1 | 2 | 3>(1);
@@ -142,20 +135,20 @@ export default function CadastroONGScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           
           {/* Header */}
           <View style={styles.topRow}>
             <TouchableOpacity style={styles.backButton} onPress={() => etapa > 1 ? setEtapa((etapa - 1) as any) : navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.brand} />
             </TouchableOpacity>
             <Text style={styles.stepIndicator}>Etapa {etapa} de 3</Text>
           </View>
 
           <View style={styles.header}>
             <View style={styles.logoBadge}>
-              <MaterialCommunityIcons name="domain" size={40} color={COLORS.primary} />
+              <MaterialCommunityIcons name="domain" size={40} color={theme.colors.brand} />
             </View>
             <Text style={styles.brandTitle}>Cadastro de ONG</Text>
             <Text style={styles.brandTagline}>Gerencie resgates e prestação de contas no PetRadar.</Text>
@@ -171,37 +164,37 @@ export default function CadastroONGScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>CNPJ *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="business-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="00.000.000/0001-00" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={cnpj} onChangeText={setCnpj} />
+                    <Ionicons name="business-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="00.000.000/0001-00" placeholderTextColor={theme.colors.placeholder} keyboardType="numeric" value={cnpj} onChangeText={setCnpj} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Razão Social *</Text>
                   <View style={styles.inputContainer}>
-                    <TextInput style={styles.input} placeholder="Nome Jurídico Completo" placeholderTextColor={COLORS.placeholder} value={razaoSocial} onChangeText={setRazaoSocial} />
+                    <TextInput style={styles.input} placeholder="Nome Jurídico Completo" placeholderTextColor={theme.colors.placeholder} value={razaoSocial} onChangeText={setRazaoSocial} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Nome Fantasia *</Text>
                   <View style={styles.inputContainer}>
-                    <TextInput style={styles.input} placeholder="Nome de divulgação da ONG" placeholderTextColor={COLORS.placeholder} value={nomeFantasia} onChangeText={setNomeFantasia} />
+                    <TextInput style={styles.input} placeholder="Nome de divulgação da ONG" placeholderTextColor={theme.colors.placeholder} value={nomeFantasia} onChangeText={setNomeFantasia} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Endereço Completo *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="location-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="Rua, Número, Bairro, Cidade - UF" placeholderTextColor={COLORS.placeholder} value={endereco} onChangeText={setEndereco} />
+                    <Ionicons name="location-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Rua, Número, Bairro, Cidade - UF" placeholderTextColor={theme.colors.placeholder} value={endereco} onChangeText={setEndereco} />
                   </View>
                 </View>
 
                 <TouchableOpacity style={styles.submitButton} onPress={avançarEtapa1}>
                   <View style={styles.buttonContent}>
                     <Text style={styles.submitButtonText}>Próximo: Estrutura</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                    <Ionicons name="arrow-forward" size={20} color={theme.colors.surface} />
                   </View>
                 </TouchableOpacity>
               </>
@@ -214,40 +207,40 @@ export default function CadastroONGScreen({ navigation }: any) {
 
                 <View style={styles.switchRow}>
                   <Text style={styles.switchLabel}>Oferece Lar Temporário?</Text>
-                  <Switch value={ofereceLarTemporario} onValueChange={setOfereceLarTemporario} trackColor={{ false: '#CBD5E1', true: COLORS.accent }} />
+                  <Switch value={ofereceLarTemporario} onValueChange={setOfereceLarTemporario} trackColor={{ false: theme.colors.disabled, true: theme.colors.accent }} />
                 </View>
 
                 <View style={styles.switchRow}>
                   <Text style={styles.switchLabel}>Possui vagas para lar emergencial?</Text>
-                  <Switch value={vagasEmergenciais} onValueChange={setVagasEmergenciais} trackColor={{ false: '#CBD5E1', true: COLORS.accent }} />
+                  <Switch value={vagasEmergenciais} onValueChange={setVagasEmergenciais} trackColor={{ false: theme.colors.disabled, true: theme.colors.accent }} />
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Capacidade Total de Animais</Text>
                   <View style={styles.inputContainer}>
-                    <TextInput style={styles.input} placeholder="Ex: 50" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={capacidadeTotal} onChangeText={setCapacidadeTotal} />
+                    <TextInput style={styles.input} placeholder="Ex: 50" placeholderTextColor={theme.colors.placeholder} keyboardType="numeric" value={capacidadeTotal} onChangeText={setCapacidadeTotal} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Lotação Atual</Text>
                   <View style={styles.inputContainer}>
-                    <TextInput style={styles.input} placeholder="Ex: 35" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={lotacaoAtual} onChangeText={setLotacaoAtual} />
+                    <TextInput style={styles.input} placeholder="Ex: 35" placeholderTextColor={theme.colors.placeholder} keyboardType="numeric" value={lotacaoAtual} onChangeText={setLotacaoAtual} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Link de Prestação de Contas (Opcional)</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="link-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="https://..." placeholderTextColor={COLORS.placeholder} autoCapitalize="none" value={linkPrestacao} onChangeText={setLinkPrestacao} />
+                    <Ionicons name="link-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="https://..." placeholderTextColor={theme.colors.placeholder} autoCapitalize="none" value={linkPrestacao} onChangeText={setLinkPrestacao} />
                   </View>
                 </View>
 
                 <TouchableOpacity style={styles.submitButton} onPress={avançarEtapa2}>
                   <View style={styles.buttonContent}>
                     <Text style={styles.submitButtonText}>Próximo: Gestor e Acesso</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                    <Ionicons name="arrow-forward" size={20} color={theme.colors.surface} />
                   </View>
                 </TouchableOpacity>
               </>
@@ -261,41 +254,41 @@ export default function CadastroONGScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Nome do Gestor *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="Nome completo do responsável" placeholderTextColor={COLORS.placeholder} value={nomeGestor} onChangeText={setNomeGestor} />
+                    <Ionicons name="person-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="Nome completo do responsável" placeholderTextColor={theme.colors.placeholder} value={nomeGestor} onChangeText={setNomeGestor} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>CPF do Gestor *</Text>
                   <View style={styles.inputContainer}>
-                    <TextInput style={styles.input} placeholder="000.000.000-00" placeholderTextColor={COLORS.placeholder} keyboardType="numeric" value={cpfGestor} onChangeText={setCpfGestor} />
+                    <TextInput style={styles.input} placeholder="000.000.000-00" placeholderTextColor={theme.colors.placeholder} keyboardType="numeric" value={cpfGestor} onChangeText={setCpfGestor} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Telefone / WhatsApp *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="(00) 00000-0000" placeholderTextColor={COLORS.placeholder} keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
+                    <Ionicons name="call-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="(00) 00000-0000" placeholderTextColor={theme.colors.placeholder} keyboardType="phone-pad" value={telefone} onChangeText={setTelefone} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>E-mail de Acesso *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="ong@exemplo.com" placeholderTextColor={COLORS.placeholder} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+                    <Ionicons name="mail-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="ong@exemplo.com" placeholderTextColor={theme.colors.placeholder} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Senha *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={senha} onChangeText={setSenha} />
+                    <Ionicons name="lock-closed-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={theme.colors.placeholder} secureTextEntry={!showPassword} value={senha} onChangeText={setSenha} />
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={COLORS.textBody} />
+                      <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color={theme.colors.textBody} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -303,26 +296,26 @@ export default function CadastroONGScreen({ navigation }: any) {
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Confirma Senha *</Text>
                   <View style={styles.inputContainer}>
-                    <Ionicons name="lock-closed-outline" size={20} color={COLORS.primary} style={styles.inputIcon} />
-                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={COLORS.placeholder} secureTextEntry={!showPassword} value={confirmaSenha} onChangeText={setConfirmaSenha} />
+                    <Ionicons name="lock-closed-outline" size={20} color={theme.colors.brand} style={styles.inputIcon} />
+                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor={theme.colors.placeholder} secureTextEntry={!showPassword} value={confirmaSenha} onChangeText={setConfirmaSenha} />
                   </View>
                 </View>
 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.label}>Comprovante de Vínculo (Opcional)</Text>
                   <TouchableOpacity style={styles.uploadButton} onPress={selecionarComprovante}>
-                    <Ionicons name="document-attach-outline" size={20} color={COLORS.primary} />
+                    <Ionicons name="document-attach-outline" size={20} color={theme.colors.brand} />
                     <Text style={styles.uploadText}>{comprovanteUri ? 'Comprovante Anexado ✓' : 'Anexar documento'}</Text>
                   </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity style={styles.submitButton} onPress={handleCadastroFinal} disabled={loading}>
                   {loading ? (
-                    <ActivityIndicator color="#FFF" />
+                    <ActivityIndicator color={theme.colors.surface} />
                   ) : (
                     <View style={styles.buttonContent}>
                       <Text style={styles.submitButtonText}>Finalizar Cadastro</Text>
-                      <Ionicons name="checkmark-circle-outline" size={22} color="#FFF" />
+                      <Ionicons name="checkmark-circle-outline" size={22} color={theme.colors.surface} />
                     </View>
                   )}
                 </TouchableOpacity>
@@ -334,29 +327,3 @@ export default function CadastroONGScreen({ navigation }: any) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.surface, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  stepIndicator: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
-  header: { alignItems: 'center', marginBottom: 20 },
-  logoBadge: { width: 72, height: 72, borderRadius: 36, backgroundColor: COLORS.primaryLight, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  brandTitle: { fontSize: 26, fontWeight: '800', color: COLORS.primary },
-  brandTagline: { fontSize: 13, color: COLORS.textBody, marginTop: 4, textAlign: 'center' },
-  card: { backgroundColor: COLORS.surface, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.primary, marginBottom: 16 },
-  inputWrapper: { marginBottom: 14 },
-  label: { fontSize: 12, fontWeight: '600', color: COLORS.textTitle, marginBottom: 6, textTransform: 'uppercase' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: 14, paddingHorizontal: 16, height: 52, borderWidth: 1, borderColor: COLORS.border },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 15, color: COLORS.textTitle, fontWeight: '500' },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border, marginBottom: 14 },
-  switchLabel: { fontSize: 14, fontWeight: '600', color: COLORS.textTitle, flex: 1 },
-  uploadButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.primaryLight, padding: 14, borderRadius: 14, gap: 10 },
-  uploadText: { color: COLORS.primary, fontWeight: '600', fontSize: 14 },
-  submitButton: { backgroundColor: COLORS.primary, borderRadius: 16, height: 54, justifyContent: 'center', alignItems: 'center', marginTop: 12 },
-  buttonContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-});

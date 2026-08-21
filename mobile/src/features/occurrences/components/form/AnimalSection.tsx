@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { theme } from "../../../../theme/colors";
@@ -9,8 +9,10 @@ import AnimalTypeSelector, {
 } from "./AnimalTypeSelector";
 import ChoiceButton from "./ChoiceButton";
 import SelectionChipGroup from "./SelectionChipGroup";
-import { occurrenceFormSharedStyles } from "./occurrenceForm.styles";
-
+import {
+  animalSectionStyles as styles,
+  occurrenceFormSharedStyles,
+} from "../../styles/occurrenceForm.styles";
 const tiposAnimais: AnimalTypeOption[] = [
   {
     valor: "CACHORRO",
@@ -199,17 +201,3 @@ export default function AnimalSection({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  ...occurrenceFormSharedStyles,
-
-  otherAnimalField: {
-    marginTop: 14,
-  },
-
-  optionalText: {
-    color: theme.colors.textBody,
-    fontSize: 10,
-    fontWeight: "700",
-  },
-});

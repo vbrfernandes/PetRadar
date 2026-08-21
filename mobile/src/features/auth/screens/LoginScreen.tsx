@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -17,18 +16,12 @@ import { Ionicons } from "@expo/vector-icons";
 
 import authService from "../services/authService";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { theme } from '../../../theme/colors';
 
-const COLORS = {
-  primary: "#1F5C4D",
-  primaryLight: "#E8F5E9",
-  accent: "#10B981",
-  background: "#F4F7F6",
-  surface: "#FFFFFF",
-  textTitle: "#1A1A1A",
-  textBody: "#666666",
-  border: "#E2E8F0",
-  placeholder: "#A0AEC0",
-};
+import {
+  loginStyles as styles,
+} from '../styles/auth.styles';
+
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState("");
@@ -76,7 +69,7 @@ const handleLogin = async () => {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        style={styles.keyboardAvoidingView}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -100,13 +93,13 @@ const handleLogin = async () => {
                 <Ionicons
                   name="mail-outline"
                   size={20}
-                  color={COLORS.primary}
+                  color={theme.colors.brand}
                   style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="seuemail@exemplo.com"
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={theme.colors.placeholder}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -122,13 +115,13 @@ const handleLogin = async () => {
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={COLORS.primary}
+                  color={theme.colors.brand}
                   style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.input}
                   placeholder="••••••••"
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={theme.colors.placeholder}
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -140,7 +133,7 @@ const handleLogin = async () => {
                   <Ionicons
                     name={showPassword ? "eye-outline" : "eye-off-outline"}
                     size={20}
-                    color={COLORS.textBody}
+                    color={theme.colors.textBody}
                   />
                 </TouchableOpacity>
               </View>
@@ -162,11 +155,11 @@ const handleLogin = async () => {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#FFF" />
+                <ActivityIndicator color={theme.colors.surface} />
               ) : (
                 <View style={styles.buttonContent}>
                   <Text style={styles.loginButtonText}>Entrar na Conta</Text>
-                  <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                  <Ionicons name="arrow-forward" size={20} color={theme.colors.surface} />
                 </View>
               )}
             </TouchableOpacity>
@@ -186,114 +179,3 @@ const handleLogin = async () => {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    // justify: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  logoImage: {
-    width: 220,
-    height: 180,
-  },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.03)",
-  },
-  inputWrapper: {
-    marginBottom: 18,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textTitle,
-    marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.background,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 56,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: COLORS.textTitle,
-    fontWeight: "500",
-  },
-  eyeIcon: {
-    padding: 6,
-  },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    color: COLORS.primary,
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  loginButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 16,
-    height: 56,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  buttonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  loginButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 24,
-  },
-  footerText: {
-    color: COLORS.textBody,
-    fontSize: 15,
-  },
-  registerText: {
-    color: COLORS.primary,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-});

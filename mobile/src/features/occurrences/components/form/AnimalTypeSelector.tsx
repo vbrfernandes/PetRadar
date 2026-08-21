@@ -1,7 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
+import {
+  animalTypeSelectorStyles as styles,
+} from "../../styles/occurrenceForm.styles";
 import { theme } from "../../../../theme/colors";
 import type { TipoAnimal } from "../../types/occurrence.types";
 
@@ -69,56 +71,3 @@ export default function AnimalTypeSelector({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  animalGrid: {
-    flexDirection: "row",
-    gap: 9,
-    marginBottom: 4,
-  },
-
-  animalCard: {
-    flex: 1,
-    minHeight: 92,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(31, 92, 77, 0.10)",
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 6,
-  },
-
-  animalCardActive: {
-    borderColor: theme.colors.brand,
-    backgroundColor: "rgba(31, 92, 77, 0.07)",
-  },
-
-  animalIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: theme.colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 7,
-  },
-
-  animalIconActive: {
-    backgroundColor: theme.colors.brand,
-  },
-
-  animalTitle: {
-    color: theme.colors.textBody,
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  animalTitleActive: {
-    color: theme.colors.brand,
-  },
-
-  pressed: {
-    opacity: 0.82,
-  },
-});

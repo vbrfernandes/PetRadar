@@ -1,12 +1,13 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import ChoiceButton from "./ChoiceButton";
 import SelectionChipGroup from "./SelectionChipGroup";
 import {
+  healthSectionStyles as styles,
   occurrenceConditionStyles,
   occurrenceFormSharedStyles,
-} from "./occurrenceForm.styles";
+} from "../../styles/occurrenceForm.styles";
 
 const problemasSaude = [
   "Ferido / machucado",
@@ -66,8 +67,3 @@ export default function HealthSection({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  ...occurrenceFormSharedStyles,
-  ...occurrenceConditionStyles,
-});
