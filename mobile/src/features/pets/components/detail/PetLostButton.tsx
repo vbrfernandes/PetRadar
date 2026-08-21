@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { petDetailStyles as styles } from "../../styles/detail/petDetail.styles";
 import type { Pet } from "../../types/pet.types";

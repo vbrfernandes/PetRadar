@@ -9,8 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { AuthStackParamList } from '../../../navigation/navigation.types';
-import { theme } from '../../../theme/colors';
+import type { AuthStackParamList } from '../../../app/navigation/types/authNavigation.types';
+import { theme } from '../../../theme';
 import { OngCapacityStep } from '../components/cadastro-ong/OngCapacityStep';
 import { OngInstitutionalStep } from '../components/cadastro-ong/OngInstitutionalStep';
 import { OngManagerAccessStep } from '../components/cadastro-ong/OngManagerAccessStep';

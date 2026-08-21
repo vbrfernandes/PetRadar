@@ -5,7 +5,7 @@ import { FlatList, View } from "react-native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 
-import type { AppTabParamList } from "../../../navigation/navigation.types";
+import type { AppTabParamList } from "../../../app/navigation/types/appNavigation.types";
 
 import { usePets } from "../hooks/usePets";
 import { petsTabStyles as styles } from "../styles/petsTab.styles";

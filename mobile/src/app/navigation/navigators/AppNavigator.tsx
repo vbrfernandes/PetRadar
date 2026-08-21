@@ -1,11 +1,11 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, Text } from "react-native";
-import MapScreen from "../features/map";
-import FeedNoticias from "../features/feed/screens/FeedNoticias";
-import CadastroOcorrenciaScreen from "../features/occurrences/screens/CadastroOcorrenciaScreen";
-import type { AppTabParamList } from "./navigation.types";
-import ProcuraSeScreen from "../features/procurase/screens/ProcuraSeScreen";
+import MapScreen from "../../../features/map";
+import FeedNoticias from "../../../features/feed/screens/FeedNoticias";
+import CadastroOcorrenciaScreen from "../../../features/occurrences/screens/CadastroOcorrenciaScreen";
+import type { AppTabParamList } from "../types/appNavigation.types";
+import ProcuraSeScreen from "../../../features/procurase/screens/ProcuraSeScreen";
 
 const SOSScreen = () => (
   <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

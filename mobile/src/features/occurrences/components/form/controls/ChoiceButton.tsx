@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   choiceButtonStyles as styles,
 } from "../../../styles/form/occurrenceFormControls.styles";
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 
 interface ChoiceButtonProps {
   label: string;

@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   reviewSectionStyles as styles,
 } from "../../../styles/form/occurrencePhotoReview.styles";
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 import type { ReviewItem } from "../../../types/occurrenceForm.types";
 
 export type { ReviewItem } from "../../../types/occurrenceForm.types";

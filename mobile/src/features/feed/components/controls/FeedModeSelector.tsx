@@ -2,7 +2,7 @@ import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import type { ModoFeed } from "../../types/feed.types";
 import { feedControlsStyles as styles } from "../../styles/feedControls.styles";
 
@@ -102,7 +102,7 @@ export default function FeedModeSelector({
         >
           <Image
             source={require(
-              "../../../../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
+              "../../../../../assets/images/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
             )}
             resizeMode="contain"
             style={[

@@ -4,9 +4,9 @@ import { useNavigation } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import Mapbox from "@rnmapbox/maps";
 
-import AppNavigationDrawer from "../../../components/AppNavigationDrawer";
-import type { AppTabParamList } from "../../../navigation/navigation.types";
-import { useAuthStore } from "../../../store/useAuthStore";
+import AppNavigationDrawer from "../../../app/navigation/components/AppNavigationDrawer";
+import type { AppTabParamList } from "../../../app/navigation/types/appNavigation.types";
+import { useAuthStore } from "../../../store";
 import OccurrenceDetailDrawer from "../../occurrences/components/detail/OccurrenceDetailDrawer";
 import {
   ProfileDetailScreen,

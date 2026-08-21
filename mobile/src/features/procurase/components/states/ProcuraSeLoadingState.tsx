@@ -4,7 +4,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { procuraSeStatesStyles as styles } from "../../styles/procuraseStates.styles";
 

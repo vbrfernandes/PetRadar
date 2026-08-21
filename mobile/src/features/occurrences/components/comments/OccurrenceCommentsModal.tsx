@@ -10,8 +10,8 @@ import {
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAuthStore } from "../../../../store/useAuthStore";
-import { theme } from "../../../../theme/colors";
+import { useAuthStore } from "../../../../store";
+import { theme } from "../../../../theme";
 import { useOccurrenceComments } from "../../hooks/useOccurrenceComments";
 import { occurrenceCommentsModalStyles as styles } from "../../styles/comments/occurrenceCommentsModal.styles";
 import CommentAuthorModal from "./CommentAuthorModal";

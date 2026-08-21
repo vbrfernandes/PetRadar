@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { occurrenceCardStyles as styles } from "../../styles/occurrenceCard.styles";
 
 interface OccurrenceCardContentProps {

@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { petsTabStyles as styles } from "../../styles/petsTab.styles";
 

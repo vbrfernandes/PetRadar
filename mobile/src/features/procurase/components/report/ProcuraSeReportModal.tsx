@@ -10,7 +10,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { PROCURA_SE_REPORT_REASONS } from "../../constants/procurase.constants";
 import { procuraSeReportStyles as styles } from "../../styles/procuraseReport.styles";

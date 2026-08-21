@@ -2,7 +2,7 @@ import React from 'react';
 import { Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { theme } from '../../../../theme/colors';
+import { theme } from '../../../../theme';
 import { cadastroUserStyles as styles } from '../../styles/cadastroUser.styles';
 import { AuthInput } from '../common/AuthInput';
 import { AuthPasswordInput } from '../common/AuthPasswordInput';

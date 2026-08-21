@@ -4,8 +4,8 @@ import { Alert, Image, Modal, Pressable, Text, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { useAuthStore } from "../../../../store/useAuthStore";
-import { theme } from "../../../../theme/colors";
+import { useAuthStore } from "../../../../store";
+import { theme } from "../../../../theme";
 
 import { profileQuickMenuStyles as styles } from "../../styles/quick-menu/profileQuickMenu.styles";
 

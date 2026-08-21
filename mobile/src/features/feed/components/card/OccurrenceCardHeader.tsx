@@ -2,7 +2,7 @@ import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import type { StatusVisual } from "../../types/feed.types";
 import { occurrenceCardStyles as styles } from "../../styles/occurrenceCard.styles";
 import { feedButtonPressedStyle } from "../../styles/feedScreen.styles";

@@ -1,7 +1,7 @@
 import { Alert, Modal, Pressable, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 import { cadastroOcorrenciaScreenStyles as styles } from "../../../styles/form/occurrenceFormScreen.styles";
 import {
   formatarEntradaData,

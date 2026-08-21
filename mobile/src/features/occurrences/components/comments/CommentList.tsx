@@ -1,7 +1,7 @@
 import { FlatList, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { commentItemStyles } from "../../styles/comments/commentItem.styles";
 import { occurrenceCommentsModalStyles as styles } from "../../styles/comments/occurrenceCommentsModal.styles";
 import type {

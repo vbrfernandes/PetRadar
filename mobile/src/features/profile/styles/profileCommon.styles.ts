@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-import { theme } from "../../../theme/colors";
+import { theme } from "../../../theme";
 
 export const profileCommonStyles = StyleSheet.create({
   sectionHeader: {

@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { occurrenceDetailContentStyles as styles } from "../../styles/detail/occurrenceDetailContent.styles";
 import { occurrenceDetailDrawerStyles as drawerStyles } from "../../styles/detail/occurrenceDetailDrawer.styles";
 import { OccurrenceSectionHeader } from "./OccurrenceDetailsCard";

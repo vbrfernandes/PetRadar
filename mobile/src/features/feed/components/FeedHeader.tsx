@@ -2,7 +2,7 @@ import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../theme/colors";
+import { theme } from "../../../theme";
 import type { ModoFeed } from "../types/feed.types";
 import {
   feedButtonPressedStyle,

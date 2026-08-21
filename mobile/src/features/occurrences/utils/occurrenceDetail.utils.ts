@@ -1,4 +1,4 @@
-import { theme } from "../../../theme/colors";
+import { theme } from "../../../theme";
 
 export function normalizarTexto(
   valor: string | null | undefined,

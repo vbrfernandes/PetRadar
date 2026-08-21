@@ -2,7 +2,7 @@ import React from 'react';
 import { Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { theme } from '../../../../theme/colors';
+import { theme } from '../../../../theme';
 import { cadastroONGStyles as styles } from '../../styles/cadastroONG.styles';
 import { AuthInput } from '../common/AuthInput';
 import { AuthSubmitButton } from '../common/AuthSubmitButton';

@@ -12,7 +12,7 @@ import {
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { usePetForm } from "../../hooks/usePetForm";
 import { usePetPhoto } from "../../hooks/usePetPhoto";

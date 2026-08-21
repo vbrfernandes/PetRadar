@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-import { theme } from "../../../theme/colors";
+import { theme } from "../../../theme";
 
 const sharedFeedStyles = StyleSheet.create({
   buttonPressed: {

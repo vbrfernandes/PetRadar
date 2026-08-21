@@ -6,10 +6,10 @@ import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import AppNavigationDrawer from "../../../components/AppNavigationDrawer";
-import type { AppTabParamList } from "../../../navigation/navigation.types";
-import { useAuthStore } from "../../../store/useAuthStore";
-import { theme } from "../../../theme/colors";
+import AppNavigationDrawer from "../../../app/navigation/components/AppNavigationDrawer";
+import type { AppTabParamList } from "../../../app/navigation/types/appNavigation.types";
+import { useAuthStore } from "../../../store";
+import { theme } from "../../../theme";
 import OccurrenceDetailDrawer from "../../occurrences/components/detail/OccurrenceDetailDrawer";
 import {
   ProfileDetailScreen,

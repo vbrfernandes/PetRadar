@@ -6,7 +6,7 @@ import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type {
   AppTabParamList,
   PetOcorrenciaPrefill,
-} from "../../../navigation/navigation.types";
+} from "../../../app/navigation/types/appNavigation.types";
 import { occurrenceService } from "../services/occurrenceService";
 import type { OcorrenciaEdicao } from "../types/occurrenceForm.types";
 import { mensagemErroApi } from "../utils/occurrenceErrors";

@@ -2,13 +2,29 @@ import React, { useRef } from 'react';
 
 import {
   Animated,
+  StyleSheet,
   Text,
   TouchableWithoutFeedback,
 } from 'react-native';
 
-import {
-  animatedCTAStyles as styles,
-} from './styles/components.styles';
+import { theme } from '../../../theme';
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: theme.colors.action,
+    borderRadius: theme.radius.button,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.shadows.buttonGlow,
+  },
+
+  text: {
+    color: theme.colors.surface,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 interface Props {
   title: string;

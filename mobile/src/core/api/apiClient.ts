@@ -1,15 +1,9 @@
 import axios from 'axios';
-import { useAuthStore } from '../store/useAuthStore';
+import { useAuthStore } from '../../store/auth';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.0.5:8000/api/v1';
+import { apiConfig } from './apiConfig';
 
-export const api = axios.create({
-  baseURL: API_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const api = axios.create(apiConfig);
 
 api.interceptors.request.use(
   (config) => {

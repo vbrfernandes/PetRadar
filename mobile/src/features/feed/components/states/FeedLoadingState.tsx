@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { feedScreenStyles } from "../../styles/feedScreen.styles";
 import { feedStatesStyles as styles } from "../../styles/feedStates.styles";
 

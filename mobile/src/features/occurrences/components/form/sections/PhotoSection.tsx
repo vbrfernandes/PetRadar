@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   photoSectionStyles as styles,
 } from "../../../styles/form/occurrencePhotoReview.styles";
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 
 interface PhotoSectionProps {
   fotoUri: string | null;

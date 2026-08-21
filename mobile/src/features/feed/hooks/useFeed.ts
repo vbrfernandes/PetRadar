@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import * as Location from "expo-location";
 
-import api from "../../../services/api";
+import api from "../../../core/api";
 import { occurrenceService } from "../../occurrences/services/occurrenceService";
 import type { ProfileUpdateResult } from "../../profile/types/profile.types";
 import {

@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { feedControlsStyles as styles } from "../../styles/feedControls.styles";
 
 interface FeedSearchProps {

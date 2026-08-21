@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { FEED_FILTERS } from "../../constants/feed.constants";
 import type { FiltroFeed } from "../../types/feed.types";
 import { feedControlsStyles as styles } from "../../styles/feedControls.styles";

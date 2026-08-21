@@ -4,7 +4,7 @@ import { Text, TextInput, View } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 
 import { PET_SPECIES_OPTIONS } from "../../../constants/pet.constants";
 import { petFormStyles as styles } from "../../../styles/form/petForm.styles";

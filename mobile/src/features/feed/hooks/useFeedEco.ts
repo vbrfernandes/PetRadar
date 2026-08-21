@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Alert } from "react-native";
 
-import api from "../../../services/api";
+import api from "../../../core/api";
 import type { ForcaResponse, OcorrenciaFeed } from "../types/feed.types";
 
 export function useFeedEco(

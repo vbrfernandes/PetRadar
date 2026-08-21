@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { feedBannerStyles as styles } from "../../styles/feedBanner.styles";
 
 const AUTO_PLAY_INTERVAL_MS = 6000;

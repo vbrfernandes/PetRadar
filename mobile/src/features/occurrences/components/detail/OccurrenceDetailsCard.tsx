@@ -2,7 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { occurrenceDetailContentStyles as styles } from "../../styles/detail/occurrenceDetailContent.styles";
 import type {
   DetailItem,

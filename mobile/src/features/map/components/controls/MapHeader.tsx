@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { mapScreenStyles as styles } from "../../styles/map.styles";
 
 interface MapHeaderProps {

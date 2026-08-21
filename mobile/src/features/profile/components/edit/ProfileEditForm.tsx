@@ -4,7 +4,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { profileEditStyles as styles } from "../../styles/edit/profileEdit.styles";
 import { profileCommonStyles as commonStyles } from "../../styles/profileCommon.styles";

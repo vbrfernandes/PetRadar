@@ -3,7 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   initialCareSectionStyles as styles,
 } from "../../../styles/form/occurrenceFormSections.styles";
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 
 interface InitialCareSectionProps {
   aguaRegistrada: boolean;

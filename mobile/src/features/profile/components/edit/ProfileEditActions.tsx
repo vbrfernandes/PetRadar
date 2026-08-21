@@ -4,7 +4,7 @@ import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { profileEditStyles as styles } from "../../styles/edit/profileEdit.styles";
 

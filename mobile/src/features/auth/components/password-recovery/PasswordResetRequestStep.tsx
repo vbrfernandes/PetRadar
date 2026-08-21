@@ -1,7 +1,7 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
-import { theme } from '../../../../theme/colors';
+import { theme } from '../../../../theme';
 import { esqueceuSenhaStyles as styles } from '../../styles/esqueceuSenha.styles';
 import { AuthInput } from '../common/AuthInput';
 import { AuthSubmitButton } from '../common/AuthSubmitButton';

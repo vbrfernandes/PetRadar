@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { occurrenceCareStyles as styles } from "../../styles/detail/occurrenceCare.styles";
 import { occurrenceDetailContentStyles as contentStyles } from "../../styles/detail/occurrenceDetailContent.styles";
 import { occurrenceDetailDrawerStyles as drawerStyles } from "../../styles/detail/occurrenceDetailDrawer.styles";

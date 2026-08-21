@@ -1,21 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  isOng: boolean;
-}
+import storage from '../../core/storage';
 
-interface AuthState {
-  token: string | null;
-  user: User | null;
-  isAuthenticated: boolean;
-  setAuth: (token: string, user: User) => void;
-  logout: () => void;
-}
+import type { AuthState } from './authStore.types';
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -28,7 +16,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: '@petradar:auth',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => storage),
     }
   )
 );

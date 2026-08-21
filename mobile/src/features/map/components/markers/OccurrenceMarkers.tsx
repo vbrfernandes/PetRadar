@@ -3,7 +3,7 @@ import { Image, Pressable, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Mapbox from "@rnmapbox/maps";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { mapScreenStyles as styles } from "../../styles/map.styles";
 import type { OcorrenciaMapa } from "../../types/map.types";
 

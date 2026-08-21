@@ -14,7 +14,7 @@ import {
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useAuthStore } from "../../../../store/useAuthStore";
+import { useAuthStore } from "../../../../store";
 import PetsTab from "../../../pets/components/PetsTab";
 import { useProfile } from "../../hooks/useProfile";
 import { useProfileDeleteAccount } from "../../hooks/useProfileDeleteAccount";

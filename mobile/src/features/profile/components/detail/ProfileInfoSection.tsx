@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { profileDetailStyles as styles } from "../../styles/detail/profileDetail.styles";
 import { profileCommonStyles as commonStyles } from "../../styles/profileCommon.styles";

@@ -2,7 +2,7 @@ import React from "react";
 
 import { FlatList, RefreshControl, Text, View } from "react-native";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import type { OcorrenciaResumo } from "../../../occurrences/types/occurrence.types";
 import { profileOccurrencesStyles as styles } from "../../styles/occurrences/profileOccurrences.styles";

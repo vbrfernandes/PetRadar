@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../theme/colors";
+import { theme } from "../../../theme";
 import { DENUNCIA_MOTIVOS } from "../constants/feed.constants";
 import { feedReportStyles as styles } from "../styles/feedReport.styles";
 import { feedButtonPressedStyle } from "../styles/feedScreen.styles";

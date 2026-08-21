@@ -1,4 +1,4 @@
-import type { PetOcorrenciaPrefill } from "../../../navigation/navigation.types";
+import type { PetOcorrenciaPrefill } from "../../../app/navigation/types/appNavigation.types";
 
 import type { Pet } from "../types/pet.types";
 

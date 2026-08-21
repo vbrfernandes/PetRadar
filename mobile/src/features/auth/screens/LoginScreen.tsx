@@ -13,9 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { AuthStackParamList } from '../../../navigation/navigation.types';
-import { useAuthStore } from '../../../store/useAuthStore';
-import { theme } from '../../../theme/colors';
+import type { AuthStackParamList } from '../../../app/navigation/types/authNavigation.types';
+import { useAuthStore } from '../../../store';
+import { theme } from '../../../theme';
 import { AuthHeader } from '../components/common/AuthHeader';
 import { AuthInput } from '../components/common/AuthInput';
 import { AuthPasswordInput } from '../components/common/AuthPasswordInput';
@@ -81,7 +81,7 @@ export default function LoginScreen({ navigation }: Props) {
           <AuthHeader
             logo={
               <Image
-                source={require('../../../../assets/logo/logo.png')}
+                source={require('../../../../assets/images/logo.png')}
                 style={styles.logoImage}
                 resizeMode="contain"
               />

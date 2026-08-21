@@ -15,8 +15,8 @@ import {
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAuthStore } from "../../../../store/useAuthStore";
-import { theme } from "../../../../theme/colors";
+import { useAuthStore } from "../../../../store";
+import { theme } from "../../../../theme";
 import { useOccurrenceCare } from "../../hooks/useOccurrenceCare";
 import { useOccurrenceDetail } from "../../hooks/useOccurrenceDetail";
 import { occurrenceDetailContentStyles as contentStyles } from "../../styles/detail/occurrenceDetailContent.styles";

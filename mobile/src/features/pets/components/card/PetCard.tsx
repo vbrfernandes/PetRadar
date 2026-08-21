@@ -4,7 +4,7 @@ import { Image, Pressable, Text, View } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { petCardStyles as styles } from "../../styles/card/petCard.styles";
 import type { Pet } from "../../types/pet.types";

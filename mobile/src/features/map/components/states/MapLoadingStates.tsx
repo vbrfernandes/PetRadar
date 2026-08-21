@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { mapScreenStyles as styles } from "../../styles/map.styles";
 
 interface MapLoadingStatesProps {

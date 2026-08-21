@@ -9,7 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 
-import { theme } from '../../../../theme/colors';
+import { theme } from '../../../../theme';
 import { authCommonStyles } from '../../styles/authCommon.styles';
 
 export interface AuthInputProps extends TextInputProps {

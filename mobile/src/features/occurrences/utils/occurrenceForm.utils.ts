@@ -1,5 +1,5 @@
 import { TIPOS_OCORRENCIA } from "../constants/occurrence.constants";
-import type { PetOcorrenciaPrefill } from "../../../navigation/navigation.types";
+import type { PetOcorrenciaPrefill } from "../../../app/navigation/types/appNavigation.types";
 import type { TipoAnimal, TipoOcorrencia } from "../types/occurrence.types";
 
 export const ehTipoOcorrencia = (valor: string): valor is TipoOcorrencia =>

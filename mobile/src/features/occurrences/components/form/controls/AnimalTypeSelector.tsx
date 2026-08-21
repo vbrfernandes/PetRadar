@@ -3,7 +3,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   animalTypeSelectorStyles as styles,
 } from "../../../styles/form/occurrenceFormControls.styles";
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 import type { TipoAnimal } from "../../../types/occurrence.types";
 import type { AnimalTypeOption } from "../../../types/occurrenceForm.types";
 

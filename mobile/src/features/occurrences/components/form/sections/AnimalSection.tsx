@@ -1,7 +1,7 @@
 import { Text, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 import { IDADES, PORTES, SEXOS, TIPOS_ANIMAIS } from "../../../constants/occurrence.constants";
 import type { TipoAnimal } from "../../../types/occurrence.types";
 import AnimalTypeSelector from "../controls/AnimalTypeSelector";

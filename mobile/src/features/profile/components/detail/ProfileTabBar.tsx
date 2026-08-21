@@ -4,7 +4,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { profileDetailStyles as styles } from "../../styles/detail/profileDetail.styles";
 import type { ProfileTab } from "../../types/profile.types";

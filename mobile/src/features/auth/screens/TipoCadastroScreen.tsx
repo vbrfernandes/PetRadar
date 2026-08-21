@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { AuthStackParamList } from '../../../navigation/navigation.types';
-import { theme } from '../../../theme/colors';
+import type { AuthStackParamList } from '../../../app/navigation/types/authNavigation.types';
+import { theme } from '../../../theme';
 import { AuthBackButton } from '../components/common/AuthBackButton';
 import { AuthHeader } from '../components/common/AuthHeader';
 import { tipoCadastroStyles as styles } from '../styles/tipoCadastro.styles';

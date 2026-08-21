@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleProp, TouchableOpacity, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { theme } from '../../../../theme/colors';
+import { theme } from '../../../../theme';
 import { AuthInput, AuthInputProps } from './AuthInput';
 
 interface AuthPasswordInputProps

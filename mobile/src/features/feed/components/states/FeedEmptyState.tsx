@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import type { FiltroFeed, ModoFeed } from "../../types/feed.types";
 import { feedButtonPressedStyle } from "../../styles/feedScreen.styles";
 import { feedStatesStyles as styles } from "../../styles/feedStates.styles";

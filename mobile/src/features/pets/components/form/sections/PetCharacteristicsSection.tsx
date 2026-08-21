@@ -4,7 +4,7 @@ import { Text, TextInput, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 
 import {
     PET_AGE_OPTIONS,

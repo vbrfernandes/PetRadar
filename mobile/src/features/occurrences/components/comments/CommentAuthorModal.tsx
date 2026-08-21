@@ -14,7 +14,7 @@ import type { AutorComentario } from "../../types/occurrenceComment.types";
 
 import {
   theme,
-} from "../../../../theme/colors";
+} from "../../../../theme";
 
 import { commentAuthorModalStyles as styles } from "../../styles/comments/commentAuthor.styles";
 import { obterIniciais } from "../../utils/occurrenceComment.utils";

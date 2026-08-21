@@ -1,6 +1,6 @@
 import { Dimensions, StyleSheet } from "react-native";
 
-import { theme } from "../../../theme/colors";
+import { theme } from "../../../theme";
 
 const FEED_MODE_CAROUSEL_WIDTH =
   Dimensions.get("window").width - theme.spacing.globalMargin * 2;

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { occurrenceCardStyles as styles } from "../../styles/occurrenceCard.styles";
 
 interface OccurrenceCardActionsProps {
@@ -132,7 +132,7 @@ export default function OccurrenceCardActions({
         >
           <Animated.Image
             source={require(
-              "../../../../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
+              "../../../../../assets/images/ChatGPT Image 15 de ago. de 2026, 11_30_55.png"
             )}
             resizeMode="contain"
             style={[

@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   selectionChipStyles as styles,
 } from "../../../styles/form/occurrenceFormControls.styles";
-import { theme } from "../../../../../theme/colors";
+import { theme } from "../../../../../theme";
 
 type SelectionChipMode = "single" | "multiple";
 

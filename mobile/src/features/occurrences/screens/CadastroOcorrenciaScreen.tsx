@@ -14,8 +14,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 
-import type { AppTabParamList } from "../../../navigation/navigation.types";
-import { theme } from "../../../theme/colors";
+import type { AppTabParamList } from "../../../app/navigation/types/appNavigation.types";
+import { theme } from "../../../theme";
 import OccurrenceDateModal from "../components/form/modals/OccurrenceDateModal";
 import AnimalSection from "../components/form/sections/AnimalSection";
 import DisabilitySection from "../components/form/sections/DisabilitySection";

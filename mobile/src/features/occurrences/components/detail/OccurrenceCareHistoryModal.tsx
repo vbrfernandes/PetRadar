@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { occurrenceCareStyles as styles } from "../../styles/detail/occurrenceCare.styles";
 import { occurrenceDetailDrawerStyles as drawerStyles } from "../../styles/detail/occurrenceDetailDrawer.styles";
 import type { CuidadoOcorrencia } from "../../types/occurrenceDetail.types";

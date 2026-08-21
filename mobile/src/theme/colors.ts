@@ -1,5 +1,4 @@
-export const theme = {
-  colors: {
+export const colors = {
     // Brand e Fundos
     brand: '#1F5C4D',
     brandSoft: '#E8F5E9',
@@ -64,37 +63,4 @@ export const theme = {
         text: '#27AE60',
       },
     },
-  },
-
-  shadows: {
-    elevation1: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.06,
-      shadowRadius: 16,
-      elevation: 4,
-    },
-
-    buttonGlow: {
-      shadowColor: '#1F5C4D',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.35,
-      shadowRadius: 20,
-      elevation: 8,
-    },
-  },
-
-  spacing: {
-    globalMargin: 20,
-    cardGap: 24,
-    padding: 16,
-  },
-
-  radius: {
-    card: 16,
-    image: 20,
-    button: 100,
-  },
 } as const;
-
-export type Theme = typeof theme;

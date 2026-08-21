@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 import { occurrenceCareStyles as styles } from "../../styles/detail/occurrenceCare.styles";
 import type {
   CuidadoOcorrencia,

@@ -4,7 +4,7 @@ import { Image, Pressable, Text, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { procuraSeControlsStyles as styles } from "../../styles/procuraseControls.styles";
 import type { ModoProcuraSe } from "../../types/procurase.types";
@@ -102,7 +102,7 @@ export default function ProcuraSeModeSelector({
           ]}
         >
           <Image
-            source={require("../../../../../assets/ChatGPT Image 15 de ago. de 2026, 11_30_55.png")}
+            source={require("../../../../../assets/images/ChatGPT Image 15 de ago. de 2026, 11_30_55.png")}
             resizeMode="contain"
             style={[
               styles.feedModeEcoIcon,

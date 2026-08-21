@@ -4,7 +4,7 @@ import { Pressable, ScrollView, Text } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
-import { theme } from "../../../../theme/colors";
+import { theme } from "../../../../theme";
 
 import { PROCURA_SE_FILTERS } from "../../constants/procurase.constants";
 import { procuraSeControlsStyles as styles } from "../../styles/procuraseControls.styles";

@@ -1,4 +1,4 @@
-import { theme } from "../../../theme/colors";
+import { theme } from "../../../theme";
 import type { OcorrenciaFeed, StatusVisual } from "../types/feed.types";
 import { normalizarTexto } from "./feed.utils";
 

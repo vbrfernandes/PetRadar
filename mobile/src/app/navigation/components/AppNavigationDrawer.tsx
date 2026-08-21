@@ -34,11 +34,11 @@ import {
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { theme } from "../theme/colors";
+import { theme } from "../../../theme";
 
 import {
     appNavigationDrawerStyles as styles,
-} from "./styles/components.styles";
+} from "../styles/appNavigationDrawer.styles";
 
 // ============================================================
 // DIMENSÕES

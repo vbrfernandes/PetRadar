@@ -1,23 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { theme } from '../../theme/colors';
-
-export const animatedCTAStyles = StyleSheet.create({
-  button: {
-    backgroundColor: theme.colors.action,
-    borderRadius: theme.radius.button,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...theme.shadows.buttonGlow,
-  },
-
-  text: {
-    color: theme.colors.surface,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+import { theme } from '../../../theme';
 
 export const appNavigationDrawerStyles = StyleSheet.create({
   drawerRoot: {
