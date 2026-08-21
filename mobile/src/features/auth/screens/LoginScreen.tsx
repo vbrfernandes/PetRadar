@@ -1,64 +1,67 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
+  Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
-  Alert,
-  ActivityIndicator,
   ScrollView,
-  Image,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import authService from "../services/authService";
-import { useAuthStore } from "../../../store/useAuthStore";
+import type { AuthStackParamList } from '../../../navigation/navigation.types';
+import { useAuthStore } from '../../../store/useAuthStore';
 import { theme } from '../../../theme/colors';
+import { AuthHeader } from '../components/common/AuthHeader';
+import { AuthInput } from '../components/common/AuthInput';
+import { AuthPasswordInput } from '../components/common/AuthPasswordInput';
+import { AuthSubmitButton } from '../components/common/AuthSubmitButton';
+import authService from '../services/authService';
+import { loginStyles as styles } from '../styles/login.styles';
+import { getAuthErrorMessage } from '../utils/authErrors';
+import { isFieldPresent } from '../utils/authValidation';
 
-import {
-  loginStyles as styles,
-} from '../styles/auth.styles';
+type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
-
-export default function LoginScreen({ navigation }: any) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function LoginScreen({ navigation }: Props) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
   const setAuth = useAuthStore((state) => state.setAuth);
 
-const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Atenção", "Preencha seu e-mail e senha para continuar.");
+  const handleLogin = async () => {
+    if (!isFieldPresent(email) || !isFieldPresent(password)) {
+      Alert.alert('Atenção', 'Preencha seu e-mail e senha para continuar.');
       return;
     }
 
     setIsLoading(true);
+
     try {
       const response = await authService.login({
         email: email.trim().toLowerCase(),
         senha: password,
       });
-
-      // Recebe o token e o objeto user retornado pela API
       const { access_token, user } = response.data;
 
-      // Grava na store com o nome e tipo de conta corretos
       setAuth(access_token, {
         id: String(user.id_conta),
         name: user.name,
         email: user.email,
-        isOng: user.tipo_conta === "ONG",
+        isOng: user.tipo_conta === 'ONG',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       Alert.alert(
-        "Falha no Acesso",
-        error.response?.data?.detail ||
-          "Verifique suas credenciais e tente novamente.",
+        'Falha no Acesso',
+        getAuthErrorMessage(
+          error,
+          'Verifique suas credenciais e tente novamente.',
+        ),
       );
     } finally {
       setIsLoading(false);
@@ -68,109 +71,93 @@ const handleLogin = async () => {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header com a Logo da aplicação */}
-          <View style={styles.header}>
-            <Image
-              source={require("../../../../assets/logo/logo.png")}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </View>
+          <AuthHeader
+            logo={
+              <Image
+                source={require('../../../../assets/logo/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            }
+          />
 
-          {/* Form Card Premium */}
           <View style={styles.card}>
-            {/* Input E-mail */}
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>E-mail</Text>
-              <View style={styles.inputContainer}>
+            <AuthInput
+              label="E-mail"
+              icon={
                 <Ionicons
                   name="mail-outline"
                   size={20}
                   color={theme.colors.brand}
-                  style={styles.inputIcon}
                 />
-                <TextInput
-                  style={styles.input}
-                  placeholder="seuemail@exemplo.com"
-                  placeholderTextColor={theme.colors.placeholder}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </View>
-            </View>
+              }
+              wrapperStyle={styles.inputWrapper}
+              labelStyle={styles.label}
+              containerStyle={styles.inputContainer}
+              iconContainerStyle={styles.inputIcon}
+              style={styles.input}
+              placeholder="seuemail@exemplo.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-            {/* Input Senha */}
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Senha</Text>
-              <View style={styles.inputContainer}>
+            <AuthPasswordInput
+              label="Senha"
+              icon={
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
                   color={theme.colors.brand}
-                  style={styles.inputIcon}
                 />
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor={theme.colors.placeholder}
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeIcon}
-                >
-                  <Ionicons
-                    name={showPassword ? "eye-outline" : "eye-off-outline"}
-                    size={20}
-                    color={theme.colors.textBody}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
+              }
+              wrapperStyle={styles.inputWrapper}
+              labelStyle={styles.label}
+              containerStyle={styles.inputContainer}
+              iconContainerStyle={styles.inputIcon}
+              style={styles.input}
+              toggleStyle={styles.eyeIcon}
+              placeholder="••••••••"
+              value={password}
+              onChangeText={setPassword}
+              isPasswordVisible={showPassword}
+              onToggleVisibility={() => setShowPassword((visible) => !visible)}
+            />
 
-            {/* Esqueceu a Senha */}
             <TouchableOpacity
               style={styles.forgotPassword}
-              onPress={() => navigation.navigate("EsqueceuSenha")}
+              onPress={() => navigation.navigate('EsqueceuSenha')}
             >
               <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
             </TouchableOpacity>
 
-            {/* Botão Entrar */}
-            <TouchableOpacity
-              style={styles.loginButton}
+            <AuthSubmitButton
+              text="Entrar na Conta"
               onPress={handleLogin}
               activeOpacity={0.8}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={theme.colors.surface} />
-              ) : (
-                <View style={styles.buttonContent}>
-                  <Text style={styles.loginButtonText}>Entrar na Conta</Text>
-                  <Ionicons name="arrow-forward" size={20} color={theme.colors.surface} />
-                </View>
-              )}
-            </TouchableOpacity>
+              loading={isLoading}
+              style={styles.loginButton}
+              icon={
+                <Ionicons
+                  name="arrow-forward"
+                  size={20}
+                  color={theme.colors.surface}
+                />
+              }
+            />
           </View>
 
-          {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Ainda não possui uma conta? </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("TipoCadastro")}
-            >
+            <TouchableOpacity onPress={() => navigation.navigate('TipoCadastro')}>
               <Text style={styles.registerText}>Cadastre-se</Text>
             </TouchableOpacity>
           </View>

@@ -1,0 +1,651 @@
+=====================================================================
+STATUS — SEPARAÇÃO DE STYLES — PETRADAR
+=====================================================================
+
+Projeto: PetRadar
+Plano: PLANO_MESTRE_SEPARACAO_STYLES_PETRADAR.txt
+Data de início: 19/08/2026
+Última atualização: 20/08/2026
+Escopo: Frontend / Mobile
+
+=====================================================================
+FASE 0 — BASELINE E INVENTÁRIO REAL
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 19/08/2026
+
+Branch:
+refactor/frontend-modularization
+
+Commit inicial:
+9545f1a07032fce7b7f13b9b6d09bc0020013cd1
+
+Estado inicial do repositório:
+ M codigo_frontend_consolidado.txt
+ M codigo_projeto_consolidado.txt
+?? PLANO_MESTRE_SEPARACAO_STYLES_PETRADAR.txt
+
+Observação sobre o estado inicial:
+As alterações acima já existiam antes da execução da refatoração de styles.
+Elas pertencem ao usuário e não devem ser apagadas, sobrescritas ou atribuídas
+às fases deste plano.
+
+Inventário de StyleSheet.create:
+- Total encontrado: 38
+- Em arquivos .tsx: 37
+- Em arquivos .styles.ts: 1
+
+Inventário de blocos COLORS locais:
+- Total na aplicação mobile/src: 13
+
+Arquivos .styles.ts existentes:
+- mobile/src/features/feed/styles/feed.styles.ts
+- mobile/src/features/occurrences/components/form/occurrenceForm.styles.ts
+- mobile/src/features/wanted/styles/procurase.styles.ts
+
+Auditoria de cores literais:
+- Executada sobre o frontend consolidado.
+- Foram encontradas 304 correspondências brutas, incluindo código da aplicação,
+  tokens globais, app.json e o script migrar_design_system.py.
+- Cada correspondência deverá ser classificada durante as fases correspondentes.
+- Este número não significa que todas as cores devam ser substituídas.
+
+TypeScript baseline:
+Comando: npx tsc --noEmit
+Resultado: APROVADO — 0 erros.
+
+Arquivos funcionais alterados nesta fase:
+NENHUM.
+
+Arquivos documentais criados nesta fase:
+- STATUS_SEPARACAO_STYLES_PETRADAR.txt
+
+Alterações de comportamento:
+NENHUMA.
+
+Alterações visuais intencionais:
+NENHUMA.
+
+Validação:
+- Branch registrada.
+- Commit inicial registrado.
+- Estado inicial do Git registrado.
+- StyleSheet.create inventariados.
+- Blocos COLORS locais inventariados.
+- Arquivos .styles.ts existentes inventariados.
+- Cores literais auditadas.
+- TypeScript baseline aprovado com 0 erros.
+- Nenhum arquivo funcional alterado.
+
+Smoke test:
+Não aplicável à Fase 0, pois nenhum código funcional ou visual foi alterado.
+
+Pendências:
+NENHUMA para a Fase 0.
+
+Próxima fase:
+FASE 1 — ESTRUTURA DO DESIGN SYSTEM.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 0
+=====================================================================
+
+1. Fase: FASE 0 — Baseline e inventário real
+2. Branch: refactor/frontend-modularization
+3. Commit inicial: 9545f1a07032fce7b7f13b9b6d09bc0020013cd1
+4. Arquivos criados: STATUS_SEPARACAO_STYLES_PETRADAR.txt
+5. Arquivos movidos: NENHUM
+6. Arquivos funcionais modificados: NENHUM
+7. StyleSheet.create removidos de .tsx: 0
+8. COLORS locais removidos: 0
+9. Tokens criados no theme: 0
+10. Alterações de comportamento: NENHUMA
+11. Alterações visuais intencionais: NENHUMA
+12. npx tsc --noEmit: APROVADO — 0 erros
+13. Smoke test: NÃO APLICÁVEL
+14. Diff revisado: não houve alteração funcional para revisar
+15. Pendências: NENHUMA
+16. Status: CONCLUÍDA
+
+=====================================================================
+FASE 1 — ESTRUTURA DO DESIGN SYSTEM
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 19/08/2026
+
+Objetivo:
+Preparar a estrutura global do Design System sem migrar telas e sem redesign.
+
+Arquivos revisados:
+- mobile/src/theme/colors.ts
+- mobile/migrar_design_system.py
+
+Arquivos modificados:
+- mobile/src/theme/colors.ts
+
+Arquivos criados:
+NENHUM.
+
+Decisão sobre shared.styles.ts:
+Não criado. A auditoria não comprovou styles globais idênticos cuja extração
+fosse necessária nesta fase. Um arquivo vazio não será mantido no projeto.
+
+Tokens adicionados em theme.colors:
+- brandSoft
+- accent
+- accentSoft
+- backgroundSoft
+- surfaceSoft
+- muted
+- placeholder
+- border
+- disabled
+- shadow
+- borderAlpha.card
+- borderAlpha.default
+- borderAlpha.subtle
+- borderAlpha.faint
+- brandAlpha.faint
+- brandAlpha.soft
+- brandAlpha.medium
+- brandAlpha.border
+- brandAlpha.strongBorder
+- overlay.modal
+- overlay.modalStrong
+- overlay.image
+- mutedSurface
+
+Preservação visual:
+Todos os tokens foram adicionados com os valores exatos já reconhecidos pelo
+código e por mobile/migrar_design_system.py. Nenhum valor foi aproximado ou
+substituído por uma alternativa visualmente parecida.
+
+Revisão de mobile/migrar_design_system.py:
+- O caminho src/theme/colors.ts permanece inalterado.
+- VALUE_TO_THEME permanece compatível com os tokens adicionados.
+- SAFE_STYLE_LITERAL_MAP permanece compatível com os tokens adicionados.
+- O script não precisou ser alterado.
+- O script não foi executado com --apply.
+
+Alterações de comportamento:
+NENHUMA.
+
+Alterações visuais intencionais:
+NENHUMA.
+
+TypeScript:
+Comando: npx tsc --noEmit
+Resultado: APROVADO — 0 erros.
+
+Diff revisado:
+APROVADO. O diff contém somente adição de tokens em theme/colors.ts e ajustes
+de pontuação/formatação no mesmo objeto.
+
+Smoke test:
+Resultado: APROVADO MANUALMENTE PELO USUÁRIO.
+Relato do usuário: "SMOKE TEST — FASE 1 — Tudo OK".
+
+Ocorrência incidental:
+Um arquivo acidental chamado "tatus --short" foi identificado, inspecionado e
+removido pelo usuário. Ele continha apenas uma cópia textual do diff e não fazia
+parte do projeto.
+
+Pendências:
+NENHUMA para a Fase 1.
+
+Próxima fase:
+FASE 2 — COMPONENTES GLOBAIS.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 1
+=====================================================================
+
+1. Fase: FASE 1 — Estrutura do Design System
+2. Branch: refactor/frontend-modularization
+3. Commit inicial da refatoração: 9545f1a07032fce7b7f13b9b6d09bc0020013cd1
+4. Arquivos criados: NENHUM
+5. Arquivos movidos: NENHUM
+6. Arquivos modificados: mobile/src/theme/colors.ts
+7. StyleSheet.create removidos de .tsx: 0
+8. COLORS locais removidos: 0
+9. Tokens criados no theme: 23
+10. Alterações de comportamento: NENHUMA
+11. Alterações visuais intencionais: NENHUMA
+12. npx tsc --noEmit: APROVADO — 0 erros
+13. Smoke test: APROVADO MANUALMENTE PELO USUÁRIO
+14. Diff revisado: APROVADO
+15. Pendências: NENHUMA
+16. Status: CONCLUÍDA
+
+=====================================================================
+FASE 2 — COMPONENTES GLOBAIS
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 19/08/2026
+
+Arquivos criados:
+- mobile/src/components/styles/components.styles.ts
+
+Arquivos modificados:
+- mobile/src/components/AnimatedCTA.tsx
+- mobile/src/components/AppNavigationDrawer.tsx
+
+Exports criados:
+- animatedCTAStyles
+- appNavigationDrawerStyles
+
+Resultado:
+- 2 blocos StyleSheet.create removidos de arquivos .tsx.
+- Transform dinâmico de AnimatedCTA preservado no componente.
+- DRAWER_WIDTH, animações, gestos, Drawer, navegação e acessibilidade preservados.
+- Nenhuma alteração visual intencional.
+- Nenhuma alteração de comportamento.
+
+TypeScript:
+APROVADO — 0 erros.
+
+Smoke test:
+APROVADO MANUALMENTE PELO USUÁRIO.
+Relato: "SMOKE TEST — FASE 2 — Tudo OK".
+
+Pendências:
+NENHUMA.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 2
+=====================================================================
+
+1. StyleSheet.create removidos de .tsx: 2
+2. COLORS locais removidos: 0
+3. Arquivos criados: 1
+4. Arquivos modificados: 2
+5. Alterações de comportamento: NENHUMA
+6. Alterações visuais intencionais: NENHUMA
+7. npx tsc --noEmit: APROVADO — 0 erros
+8. Smoke test: APROVADO MANUALMENTE PELO USUÁRIO
+9. Status: CONCLUÍDA
+
+=====================================================================
+FASE 3 — AUTH
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 19/08/2026
+
+Arquivo criado:
+- mobile/src/features/auth/styles/auth.styles.ts
+
+Arquivos modificados:
+- mobile/src/features/auth/screens/CadastroONGScreen.tsx
+- mobile/src/features/auth/screens/CadastroUserScreen.tsx
+- mobile/src/features/auth/screens/EsqueceuSenhaScreen.tsx
+- mobile/src/features/auth/screens/LoginScreen.tsx
+- mobile/src/features/auth/screens/TipoCadastroScreen.tsx
+
+Exports criados:
+- cadastroONGStyles
+- cadastroUserStyles
+- esqueceuSenhaStyles
+- loginStyles
+- tipoCadastroStyles
+
+Resultado:
+- 5 blocos StyleSheet.create removidos de arquivos .tsx.
+- 5 blocos COLORS locais removidos.
+- Cores substituídas por tokens semanticamente equivalentes do theme.
+- Valores visuais originais preservados.
+- Styles inline estáticos identificados foram extraídos.
+- Login, recuperação de senha, cadastros, loading, teclado e navegação preservados.
+- Nenhuma alteração de comportamento.
+- Nenhuma alteração visual intencional.
+
+Auditoria:
+- Zero StyleSheet nas cinco telas Auth.
+- Zero const COLORS nas cinco telas Auth.
+- Zero referências COLORS.* nas cinco telas Auth.
+
+TypeScript:
+APROVADO — 0 erros.
+
+Smoke test:
+APROVADO MANUALMENTE PELO USUÁRIO.
+Relato: "SMOKE TEST — FASE 3 — Tudo OK".
+
+Pendências:
+NENHUMA.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 3
+=====================================================================
+
+1. StyleSheet.create removidos de .tsx: 5
+2. COLORS locais removidos: 5
+3. Arquivos criados: 1
+4. Arquivos modificados: 5
+5. Tokens novos criados no theme: 0
+6. Alterações de comportamento: NENHUMA
+7. Alterações visuais intencionais: NENHUMA
+8. npx tsc --noEmit: APROVADO — 0 erros
+9. Smoke test: APROVADO MANUALMENTE PELO USUÁRIO
+10. Status: CONCLUÍDA
+
+=====================================================================
+FASE 4 — FEED
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 19/08/2026
+
+Arquivo consolidado:
+- mobile/src/features/feed/styles/feed.styles.ts
+
+Arquivos modificados:
+- mobile/src/features/feed/components/FeedBannerCarousel.tsx
+- mobile/src/features/feed/components/FeedControls.tsx
+- mobile/src/features/feed/components/OccurrenceCard.tsx
+- mobile/src/features/feed/screens/FeedNoticias.tsx
+- mobile/src/features/feed/styles/feed.styles.ts
+
+Exports finais do arquivo de styles:
+- feedButtonPressedStyle
+- feedBannerCarouselStyles
+- feedControlsStyles
+- occurrenceCardStyles
+- feedNoticiasStyles
+
+Resultado:
+- 4 blocos StyleSheet.create removidos de arquivos .tsx.
+- Todos os StyleSheet.create do Feed ficaram em feed.styles.ts.
+- Largura calculada de FeedControls movida com Dimensions para feed.styles.ts.
+- bannerWidth permaneceu dinâmico no FeedBannerCarousel.
+- Variações dinâmicas do card permaneceram no OccurrenceCard.
+- StyleSheet.absoluteFill do backdrop da denúncia foi extraído como reportBackdrop.
+- PROXIMIDADE, ECO, pesquisa, filtros, carousel, refresh, comentários,
+  compartilhamento, favoritos, denúncia e navegação preservados.
+- Nenhuma alteração de comportamento.
+- Nenhuma alteração visual intencional.
+
+Auditoria:
+- Zero StyleSheet nos arquivos .tsx da feature Feed.
+- Exatamente uma exportação para cada grupo de styles esperado.
+
+TypeScript:
+APROVADO — 0 erros.
+
+Smoke test:
+APROVADO MANUALMENTE PELO USUÁRIO.
+Relato: "SMOKE TEST — FASE 4 — Tudo OK".
+
+Pendências:
+NENHUMA.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 4
+=====================================================================
+
+1. StyleSheet.create removidos de .tsx: 4
+2. COLORS locais removidos: 0
+3. Arquivos criados: 0
+4. Arquivos modificados: 5
+5. Alterações de comportamento: NENHUMA
+6. Alterações visuais intencionais: NENHUMA
+7. npx tsc --noEmit: APROVADO — 0 erros
+8. Smoke test: APROVADO MANUALMENTE PELO USUÁRIO
+9. Status: CONCLUÍDA
+
+=====================================================================
+FASE 5 — OCCURRENCES / FORM
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 19/08/2026
+
+Arquivo movido:
+DE:
+- mobile/src/features/occurrences/components/form/occurrenceForm.styles.ts
+PARA:
+- mobile/src/features/occurrences/styles/occurrenceForm.styles.ts
+
+Componentes modificados:
+- AnimalSection.tsx
+- AnimalTypeSelector.tsx
+- ChoiceButton.tsx
+- DisabilitySection.tsx
+- HealthSection.tsx
+- InitialCareSection.tsx
+- LocationSection.tsx
+- OccurrenceFormSection.tsx
+- OccurrenceTypeSection.tsx
+- PhotoSection.tsx
+- ReviewSection.tsx
+- SelectionChip.tsx
+- SelectionChipGroup.tsx
+
+Arquivo adicional com import atualizado:
+- mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx
+
+Exports criados:
+- animalSectionStyles
+- animalTypeSelectorStyles
+- choiceButtonStyles
+- disabilitySectionStyles
+- healthSectionStyles
+- initialCareSectionStyles
+- locationSectionStyles
+- occurrenceFormSectionStyles
+- occurrenceTypeSectionStyles
+- photoSectionStyles
+- reviewSectionStyles
+- selectionChipStyles
+- selectionChipGroupStyles
+
+Exports compartilhados preservados:
+- occurrenceFormSharedStyles
+- occurrenceConditionStyles
+
+Resultado:
+- 13 blocos StyleSheet.create removidos dos componentes form/*.tsx.
+- Zero StyleSheet nos 13 componentes do formulário.
+- Zero imports apontando para o caminho antigo.
+- 13 exports específicos confirmados em occurrenceForm.styles.ts.
+- Seleções, localização, foto, saúde, deficiência, cuidados, revisão e envio preservados.
+- Nenhuma alteração de comportamento.
+- Nenhuma alteração visual intencional.
+
+TypeScript:
+APROVADO — 0 erros.
+
+Smoke test:
+APROVADO MANUALMENTE PELO USUÁRIO.
+Relato: "SMOKE TEST — FASE 5 — Tudo OK".
+
+Observação externa ao escopo:
+Durante a execução foi observada uma resposta HTTP 500 ao carregar o perfil do
+mapa. O erro foi retornado pelo backend e não decorreu da separação de styles.
+Nenhuma requisição ou arquivo backend foi alterado nesta fase.
+
+Pendências:
+NENHUMA para a Fase 5.
+
+Próxima fase:
+FASE 6 — OCCURRENCES / COMMENTS.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 5
+=====================================================================
+
+1. StyleSheet.create removidos de .tsx: 13
+2. COLORS locais removidos: 0
+3. Arquivos criados: 0
+4. Arquivos movidos: 1
+5. Componentes modificados: 13
+6. Arquivo adicional com import atualizado: 1
+7. Alterações de comportamento: NENHUMA
+8. Alterações visuais intencionais: NENHUMA
+9. npx tsc --noEmit: APROVADO — 0 erros
+10. Smoke test: APROVADO MANUALMENTE PELO USUÁRIO
+11. Status: CONCLUÍDA
+
+=====================================================================
+FASE 6 — OCCURRENCES / COMMENTS
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 20/08/2026
+
+Arquivo criado:
+- mobile/src/features/occurrences/styles/occurrenceComments.styles.ts
+
+Componentes modificados:
+- mobile/src/features/occurrences/components/comments/CommentAuthorModal.tsx
+- mobile/src/features/occurrences/components/comments/OccurrenceCommentsModal.tsx
+
+Exports criados:
+- commentAuthorModalStyles
+- occurrenceCommentsModalStyles
+
+Resultado:
+- 2 blocos StyleSheet.create removidos de arquivos .tsx.
+- 2 blocos COLORS locais removidos.
+- Zero StyleSheet nos dois componentes de comentários.
+- Zero const COLORS e zero referências COLORS.* nos dois componentes.
+- Styles centralizados em occurrenceComments.styles.ts.
+- Modal de identificação do autor preservado.
+- Listagem, criação, respostas, respostas de segundo nível, edição, exclusão lógica,
+  expansão/redução do modal, composer e estados visuais preservados.
+- Literais sem token exato foram preservados quando necessário para evitar alteração visual.
+- Nenhuma alteração de comportamento.
+- Nenhuma alteração visual intencional.
+
+TypeScript:
+APROVADO — 0 erros.
+
+Smoke test:
+APROVADO MANUALMENTE PELO USUÁRIO.
+Relato: "SMOKE TEST — FASE 6 — Tudo OK".
+
+Observação externa ao escopo:
+Foi identificado durante a auditoria um problema pré-existente no backend relacionado
+à inicialização de id_comentario_pai na criação de comentário raiz. Esse problema não
+foi alterado nesta fase para não misturar correção funcional com separação de styles.
+
+Pendências:
+NENHUMA para a separação de styles da Fase 6.
+
+Próxima fase:
+FASE 7 — PETS.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 6
+=====================================================================
+
+1. StyleSheet.create removidos de .tsx: 2
+2. COLORS locais removidos: 2
+3. Arquivos criados: 1
+4. Componentes modificados: 2
+5. Exports criados: 2
+6. Alterações de comportamento: NENHUMA
+7. Alterações visuais intencionais: NENHUMA
+8. npx tsc --noEmit: APROVADO — 0 erros
+9. Smoke test: APROVADO MANUALMENTE PELO USUÁRIO
+10. Status: CONCLUÍDA
+
+=====================================================================
+FASE 7 — PETS
+=====================================================================
+
+Status: CONCLUÍDA
+Data: 20/08/2026
+
+Arquivo criado:
+- mobile/src/features/pets/styles/pets.styles.ts
+
+Componentes modificados:
+- mobile/src/features/pets/components/PetCard.tsx
+- mobile/src/features/pets/components/PetDetailModal.tsx
+- mobile/src/features/pets/components/PetFormModal.tsx
+- mobile/src/features/pets/components/PetsTab.tsx
+
+Exports criados:
+- petCardStyles
+- petDetailModalStyles
+- petFormModalStyles
+- petsTabStyles
+
+Resultado:
+- 4 blocos StyleSheet.create removidos de arquivos .tsx.
+- 4 blocos COLORS locais removidos.
+- Zero StyleSheet nos componentes .tsx da feature Pets.
+- Zero const COLORS e zero referências COLORS.* nos componentes .tsx da feature Pets.
+- Styles centralizados em pets.styles.ts.
+- Tokens do theme utilizados somente quando semanticamente e visualmente equivalentes.
+- Literais sem token exato foram preservados para evitar alteração visual.
+- PetCard, listagem, estado vazio, cadastro, seleção de foto, detalhes e fluxo
+  "INFORMAR COMO PERDIDO" preservados.
+- Nenhuma alteração de comportamento.
+- Nenhuma alteração visual intencional.
+
+TypeScript:
+APROVADO — 0 erros.
+
+Auditoria:
+- Zero StyleSheet em mobile/src/features/pets/components/*.tsx.
+- Zero const COLORS em mobile/src/features/pets/components/*.tsx.
+- Zero referências COLORS.* em mobile/src/features/pets/components/*.tsx.
+- Quatro exports de styles confirmados em pets.styles.ts.
+
+Smoke test:
+APROVADO MANUALMENTE PELO USUÁRIO.
+Relato: "SMOKE TEST — FASE 7 — Tudo OK".
+
+Pendências:
+NENHUMA para a Fase 7.
+
+Próxima fase:
+FASE 8 — OCCURRENCES / DETAIL.
+
+=====================================================================
+RESUMO DO CHECKPOINT — FASE 7
+=====================================================================
+
+1. StyleSheet.create removidos de .tsx: 4
+2. COLORS locais removidos: 4
+3. Arquivos criados: 1
+4. Componentes modificados: 4
+5. Exports criados: 4
+6. Alterações de comportamento: NENHUMA
+7. Alterações visuais intencionais: NENHUMA
+8. npx tsc --noEmit: APROVADO — 0 erros
+9. Smoke test: APROVADO MANUALMENTE PELO USUÁRIO
+10. Status: CONCLUÍDA
+
+=====================================================================
+RESUMO ACUMULADO — FASES 0 A 7
+=====================================================================
+
+- Fases concluídas: 0, 1, 2, 3, 4, 5, 6 e 7.
+- StyleSheet.create removidos de .tsx nas Fases 2–7: 30.
+- Baseline inicial em .tsx: 37.
+- StyleSheet.create restantes em .tsx após a Fase 7: 7.
+- COLORS locais removidos nas Fases 2–7: 11.
+- Baseline inicial de blocos COLORS locais: 13.
+- COLORS locais restantes após a Fase 7: 2.
+- TypeScript: APROVADO após todas as fases.
+- Smoke manual: APROVADO nas Fases 1, 2, 3, 4, 5, 6 e 7.
+- Próxima fase obrigatória: FASE 8 — OCCURRENCES / DETAIL.
+
+Inventário pendente de StyleSheet.create em .tsx após a Fase 7:
+- mobile/src/features/occurrences/components/OccurrenceDetailDrawer.tsx
+- mobile/src/features/occurrences/screens/CadastroOcorrenciaScreen.tsx
+- mobile/src/features/profile/components/ProfileDetailScreen.tsx
+- mobile/src/features/profile/components/ProfileQuickMenu.tsx
+- mobile/src/features/wanted/components/ProcuraSeControls.tsx
+- mobile/src/features/wanted/screens/ProcuraSeScreen.tsx
+- mobile/src/screens/MapScreen.tsx
+
+=====================================================================
+FIM DO STATUS
+=====================================================================
