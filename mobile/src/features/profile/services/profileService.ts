@@ -1,13 +1,11 @@
 import api from "../../../services/api";
 
 import type {
+  DeleteProfilePayload,
+  ProfilePhotoUploadResponse,
   ProfileUpdatePayload,
   UserProfile,
 } from "../types/profile.types";
-
-interface DeleteProfilePayload {
-  senha: string;
-}
 
 export const profileService = {
   getProfile: () =>
@@ -21,7 +19,7 @@ export const profileService = {
   uploadProfilePhoto: (
     formData: FormData,
   ) =>
-    api.post("/auth/me/foto", formData, {
+    api.post<ProfilePhotoUploadResponse>("/auth/me/foto", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

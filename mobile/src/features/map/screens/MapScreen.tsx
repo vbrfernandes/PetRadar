@@ -8,9 +8,11 @@ import AppNavigationDrawer from "../../../components/AppNavigationDrawer";
 import type { AppTabParamList } from "../../../navigation/navigation.types";
 import { useAuthStore } from "../../../store/useAuthStore";
 import OccurrenceDetailDrawer from "../../occurrences/components/detail/OccurrenceDetailDrawer";
-import ProfileDetailScreen from "../../profile/components/ProfileDetailScreen";
-import ProfileQuickMenu from "../../profile/components/ProfileQuickMenu";
-import type { ProfileUpdateResult } from "../../profile/types/profile.types";
+import {
+  ProfileDetailScreen,
+  ProfileQuickMenu,
+  type ProfileUpdateResult,
+} from "../../profile";
 import { MapBottomActions } from "../components/controls/MapBottomActions";
 import { MapHeader } from "../components/controls/MapHeader";
 import { MapZoomControls } from "../components/controls/MapZoomControls";

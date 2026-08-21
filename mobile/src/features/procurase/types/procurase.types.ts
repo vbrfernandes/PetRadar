@@ -18,4 +18,15 @@ export type FiltroProcuraSe =
 export type ModoProcuraSe =
   | "PROXIMIDADE"
   | "ECO";
-  
+
+export interface ProcuraSeEcoResponse {
+  ativo: boolean;
+  total_forca: number;
+}
+
+export type ProcuraSeLoadingMode =
+  | "normal"
+  | "refresh";
+
+export type RecarregarListaOcorrencias =
+  () => void | Promise<void>;

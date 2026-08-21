@@ -6,17 +6,9 @@ export interface Pet {
     especie: string;
 
     raca: string | null;
-
-    // ALTERE AQUI
     sexo: string | null;
-
-    // ALTERE AQUI
     cor: string | null;
-
     porte: string | null;
-
-    // ALTERE AQUI
     idade: string | null;
-
     foto: string | null;
 }
