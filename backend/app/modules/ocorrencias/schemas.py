@@ -2,6 +2,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 from datetime import datetime
 
+
 class OcorrenciaCriar(BaseModel):
 
     tipo_ocorrencia: str
@@ -23,6 +24,7 @@ class OcorrenciaCriar(BaseModel):
     latitude: float
     longitude: float
     observacao: str | None = None
+
 
 class OcorrenciaResposta(BaseModel):
     id_ocorrencia: int
@@ -96,6 +98,46 @@ class CuidadoOcorrenciaResposta(BaseModel):
 class EstadoCuidadosResposta(BaseModel):
     agua: CuidadoOcorrenciaResposta | None = None
     comida: CuidadoOcorrenciaResposta | None = None
+
+
+class AutorComentarioResposta(BaseModel):
+    id_conta: int
+    nome: str
+    foto: str | None = None
+    tipo_conta: str
+
+
+class ComentarioCriar(BaseModel):
+    texto: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
+
+    id_comentario_pai: int | None = None
+
+
+class ComentarioAtualizar(BaseModel):
+    texto: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+    )
+
+
+class ComentarioResposta(BaseModel):
+    id_comentario: int
+    id_ocorrencia: int
+    id_conta: int
+    id_comentario_pai: int | None = None
+    texto: str
+    data_hora: datetime
+    editado_em: datetime | None = None
+    excluido_em: datetime | None = None
+    autor: AutorComentarioResposta
+
+    class Config:
+        from_attributes = True
 
 
 class OcorrenciaDetalheResposta(BaseModel):

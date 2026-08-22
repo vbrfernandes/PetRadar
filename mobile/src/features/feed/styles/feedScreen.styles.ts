@@ -1,0 +1,142 @@
+import { StyleSheet } from "react-native";
+
+import { theme } from "../../../theme";
+
+const sharedFeedStyles = StyleSheet.create({
+  buttonPressed: {
+    opacity: 0.78,
+  },
+});
+
+export const feedButtonPressedStyle = sharedFeedStyles.buttonPressed;
+
+export const feedScreenStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  listContent: {
+    paddingHorizontal: theme.spacing.globalMargin,
+    paddingBottom: 125,
+  },
+  header: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    gap: 12,
+  },
+  headerMenuButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surface,
+    ...theme.shadows.elevation1,
+  },
+  headerContent: {
+    flex: 1,
+    justifyContent: "center",
+    minWidth: 0,
+  },
+  headerTitle: {
+    color: theme.colors.textTitle,
+    fontSize: 20,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+    textAlign: "center",
+  },
+  headerActions: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  headerAvatarButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    padding: 2,
+    backgroundColor: theme.colors.surface,
+    ...theme.shadows.elevation1,
+  },
+  headerAvatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 21,
+  },
+  headerOnlineIndicator: {
+    position: "absolute",
+    right: 1,
+    bottom: 1,
+    width: 11,
+    height: 11,
+    borderRadius: 6,
+    backgroundColor: theme.colors.semantic.success.text,
+    borderWidth: 2,
+    borderColor: theme.colors.surface,
+  },
+  radiusBadge: {
+    minHeight: 25,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: 8,
+    borderRadius: theme.radius.button,
+    backgroundColor: theme.colors.semantic.success.bg,
+  },
+  radiusText: {
+    color: theme.colors.brand,
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  registerButton: {
+    position: "absolute",
+    left: theme.spacing.globalMargin,
+    right: theme.spacing.globalMargin,
+    bottom: 18,
+    minHeight: 66,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    borderRadius: 21,
+    backgroundColor: theme.colors.brand,
+    ...theme.shadows.buttonGlow,
+  },
+  registerButtonPressed: {
+    transform: [{ scale: 0.985 }],
+    opacity: 0.96,
+  },
+  registerButtonIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surface,
+  },
+  registerButtonContent: {
+    flex: 1,
+    marginLeft: 11,
+  },
+  registerButtonTitle: {
+    color: theme.colors.surface,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  registerButtonSubtitle: {
+    marginTop: 2,
+    color: theme.colors.surface,
+    fontSize: 9,
+    fontWeight: "500",
+  },
+  registerButtonArrow: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.action,
+  },
+});
